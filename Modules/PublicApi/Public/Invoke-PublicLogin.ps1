@@ -17,9 +17,20 @@ function Invoke-PublicLogin {
         }
     }
 
+    # Validate email format
+    if (-not (Test-EmailFormat -Email $Body.email)) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Invalid email format" }
+        }
+    }
+
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
-        $User = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$($Body.email.ToLower())'" | Select-Object -First 1
+        
+        # Sanitize email for query to prevent injection
+        $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
+        $User = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         
         if (-not $User) {
             return [HttpResponseContext]@{
@@ -52,7 +63,7 @@ function Invoke-PublicLogin {
         
     } catch {
         Write-Error "Login error: $($_.Exception.Message)"
-        $Results = @{ error = "Login failed" }
+        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Login failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
 

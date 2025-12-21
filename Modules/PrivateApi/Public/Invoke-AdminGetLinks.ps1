@@ -12,7 +12,10 @@ function Invoke-AdminGetLinks {
 
     try {
         $Table = Get-LinkToMeTable -TableName 'Links'
-        $Links = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$($User.UserId)'"
+        
+        # Sanitize userId for query
+        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        $Links = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
         $Results = @($Links | ForEach-Object {
             @{

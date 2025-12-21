@@ -11,9 +11,51 @@ function Invoke-AdminUpdateProfile {
     $User = $Request.AuthenticatedUser
     $Body = $Request.Body
 
+    # Validate input lengths
+    if ($Body.displayName) {
+        $LengthCheck = Test-InputLength -Value $Body.displayName -MaxLength 100 -FieldName "Display name"
+        if (-not $LengthCheck.Valid) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ error = $LengthCheck.Message }
+            }
+        }
+    }
+
+    if ($Body.bio) {
+        $LengthCheck = Test-InputLength -Value $Body.bio -MaxLength 500 -FieldName "Bio"
+        if (-not $LengthCheck.Valid) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ error = $LengthCheck.Message }
+            }
+        }
+    }
+
+    if ($Body.avatar) {
+        $LengthCheck = Test-InputLength -Value $Body.avatar -MaxLength 2048 -FieldName "Avatar URL"
+        if (-not $LengthCheck.Valid) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ error = $LengthCheck.Message }
+            }
+        }
+        
+        # Validate avatar URL format
+        if (-not (Test-UrlFormat -Url $Body.avatar)) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ error = "Avatar must be a valid http or https URL" }
+            }
+        }
+    }
+
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
-        $UserData = Get-AzDataTableEntity @Table -Filter "RowKey eq '$($User.UserId)'" | Select-Object -First 1
+        
+        # Sanitize userId for query
+        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        $UserData = Get-AzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $UserData) {
             return [HttpResponseContext]@{
@@ -42,7 +84,7 @@ function Invoke-AdminUpdateProfile {
         
     } catch {
         Write-Error "Update profile error: $($_.Exception.Message)"
-        $Results = @{ error = "Failed to update profile" }
+        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update profile"
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
 
