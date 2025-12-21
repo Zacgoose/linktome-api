@@ -17,11 +17,30 @@ function Invoke-PublicLogin {
         }
     }
 
+    # Validate email format
+    if (-not (Test-EmailFormat -Email $Body.email)) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Invalid email format" }
+        }
+    }
+
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
-        $User = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$($Body.email.ToLower())'" | Select-Object -First 1
+        
+        # Sanitize email for query to prevent injection
+        $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
+        $User = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
+        
+        # Get client IP for logging
+        $ClientIP = Get-ClientIPAddress -Request $Request
         
         if (-not $User) {
+            # Log failed login attempt
+            Write-SecurityEvent -EventType 'LoginFailed' -Email $Body.email -IpAddress $ClientIP -Endpoint 'public/login' -Metadata @{
+                Reason = 'UserNotFound'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
                 Body = @{ error = "Invalid credentials" }
@@ -31,11 +50,19 @@ function Invoke-PublicLogin {
         $Valid = Test-PasswordHash -Password $Body.password -StoredHash $User.PasswordHash -StoredSalt $User.PasswordSalt
         
         if (-not $Valid) {
+            # Log failed login attempt
+            Write-SecurityEvent -EventType 'LoginFailed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login' -Metadata @{
+                Reason = 'InvalidPassword'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
                 Body = @{ error = "Invalid credentials" }
             }
         }
+        
+        # Log successful login
+        Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
         $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username
         
@@ -52,7 +79,7 @@ function Invoke-PublicLogin {
         
     } catch {
         Write-Error "Login error: $($_.Exception.Message)"
-        $Results = @{ error = "Login failed" }
+        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Login failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
 
