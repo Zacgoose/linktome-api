@@ -24,7 +24,7 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - **Authentication:** JWT with PBKDF2-SHA256 password hashing
 - **Frontend Integration:** Azure Static Web Apps
 - **Rate Limiting:** IP-based using Azure Table Storage (5 login/min, 3 signup/hour)
-- **Logging:** Application Insights + Table Storage for security events
+- **Logging:** Azure Table Storage for security events
 
 ## Features
 
@@ -34,7 +34,7 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Input validation and sanitization
 - ✅ Protection against NoSQL injection
 - ✅ Rate limiting (5 login attempts/min, 3 signups/hour per IP)
-- ✅ Security event logging to Application Insights and Table Storage
+- ✅ Security event logging to Azure Table Storage
 - ✅ Safe error handling (no information disclosure)
 - ✅ Minimum password requirements
 
@@ -345,10 +345,10 @@ Local development:
 # Logs are displayed in console where `func start` is running
 ```
 
-Azure (Application Insights):
+Azure:
 ```bash
 # View logs in Azure Portal → Function App → Monitor → Logs
-# Or use Application Insights queries
+# View security events in Azure Table Storage → SecurityEvents table
 ```
 
 ## Contributing
