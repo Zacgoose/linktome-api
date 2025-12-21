@@ -65,36 +65,41 @@ This implementation delivers a complete **Role-Based Access Control (RBAC) and P
    - Old tokens work until they expire
    - Users without roles get defaults automatically
 
+4. **Role Management (MVP - NEW)**
+   - Admin and company_owner can assign roles to users
+   - Admin and company_owner can view user roles and permissions
+   - Company_owner can only manage users in their own company
+   - Automatic permission updates when roles are assigned
+
 ## What Needs Clarification
 
 The following features have **foundation implemented** but need frontend engineer input:
 
-### 1. User Management Endpoints (NOT YET IMPLEMENTED)
+### 1. User Management Endpoints (DEFERRED - Per Frontend Request)
+**Status**: Deferred to future release
 **Foundation Ready**: Permission mappings and role assignments exist
-**Missing**: Endpoint handler functions for:
+**Not Implemented**: Endpoint handler functions for:
 - GET /api/admin/getUsers
 - POST /api/admin/createUser  
 - PUT /api/admin/updateUser
 - DELETE /api/admin/deleteUser
 
-**Action Required**: Confirm if these endpoints are needed and provide requirements
+**Implemented (MVP)**:
+- ✅ PUT /api/admin/assignRole - Assign role to user
+- ✅ GET /api/admin/getUserRoles - Get user's roles and permissions
 
-### 2. Company Management Endpoints (NOT YET IMPLEMENTED)
+
+### 2. Company Management Endpoints (DEFERRED - Per Frontend Request)
+**Status**: Deferred to future release
 **Foundation Ready**: Permission mappings and role assignments exist
-**Missing**: Endpoint handler functions for:
+**Not Implemented**: Endpoint handler functions for:
 - GET /api/admin/getCompany
 - PUT /api/admin/updateCompany
 - GET /api/admin/getCompanyMembers
 - POST /api/admin/addCompanyMember
 - DELETE /api/admin/removeCompanyMember
 
-**Action Required**: Confirm if multi-tenant support is needed and provide requirements
-
-### 3. Role/Permission Management API (NOT YET IMPLEMENTED)
-**Current State**: Roles/permissions must be manually updated in Azure Tables
-**Question**: Do you need API endpoints to manage roles and permissions?
-
-**Action Required**: Confirm if management API is needed
+**Note**: CompanyId support exists in JWT and database, ready for future implementation
 
 ## Differences from Requirements Document
 
@@ -133,11 +138,11 @@ The requirements document assumed a relational database, but we're using Azure T
 - **End-to-End Testing**: Requires deployed environment
 
 ### How to Test
-See **RBAC_TESTING.md** for comprehensive manual testing guide with 10 test scenarios.
+See **RBAC_TESTING.md** for comprehensive manual testing guide with 14 test scenarios (including role management tests).
 
 ## Files Changed Summary
 
-### Created (18 files)
+### Created (20 files)
 ```
 Modules/LinkTomeCore/Auth/
   - Get-DefaultRolePermissions.ps1
@@ -152,6 +157,10 @@ Modules/LinkTomeCore/Auth/
 Modules/PublicApi/Public/
   - Invoke-PublicRefreshToken.ps1
   - Invoke-PublicLogout.ps1
+
+Modules/PrivateApi/Public/
+  - Invoke-AdminAssignRole.ps1
+  - Invoke-AdminGetUserRoles.ps1
 
 Documentation/
   - RBAC_IMPLEMENTATION.md

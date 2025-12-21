@@ -33,6 +33,8 @@ function Get-EndpointPermissions {
         'admin/createUser' = @('write:users')
         'admin/updateUser' = @('write:users')
         'admin/deleteUser' = @('manage:users')
+        'admin/assignRole' = @('manage:users')
+        'admin/getUserRoles' = @('read:users')
         
         # Company endpoints (company_owner)
         'admin/getCompany' = @('read:company')

@@ -44,6 +44,8 @@ function Get-DefaultRolePermissions {
             'read:appearance',
             'write:appearance',
             'read:analytics',
+            'read:users',
+            'manage:users',
             'read:company',
             'write:company',
             'read:company_members',
