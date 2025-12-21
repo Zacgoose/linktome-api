@@ -21,6 +21,7 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
   - `Links` - User link collections
   - `RateLimits` - Rate limiting tracking (temporary solution)
   - `SecurityEvents` - Security event audit log
+  - `Analytics` - Page views and analytics tracking
 - **Authentication:** JWT with PBKDF2-SHA256 password hashing
 - **Frontend Integration:** Azure Static Web Apps
 - **Rate Limiting:** IP-based using Azure Table Storage (5 login/min, 3 signup/hour)
@@ -38,18 +39,25 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Safe error handling (no information disclosure)
 - ✅ Minimum password requirements
 
+### Analytics
+- ✅ Automatic page view tracking on profile loads
+- ✅ Server-side analytics (no additional frontend API calls required)
+- ✅ Tracks IP address, user agent, and referrer
+- ✅ Analytics dashboard data via admin endpoint
+
 ### API Endpoints
 
 #### Public Endpoints (No Authentication Required)
 - `POST /public/signup` - Register new user
 - `POST /public/login` - Authenticate user
-- `GET /public/getUserProfile?username={username}` - Get public profile and links
+- `GET /public/getUserProfile?username={username}` - Get public profile and links (auto-tracks page view)
 
 #### Admin Endpoints (Requires JWT Authentication)
 - `GET /admin/getProfile` - Get authenticated user's profile
 - `PUT /admin/updateProfile` - Update profile (displayName, bio, avatar)
 - `GET /admin/getLinks` - Get user's links
 - `PUT /admin/updateLinks` - Create, update, or delete links
+- `GET /admin/getAnalytics` - Get analytics data (page views, unique visitors, views by day)
 
 ## Local Development Setup
 

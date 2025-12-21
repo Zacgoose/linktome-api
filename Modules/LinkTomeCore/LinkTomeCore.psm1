@@ -1,5 +1,5 @@
 # Import all functions from subdirectories
-$Subdirectories = @('Auth', 'Table', 'Validation', 'Error', 'RateLimit', 'Logging', 'Request')
+$Subdirectories = @('Auth', 'Table', 'Validation', 'Error', 'RateLimit', 'Logging', 'Request', 'Analytics')
 $AllFunctions = @()
 
 foreach ($Subdir in $Subdirectories) {

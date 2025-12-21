@@ -54,6 +54,13 @@ function Invoke-PublicGetUserProfile {
                 } | Sort-Object order)
             }
             $StatusCode = [HttpStatusCode]::OK
+            
+            # Track page view analytics
+            $ClientIP = Get-ClientIPAddress -Request $Request
+            $UserAgent = $Request.Headers.'User-Agent'
+            $Referrer = $Request.Headers.Referer
+            
+            Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -UserAgent $UserAgent -Referrer $Referrer
         }
         
     } catch {
