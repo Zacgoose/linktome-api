@@ -30,17 +30,13 @@ function Receive-LinkTomeHttpTrigger {
     $Response = New-LinkTomeCoreRequest -Request $Request -TriggerMetadata $TriggerMetadata
     
     if ($Response.StatusCode) {
-        # Add security headers to all responses
-        $Response = Add-SecurityHeaders -Response $Response
-        $Response = Add-CorsHeaders -Response $Response -Request $Request
-        
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
         Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
     } else {
         # Fallback error response
-        $ErrorResponse = @{
+        Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::InternalServerError
             Body       = @{
                 error = @{
@@ -48,10 +44,7 @@ function Receive-LinkTomeHttpTrigger {
                     message = 'An error occurred processing the request'
                 }
             }
-        }
-        $ErrorResponse = Add-SecurityHeaders -Response $ErrorResponse
-        $ErrorResponse = Add-CorsHeaders -Response $ErrorResponse -Request $Request
-        Push-OutputBinding -Name Response -Value ([HttpResponseContext]$ErrorResponse)
+        })
     }
     return
 }
