@@ -17,9 +17,20 @@ function Invoke-PublicGetUserProfile {
         }
     }
 
+    # Validate username format
+    if (-not (Test-UsernameFormat -Username $Username)) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Invalid username format" }
+        }
+    }
+
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
-        $User = Get-AzDataTableEntity @Table -Filter "Username eq '$($Username.ToLower())'" | Select-Object -First 1
+        
+        # Sanitize username for query
+        $SafeUsername = Protect-TableQueryValue -Value $Username.ToLower()
+        $User = Get-AzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
         
         if (-not $User) {
             $StatusCode = [HttpStatusCode]::NotFound
@@ -47,7 +58,7 @@ function Invoke-PublicGetUserProfile {
         
     } catch {
         Write-Error "Get profile error: $($_.Exception.Message)"
-        $Results = @{ error = "Failed to get profile" }
+        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to get profile"
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
 
