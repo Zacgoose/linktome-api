@@ -11,7 +11,16 @@ function New-LinkToMeJWT {
         [string]$Email,
         
         [Parameter(Mandatory)]
-        [string]$Username
+        [string]$Username,
+        
+        [Parameter()]
+        [string[]]$Roles = @('user'),
+        
+        [Parameter()]
+        [string[]]$Permissions = @(),
+        
+        [Parameter()]
+        [string]$CompanyId = $null
     )
     
     $Secret = Get-JwtSecret | ConvertTo-SecureString -AsPlainText -Force
@@ -20,9 +29,16 @@ function New-LinkToMeJWT {
         sub = $UserId
         email = $Email
         username = $Username
+        roles = $Roles
+        permissions = $Permissions
         iat = ([DateTimeOffset]::UtcNow).ToUnixTimeSeconds()
-        exp = ([DateTimeOffset]::UtcNow.AddHours(24)).ToUnixTimeSeconds()
+        exp = ([DateTimeOffset]::UtcNow.AddMinutes(15)).ToUnixTimeSeconds()  # 15 minutes
         iss = 'LinkTome-app'
+    }
+    
+    # Add companyId if provided
+    if ($CompanyId) {
+        $Claims['companyId'] = $CompanyId
     }
     
     $Token = New-JsonWebToken -Claims $Claims -HashAlgorithm SHA256 -SecureKey $Secret

@@ -64,15 +64,36 @@ function Invoke-PublicLogin {
         # Log successful login
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
-        $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username
+        # Get roles and permissions
+        $Roles = if ($User.Roles) {
+            if ($User.Roles -is [array]) { $User.Roles } else { @($User.Roles) }
+        } else {
+            @('user')
+        }
+        
+        $Permissions = if ($User.Permissions) {
+            if ($User.Permissions -is [array]) { $User.Permissions } else { @($User.Permissions) }
+        } else {
+            Get-DefaultRolePermissions -Role $Roles[0]
+        }
+        
+        $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyId $User.CompanyId
+        
+        # Generate refresh token
+        $RefreshToken = New-RefreshToken -UserId $User.RowKey
+        $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
+        Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
         
         $Results = @{
             user = @{
                 userId = $User.RowKey
                 email = $User.PartitionKey
                 username = $User.Username
+                roles = $Roles
+                permissions = $Permissions
             }
             accessToken = $Token
+            refreshToken = $RefreshToken
         }
 
         $StatusCode = [HttpStatusCode]::OK

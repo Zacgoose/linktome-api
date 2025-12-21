@@ -135,7 +135,34 @@ function New-LinkTomeCoreRequest {
                 
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized
-                    Body = @{ error = "Authentication required" }
+                    Body = @{ 
+                        success = $false
+                        error = "Unauthorized: Invalid or expired token" 
+                    }
+                }
+            }
+            
+            # Check permissions for the endpoint
+            $RequiredPermissions = Get-EndpointPermissions -Endpoint $Endpoint
+            
+            if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
+                $HasPermission = Test-UserPermission -User $User -RequiredPermissions $RequiredPermissions
+                
+                if (-not $HasPermission) {
+                    # Log permission denied attempt
+                    $ClientIP = Get-ClientIPAddress -Request $Request
+                    Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -Metadata @{
+                        RequiredPermissions = ($RequiredPermissions -join ', ')
+                        UserPermissions = ($User.Permissions -join ', ')
+                    }
+                    
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::Forbidden
+                        Body = @{ 
+                            success = $false
+                            error = "Forbidden: Insufficient permissions. Required: $($RequiredPermissions -join ', ')"
+                        }
+                    }
                 }
             }
             
