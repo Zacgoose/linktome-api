@@ -25,6 +25,13 @@ function New-LinkToMeJWT {
     
     $Secret = Get-JwtSecret | ConvertTo-SecureString -AsPlainText -Force
     
+    # Get token expiration time in minutes (default 15 minutes)
+    $ExpirationMinutes = if ($env:JWT_EXPIRATION_MINUTES) { 
+        [int]$env:JWT_EXPIRATION_MINUTES 
+    } else { 
+        15 
+    }
+    
     $Claims = @{
         sub = $UserId
         email = $Email
@@ -32,7 +39,7 @@ function New-LinkToMeJWT {
         roles = $Roles
         permissions = $Permissions
         iat = ([DateTimeOffset]::UtcNow).ToUnixTimeSeconds()
-        exp = ([DateTimeOffset]::UtcNow.AddMinutes(15)).ToUnixTimeSeconds()  # 15 minutes
+        exp = ([DateTimeOffset]::UtcNow.AddMinutes($ExpirationMinutes)).ToUnixTimeSeconds()
         iss = 'LinkTome-app'
     }
     

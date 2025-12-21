@@ -5,10 +5,6 @@ function New-RefreshToken {
     .DESCRIPTION
         Creates a secure random refresh token string
     #>
-    param(
-        [Parameter(Mandatory)]
-        [string]$UserId
-    )
     
     # Generate a secure random token
     $TokenBytes = New-Object byte[] 64

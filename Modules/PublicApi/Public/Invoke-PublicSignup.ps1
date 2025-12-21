@@ -108,7 +108,7 @@ function Invoke-PublicSignup {
         $Token = New-LinkToMeJWT -UserId $UserId -Email $Body.email.ToLower() -Username $Body.username.ToLower() -Roles @($DefaultRole) -Permissions $DefaultPermissions
         
         # Generate refresh token
-        $RefreshToken = New-RefreshToken -UserId $UserId
+        $RefreshToken = New-RefreshToken
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
         Save-RefreshToken -Token $RefreshToken -UserId $UserId -ExpiresAt $ExpiresAt
         
