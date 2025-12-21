@@ -17,9 +17,10 @@ function Test-UsernameFormat {
     )
     
     # Username requirements:
-    # - 3-30 characters
+    # - 3-30 characters total
     # - Alphanumeric, underscore, hyphen only
     # - Must start with alphanumeric
+    # Pattern breakdown: [a-zA-Z0-9] = first char, [a-zA-Z0-9_-]{2,29} = remaining 2-29 chars = 3-30 total
     $UsernameRegex = '^[a-zA-Z0-9][a-zA-Z0-9_-]{2,29}$'
     
     return $Username -match $UsernameRegex

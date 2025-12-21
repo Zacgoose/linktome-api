@@ -23,7 +23,9 @@ function Test-EmailFormat {
     
     # Basic email regex validation
     # Matches: local-part@domain.tld
-    $EmailRegex = '^[\w\.\-\+]+@[\w\.\-]+\.\w{2,}$'
+    # Note: This is a simplified validation. For production use, consider more comprehensive validation
+    # or use built-in .NET email validation
+    $EmailRegex = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     
     return $Email -match $EmailRegex
 }

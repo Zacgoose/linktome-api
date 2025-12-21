@@ -30,11 +30,18 @@ function Add-CorsHeaders {
     if ($AllowedOriginsEnv) {
         $AllowedOrigins = $AllowedOriginsEnv -split ','
     } else {
-        # Default allowed origins
-        $AllowedOrigins = @(
-            'http://localhost:3000',
-            'http://localhost:5173'
-        )
+        # Default allowed origins - HTTP localhost only for development
+        # In production, CORS_ALLOWED_ORIGINS should be set with HTTPS origins
+        if ($env:AZURE_FUNCTIONS_ENVIRONMENT -eq 'Production') {
+            # No default origins in production - must be explicitly configured
+            $AllowedOrigins = @()
+        } else {
+            # Development defaults
+            $AllowedOrigins = @(
+                'http://localhost:3000',
+                'http://localhost:5173'
+            )
+        }
     }
     
     $Origin = $Request.Headers.Origin
