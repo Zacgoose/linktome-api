@@ -45,10 +45,27 @@ function Invoke-PublicSignup {
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
+        # Get client IP for logging
+        $ClientIP = $Request.Headers.'X-Forwarded-For'
+        if (-not $ClientIP) {
+            $ClientIP = $Request.Headers.'X-Real-IP'
+        }
+        if (-not $ClientIP) {
+            $ClientIP = 'unknown'
+        }
+        if ($ClientIP -like '*,*') {
+            $ClientIP = ($ClientIP -split ',')[0].Trim()
+        }
+        
         # Check if email exists - sanitize for query
         $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
         $ExistingEmail = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         if ($ExistingEmail) {
+            # Log failed signup attempt
+            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
+                Reason = 'EmailAlreadyRegistered'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
                 Body = @{ error = "Email already registered" }
@@ -59,6 +76,11 @@ function Invoke-PublicSignup {
         $SafeUsername = Protect-TableQueryValue -Value $Body.username.ToLower()
         $ExistingUsername = Get-AzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
         if ($ExistingUsername) {
+            # Log failed signup attempt
+            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
+                Reason = 'UsernameAlreadyTaken'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
                 Body = @{ error = "Username already taken" }
@@ -82,6 +104,9 @@ function Invoke-PublicSignup {
         }
         
         Add-AzDataTableEntity @Table -Entity $NewUser -Force
+        
+        # Log successful signup
+        Write-SecurityEvent -EventType 'SignupSuccess' -UserId $UserId -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup'
         
         $Token = New-LinkToMeJWT -UserId $UserId -Email $Body.email.ToLower() -Username $Body.username.ToLower()
         

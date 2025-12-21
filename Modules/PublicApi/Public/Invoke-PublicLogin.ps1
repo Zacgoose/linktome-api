@@ -32,7 +32,24 @@ function Invoke-PublicLogin {
         $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
         $User = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         
+        # Get client IP for logging
+        $ClientIP = $Request.Headers.'X-Forwarded-For'
+        if (-not $ClientIP) {
+            $ClientIP = $Request.Headers.'X-Real-IP'
+        }
+        if (-not $ClientIP) {
+            $ClientIP = 'unknown'
+        }
+        if ($ClientIP -like '*,*') {
+            $ClientIP = ($ClientIP -split ',')[0].Trim()
+        }
+        
         if (-not $User) {
+            # Log failed login attempt
+            Write-SecurityEvent -EventType 'LoginFailed' -Email $Body.email -IpAddress $ClientIP -Endpoint 'public/login' -Metadata @{
+                Reason = 'UserNotFound'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
                 Body = @{ error = "Invalid credentials" }
@@ -42,11 +59,19 @@ function Invoke-PublicLogin {
         $Valid = Test-PasswordHash -Password $Body.password -StoredHash $User.PasswordHash -StoredSalt $User.PasswordSalt
         
         if (-not $Valid) {
+            # Log failed login attempt
+            Write-SecurityEvent -EventType 'LoginFailed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login' -Metadata @{
+                Reason = 'InvalidPassword'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
                 Body = @{ error = "Invalid credentials" }
             }
         }
+        
+        # Log successful login
+        Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
         $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username
         
