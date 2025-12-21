@@ -60,14 +60,14 @@ function Write-SecurityEvent {
             
             $EventRecord = @{
                 PartitionKey = $EventType
-                RowKey = [DateTime]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
-                Timestamp = [DateTime]::UtcNow
+                RowKey = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
+                EventTimestamp = [DateTimeOffset]::UtcNow
                 UserId = $UserId
                 Email = $RedactedEmail
                 Username = $Username
                 IpAddress = $IpAddress
                 Endpoint = $Endpoint
-                MetadataJson = ($Metadata | ConvertTo-Json -Compress)
+                MetadataJson = if ($Metadata.Count -gt 0) { ($Metadata | ConvertTo-Json -Compress) } else { '' }
             }
             
             Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
