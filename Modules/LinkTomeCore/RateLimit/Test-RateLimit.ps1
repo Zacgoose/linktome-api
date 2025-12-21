@@ -4,7 +4,7 @@ function Test-RateLimit {
         Check if request is within rate limits
     .DESCRIPTION
         Checks rate limits using Azure Table Storage to track request counts per IP/identifier.
-        This is a temporary solution until Azure API Management or Front Door is implemented.
+        Can be upgraded to Azure API Management or Front Door for additional features.
     .PARAMETER Identifier
         Unique identifier for rate limiting (typically IP address or user ID)
     .PARAMETER Endpoint

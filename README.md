@@ -19,13 +19,13 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - **Storage:** Azure Table Storage
   - `Users` - User accounts and profiles
   - `Links` - User link collections
-  - `RateLimits` - Rate limiting tracking (temporary solution)
+  - `RateLimits` - IP-based rate limiting tracking
   - `SecurityEvents` - Security event audit log
   - `Analytics` - Page views and analytics tracking
 - **Authentication:** JWT with PBKDF2-SHA256 password hashing
-- **Frontend Integration:** Azure Static Web Apps
+- **Frontend Integration:** Azure Static Web Apps (handles CORS and security headers)
 - **Rate Limiting:** IP-based using Azure Table Storage (5 login/min, 3 signup/hour)
-- **Logging:** Azure Table Storage for security events
+- **Logging:** Azure Table Storage for security events and analytics
 
 ## Features
 
@@ -214,9 +214,11 @@ This API implements comprehensive security measures:
 - **Input Validation:** All inputs are validated and sanitized
 - **Authentication:** JWT tokens with 24-hour expiration
 - **Password Security:** PBKDF2-SHA256 with 100,000 iterations
-- **Query Protection:** Azure Table Storage queries are sanitized
+- **Query Protection:** Azure Table Storage queries are sanitized to prevent NoSQL injection
+- **Rate Limiting:** IP-based limits on login and signup endpoints
+- **Security Event Logging:** Comprehensive audit trail in Azure Table Storage
 - **Error Handling:** Safe error messages (no information disclosure in production)
-- **Security Headers:** X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, etc.
+- **Security Headers & CORS:** Handled automatically by Azure Static Web Apps integration
 
 For detailed security information, see:
 - [SECURITY_REVIEW.md](./SECURITY_REVIEW.md) - Complete security analysis
