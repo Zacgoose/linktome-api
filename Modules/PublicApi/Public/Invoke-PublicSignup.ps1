@@ -17,21 +17,61 @@ function Invoke-PublicSignup {
         }
     }
 
+    # Validate email format
+    if (-not (Test-EmailFormat -Email $Body.email)) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Invalid email format" }
+        }
+    }
+
+    # Validate username format
+    if (-not (Test-UsernameFormat -Username $Body.username)) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Username must be 3-30 characters and contain only letters, numbers, underscore, or hyphen" }
+        }
+    }
+
+    # Validate password strength
+    $PasswordCheck = Test-PasswordStrength -Password $Body.password
+    if (-not $PasswordCheck.Valid) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = $PasswordCheck.Message }
+        }
+    }
+
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
-        # Check if email exists
-        $ExistingEmail = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$($Body.email.ToLower())'" | Select-Object -First 1
+        # Get client IP for logging
+        $ClientIP = Get-ClientIPAddress -Request $Request
+        
+        # Check if email exists - sanitize for query
+        $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
+        $ExistingEmail = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         if ($ExistingEmail) {
+            # Log failed signup attempt
+            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
+                Reason = 'EmailAlreadyRegistered'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
                 Body = @{ error = "Email already registered" }
             }
         }
         
-        # Check if username exists
-        $ExistingUsername = Get-AzDataTableEntity @Table -Filter "Username eq '$($Body.username.ToLower())'" | Select-Object -First 1
+        # Check if username exists - sanitize for query
+        $SafeUsername = Protect-TableQueryValue -Value $Body.username.ToLower()
+        $ExistingUsername = Get-AzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
         if ($ExistingUsername) {
+            # Log failed signup attempt
+            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
+                Reason = 'UsernameAlreadyTaken'
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
                 Body = @{ error = "Username already taken" }
@@ -56,6 +96,9 @@ function Invoke-PublicSignup {
         
         Add-AzDataTableEntity @Table -Entity $NewUser -Force
         
+        # Log successful signup
+        Write-SecurityEvent -EventType 'SignupSuccess' -UserId $UserId -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup'
+        
         $Token = New-LinkToMeJWT -UserId $UserId -Email $Body.email.ToLower() -Username $Body.username.ToLower()
         
         $Results = @{
@@ -70,7 +113,7 @@ function Invoke-PublicSignup {
         
     } catch {
         Write-Error "Signup error: $($_.Exception.Message)"
-        $Results = @{ error = "Signup failed" }
+        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Signup failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
 

@@ -12,7 +12,10 @@ function Invoke-AdminGetProfile {
 
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
-        $filter = "RowKey eq '$($User.UserId)'"
+        
+        # Sanitize userId for query
+        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        $filter = "RowKey eq '$SafeUserId'"
         $entities = Get-AzDataTableEntity @Table -Filter $filter
         $UserData = $entities | Select-Object -First 1
 
@@ -35,7 +38,7 @@ function Invoke-AdminGetProfile {
 
     } catch {
         Write-Error "Get profile error: $($_.Exception.Message)"
-        $Results = @{ error = "Failed to get profile" }
+        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to get profile"
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
 
