@@ -46,16 +46,7 @@ function Invoke-PublicSignup {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
         # Get client IP for logging
-        $ClientIP = $Request.Headers.'X-Forwarded-For'
-        if (-not $ClientIP) {
-            $ClientIP = $Request.Headers.'X-Real-IP'
-        }
-        if (-not $ClientIP) {
-            $ClientIP = 'unknown'
-        }
-        if ($ClientIP -like '*,*') {
-            $ClientIP = ($ClientIP -split ',')[0].Trim()
-        }
+        $ClientIP = Get-ClientIPAddress -Request $Request
         
         # Check if email exists - sanitize for query
         $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()

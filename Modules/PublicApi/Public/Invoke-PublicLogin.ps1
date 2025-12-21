@@ -33,16 +33,7 @@ function Invoke-PublicLogin {
         $User = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         
         # Get client IP for logging
-        $ClientIP = $Request.Headers.'X-Forwarded-For'
-        if (-not $ClientIP) {
-            $ClientIP = $Request.Headers.'X-Real-IP'
-        }
-        if (-not $ClientIP) {
-            $ClientIP = 'unknown'
-        }
-        if ($ClientIP -like '*,*') {
-            $ClientIP = ($ClientIP -split ',')[0].Trim()
-        }
+        $ClientIP = Get-ClientIPAddress -Request $Request
         
         if (-not $User) {
             # Log failed login attempt
