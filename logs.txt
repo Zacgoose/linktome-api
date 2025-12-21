@@ -1,0 +1,371 @@
+[2025-12-21T10:13:16.137Z] INFORMATION: #### LinkToMe API Start ####
+[2025-12-21T10:13:17.946Z] INFORMATION: Function App: Local | API Version: 1.0.0 | PS Version: 7.4.12
+[2025-12-21T10:13:18.019Z] INFORMATION: Profile Load Timings: {"AllModules":1776.2,"Module_AzBobbyTables":19.76,"Module_LinkTomeCore":247.62,"Module_PrivateApi":91.84,"Module_PSJsonWebToken":1364.15,"Module_PublicApi":43.14,"Total":1796.4,"VersionCheck":20.07}
+[2025-12-21T10:13:18.109Z] INFORMATION: Processing endpoint: public/Login
+[2025-12-21T10:13:18.122Z] INFORMATION: Resolved: public/Login -> Invoke-PublicLogin
+[2025-12-21T10:13:18.362Z] WARNING: Rate limit check failed: Cannot convert the "21/12/2025 9:41:49 AM +00:00" value of type "System.DateTimeOffset" to type "System.DateTime".. Allowing request.
+[2025-12-21T10:13:18.365Z] INFORMATION: Invoking function: Invoke-PublicLogin
+[2025-12-21T10:13:18.492Z] WARNING: An input entity has at least one property with a potentially unsupported type, please ensure that the input entities have only supported data types. Unsupported property types found:
+MetadataJson
+
+https://docs.microsoft.com/en-us/rest/api/storageservices/understanding-the-table-service-data-model#property-types
+[2025-12-21T10:13:18.734Z] ERROR: Unable to cast object of type 'System.DateTime' to type 'System.Nullable`1[System.DateTimeOffset]'.
+[2025-12-21T10:13:18.737Z]
+[2025-12-21T10:13:18.739Z] Exception             :
+[2025-12-21T10:13:18.740Z]     Type       : System.InvalidCastException
+[2025-12-21T10:13:18.741Z]     TargetSite :
+[2025-12-21T10:13:18.742Z]         Name          : ConvertToTableEntity
+[2025-12-21T10:13:18.742Z]         DeclaringType : [PipeHow.AzBobbyTables.Core.Conversion.HashtableEntityConverter]
+[2025-12-21T10:13:18.743Z]         MemberType    : Method
+[2025-12-21T10:13:18.746Z]         Module        : AzBobbyTables.Core.dll
+[2025-12-21T10:13:18.746Z]     Message    : Unable to cast object of type 'System.DateTime' to type 'System.Nullable`1[System.DateTimeOffset]'.
+[2025-12-21T10:13:18.747Z]     Source     : AzBobbyTables.Core
+[2025-12-21T10:13:18.748Z]     HResult    : -2147467262
+[2025-12-21T10:13:18.750Z]     StackTrace :
+[2025-12-21T10:13:18.751Z]    at PipeHow.AzBobbyTables.Core.Conversion.HashtableEntityConverter.ConvertToTableEntity(Object obj) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/Conversion/HashtableEntityConverter.cs:line 84
+[2025-12-21T10:13:18.751Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.<>c__DisplayClass23_0.<AddEntitiesToTable>b__0(Object entity) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 267
+[2025-12-21T10:13:18.752Z]    at System.Linq.Utilities.<>c__DisplayClass2_0`3.<CombineSelectors>b__0(TSource x)
+[2025-12-21T10:13:18.753Z]    at System.Linq.Enumerable.SelectArrayIterator`2.MoveNext()
+[2025-12-21T10:13:18.754Z]    at System.Collections.Generic.List`1.AddRange(IEnumerable`1 collection)
+[2025-12-21T10:13:18.756Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 271
+[2025-12-21T10:13:18.757Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], InvalidCastException
+[2025-12-21T10:13:18.758Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
+[2025-12-21T10:13:18.759Z] InvocationInfo        :
+[2025-12-21T10:13:18.759Z]     MyCommand        : Add-AzDataTableEntity
+[2025-12-21T10:13:18.760Z]     ScriptLineNumber : 73
+[2025-12-21T10:13:18.761Z]     OffsetInLine     : 13
+[2025-12-21T10:13:18.762Z]     HistoryId        : 1
+[2025-12-21T10:13:18.764Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
+[2025-12-21T10:13:18.765Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+[2025-12-21T10:13:18.766Z]
+[2025-12-21T10:13:18.767Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
+[2025-12-21T10:13:18.768Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1:73 char:13
+[2025-12-21T10:13:18.769Z]                        +             Add-AzDataTableEntity @Table -Entity $EventRecord -Force  …
+[2025-12-21T10:13:18.771Z]                        +             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-21T10:13:18.772Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging
+[2025-12-21T10:13:18.773Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
+[2025-12-21T10:13:18.774Z]     InvocationName   : Add-AzDataTableEntity
+[2025-12-21T10:13:18.776Z]     CommandOrigin    : Internal
+[2025-12-21T10:13:18.777Z] ScriptStackTrace      : at Write-SecurityEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1: line 73
+[2025-12-21T10:13:18.777Z]                         at Invoke-PublicLogin, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1: line 65
+[2025-12-21T10:13:18.778Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
+[2025-12-21T10:13:18.779Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-21T10:13:18.780Z] PipelineIterationInfo :
+[2025-12-21T10:13:18.782Z]       0
+[2025-12-21T10:13:18.783Z]       1
+[2025-12-21T10:13:18.784Z]       0
+[2025-12-21T10:13:18.784Z]
+[2025-12-21T10:13:18.785Z]
+[2025-12-21T10:13:18.786Z] Result: ERROR: Unable to cast object of type 'System.DateTime' to type 'System.Nullable`1[System.DateTimeOffset]'.
+[2025-12-21T10:13:18.787Z]
+[2025-12-21T10:13:18.788Z] Exception             :
+[2025-12-21T10:13:18.789Z]     Type       : System.InvalidCastException
+[2025-12-21T10:13:18.790Z]     TargetSite :
+[2025-12-21T10:13:18.790Z]         Name          : ConvertToTableEntity
+[2025-12-21T10:13:18.791Z]         DeclaringType : [PipeHow.AzBobbyTables.Core.Conversion.HashtableEntityConverter]
+[2025-12-21T10:13:18.793Z]         MemberType    : Method
+[2025-12-21T10:13:18.795Z]         Module        : AzBobbyTables.Core.dll
+[2025-12-21T10:13:18.796Z]     Message    : Unable to cast object of type 'System.DateTime' to type 'System.Nullable`1[System.DateTimeOffset]'.
+[2025-12-21T10:13:18.796Z]     Source     : AzBobbyTables.Core
+[2025-12-21T10:13:18.797Z]     HResult    : -2147467262
+[2025-12-21T10:13:18.799Z]     StackTrace :
+[2025-12-21T10:13:18.800Z]    at PipeHow.AzBobbyTables.Core.Conversion.HashtableEntityConverter.ConvertToTableEntity(Object obj) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/Conversion/HashtableEntityConverter.cs:line 84
+[2025-12-21T10:13:18.801Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.<>c__DisplayClass23_0.<AddEntitiesToTable>b__0(Object entity) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 267
+[2025-12-21T10:13:18.802Z]    at System.Linq.Utilities.<>c__DisplayClass2_0`3.<CombineSelectors>b__0(TSource x)
+[2025-12-21T10:13:18.803Z]    at System.Linq.Enumerable.SelectArrayIterator`2.MoveNext()
+[2025-12-21T10:13:18.805Z]    at System.Collections.Generic.List`1.AddRange(IEnumerable`1 collection)
+[2025-12-21T10:13:18.806Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 271
+[2025-12-21T10:13:18.807Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], InvalidCastException
+[2025-12-21T10:13:18.809Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
+[2025-12-21T10:13:18.810Z] InvocationInfo        :
+[2025-12-21T10:13:18.811Z]     MyCommand        : Add-AzDataTableEntity
+[2025-12-21T10:13:18.812Z]     ScriptLineNumber : 73
+[2025-12-21T10:13:18.813Z]     OffsetInLine     : 13
+[2025-12-21T10:13:18.814Z]     HistoryId        : 1
+[2025-12-21T10:13:18.814Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
+[2025-12-21T10:13:18.815Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+[2025-12-21T10:13:18.816Z]
+[2025-12-21T10:13:18.818Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
+[2025-12-21T10:13:18.820Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1:73 char:13
+[2025-12-21T10:13:18.821Z]                        +             Add-AzDataTableEntity @Table -Entity $EventRecord -Force  …
+[2025-12-21T10:13:18.823Z]                        +             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-21T10:13:18.824Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging
+[2025-12-21T10:13:18.825Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
+[2025-12-21T10:13:18.826Z]     InvocationName   : Add-AzDataTableEntity
+[2025-12-21T10:13:18.827Z]     CommandOrigin    : Internal
+[2025-12-21T10:13:18.827Z] ScriptStackTrace      : at Write-SecurityEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1: line 73
+[2025-12-21T10:13:18.828Z]                         at Invoke-PublicLogin, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1: line 65
+[2025-12-21T10:13:18.829Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
+[2025-12-21T10:13:18.830Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-21T10:13:18.831Z] PipelineIterationInfo :
+[2025-12-21T10:13:18.832Z]       0
+[2025-12-21T10:13:18.833Z]       1
+[2025-12-21T10:13:18.835Z]       0
+[2025-12-21T10:13:18.836Z]
+[2025-12-21T10:13:18.836Z]
+Type:
+Exception: Unable to cast object of type 'System.DateTime' to type 'System.Nullable`1[System.DateTimeOffset]'.
+Stack:    at PipeHow.AzBobbyTables.Core.Conversion.HashtableEntityConverter.ConvertToTableEntity(Object obj) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/Conversion/HashtableEntityConverter.cs:line 84
+[2025-12-21T10:13:18.837Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.<>c__DisplayClass23_0.<AddEntitiesToTable>b__0(Object entity) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 267
+[2025-12-21T10:13:18.838Z]    at System.Linq.Utilities.<>c__DisplayClass2_0`3.<CombineSelectors>b__0(TSource x)
+[2025-12-21T10:13:18.839Z]    at System.Linq.Enumerable.SelectArrayIterator`2.MoveNext()
+[2025-12-21T10:13:18.840Z]    at System.Collections.Generic.List`1.AddRange(IEnumerable`1 collection)
+[2025-12-21T10:13:18.842Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 271.
+[2025-12-21T10:13:18.956Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=49a6a8d0-4f03-4d70-b713-86d5a7f8afa2, Duration=3187ms)
+[2025-12-21T10:13:19.385Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=e3568d98-c6af-4ced-b0d8-9da1a8fd101e)
+[2025-12-21T10:13:19.385Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=e87a81de-49a4-42bd-9f5e-e9977248215f)
+[2025-12-21T10:13:19.440Z] INFORMATION: Processing endpoint: admin/GetDashboardStats
+[2025-12-21T10:13:19.443Z] INFORMATION: Resolved: admin/GetDashboardStats -> Invoke-AdminGetDashboardStats
+[2025-12-21T10:13:19.477Z] INFORMATION: #### LinkToMe API Start ####
+[2025-12-21T10:13:19.714Z] INFORMATION: Invoking function: Invoke-AdminGetDashboardStats
+[2025-12-21T10:13:19.814Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=e3568d98-c6af-4ced-b0d8-9da1a8fd101e, Duration=430ms)
+[2025-12-21T10:13:20.027Z] INFORMATION: Function App: Local | API Version: 1.0.0 | PS Version: 7.4.12
+[2025-12-21T10:13:20.030Z] INFORMATION: Profile Load Timings: {"AllModules":548.76,"Module_AzBobbyTables":4.76,"Module_LinkTomeCore":201.63,"Module_PrivateApi":71.58,"Module_PSJsonWebToken":214.22,"Module_PublicApi":56.14,"Total":550.22,"VersionCheck":1.43}
+[2025-12-21T10:13:20.046Z] INFORMATION: Processing endpoint: admin/GetProfile
+[2025-12-21T10:13:20.050Z] INFORMATION: Resolved: admin/GetProfile -> Invoke-AdminGetProfile
+[2025-12-21T10:13:20.088Z] INFORMATION: Invoking function: Invoke-AdminGetProfile
+[2025-12-21T10:13:20.105Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=e87a81de-49a4-42bd-9f5e-e9977248215f, Duration=720ms)
+[2025-12-21T10:13:20.046Z] INFORMATION: Processing endpoint: admin/GetProfile
+[2025-12-21T10:13:20.050Z] INFORMATION: Resolved: admin/GetProfile -> Invoke-AdminGetProfile
+[2025-12-21T10:13:20.088Z] INFORMATION: Invoking function: Invoke-AdminGetProfile
+[2025-12-21T10:13:20.105Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=e87a81de-49a4-42bd-9f5e-e9977248215f, Duration=720ms)
+[2025-12-21T10:13:58.758Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=3b8b8844-ae5e-4af9-b74d-d8cdad49651e)
+[2025-12-21T10:13:58.771Z] INFORMATION: Processing endpoint: public/GetUserProfile
+[2025-12-21T10:13:58.772Z] INFORMATION: Resolved: public/GetUserProfile -> Invoke-PublicGetUserProfile
+[2025-12-21T10:13:58.774Z] INFORMATION: Invoking function: Invoke-PublicGetUserProfile
+[2025-12-21T10:13:58.827Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=96a208cb-90ab-40d9-a9b5-5d7ba4af5e77)
+[2025-12-21T10:13:58.841Z] INFORMATION: Processing endpoint: public/GetUserProfile
+[2025-12-21T10:13:58.843Z] INFORMATION: Resolved: public/GetUserProfile -> Invoke-PublicGetUserProfile
+[2025-12-21T10:13:58.845Z] INFORMATION: Invoking function: Invoke-PublicGetUserProfile
+[2025-12-21T10:13:58.850Z] WARNING: An input entity has at least one property with a potentially unsupported type, please ensure that the input entities have only supported data types. Unsupported property types found:
+MetadataJson
+
+https://docs.microsoft.com/en-us/rest/api/storageservices/understanding-the-table-service-data-model#property-types
+[2025-12-21T10:13:58.885Z] WARNING: An input entity has at least one property with a potentially unsupported type, please ensure that the input entities have only supported data types. Unsupported property types found:
+MetadataJson
+
+https://docs.microsoft.com/en-us/rest/api/storageservices/understanding-the-table-service-data-model#property-types
+[2025-12-21T10:13:58.980Z] ERROR: Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:58.982Z]
+[2025-12-21T10:13:58.982Z] ERROR: Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:58.982Z] Exception             :
+[2025-12-21T10:13:58.985Z]
+[2025-12-21T10:13:58.986Z]     Type       : System.NotSupportedException
+[2025-12-21T10:13:58.986Z] Exception             :
+[2025-12-21T10:13:58.988Z]     TargetSite :
+[2025-12-21T10:13:58.992Z]         Name          : WriteObjectValue
+[2025-12-21T10:13:58.992Z]         DeclaringType : [Azure.Data.Tables.ModelSerializationExtensions]
+[2025-12-21T10:13:58.993Z]         MemberType    : Method
+[2025-12-21T10:13:58.994Z]         Module        : Azure.Data.Tables.dll
+[2025-12-21T10:13:58.990Z]     Type       : System.NotSupportedException
+[2025-12-21T10:13:58.995Z]     Message    : Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:58.997Z]     TargetSite :
+[2025-12-21T10:13:58.999Z]     Source     : Azure.Data.Tables
+[2025-12-21T10:13:59.000Z]         Name          : WriteObjectValue
+[2025-12-21T10:13:59.001Z]     HResult    : -2146233067
+[2025-12-21T10:13:59.002Z]         DeclaringType : [Azure.Data.Tables.ModelSerializationExtensions]
+[2025-12-21T10:13:59.004Z]         MemberType    : Method
+[2025-12-21T10:13:59.005Z]         Module        : Azure.Data.Tables.dll
+[2025-12-21T10:13:59.006Z]     Message    : Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:59.003Z]     StackTrace :
+[2025-12-21T10:13:59.007Z]     Source     : Azure.Data.Tables
+[2025-12-21T10:13:59.008Z]    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
+[2025-12-21T10:13:59.009Z]     HResult    : -2146233067
+[2025-12-21T10:13:59.011Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
+[2025-12-21T10:13:59.012Z]     StackTrace :
+[2025-12-21T10:13:59.013Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
+[2025-12-21T10:13:59.016Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
+[2025-12-21T10:13:59.015Z]    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
+[2025-12-21T10:13:59.017Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.019Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
+[2025-12-21T10:13:59.020Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
+[2025-12-21T10:13:59.021Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
+[2025-12-21T10:13:59.022Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.023Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
+[2025-12-21T10:13:59.025Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
+[2025-12-21T10:13:59.027Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273
+[2025-12-21T10:13:59.026Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.029Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], NotSupportedException
+[2025-12-21T10:13:59.030Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
+[2025-12-21T10:13:59.031Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
+[2025-12-21T10:13:59.032Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.033Z] InvocationInfo        :
+[2025-12-21T10:13:59.034Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
+[2025-12-21T10:13:59.035Z]     MyCommand        : Add-AzDataTableEntity
+[2025-12-21T10:13:59.035Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273
+[2025-12-21T10:13:59.036Z]     ScriptLineNumber : 63
+[2025-12-21T10:13:59.037Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], NotSupportedException
+[2025-12-21T10:13:59.039Z]     OffsetInLine     : 9
+[2025-12-21T10:13:59.040Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
+[2025-12-21T10:13:59.041Z]     HistoryId        : 1
+[2025-12-21T10:13:59.042Z] InvocationInfo        :
+[2025-12-21T10:13:59.044Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.045Z]     MyCommand        : Add-AzDataTableEntity
+[2025-12-21T10:13:59.047Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+[2025-12-21T10:13:59.048Z]     ScriptLineNumber : 63
+[2025-12-21T10:13:59.049Z]
+[2025-12-21T10:13:59.050Z]     OffsetInLine     : 9
+[2025-12-21T10:13:59.051Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
+[2025-12-21T10:13:59.052Z]     HistoryId        : 1
+[2025-12-21T10:13:59.053Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1:63 char:9
+[2025-12-21T10:13:59.055Z]                        +         Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Ou …
+[2025-12-21T10:13:59.054Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.056Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-21T10:13:59.059Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics
+[2025-12-21T10:13:59.060Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.061Z]     InvocationName   : Add-AzDataTableEntity[2025-12-21T10:13:59.058Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+
+[2025-12-21T10:13:59.063Z]     CommandOrigin    : Internal
+[2025-12-21T10:13:59.064Z] ScriptStackTrace      : at Write-AnalyticsEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1: line 63
+[2025-12-21T10:13:59.065Z]                         at Invoke-PublicGetUserProfile, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PublicApi\Public\Invoke-PublicGetUserProfile.ps1: line 71
+[2025-12-21T10:13:59.066Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
+[2025-12-21T10:13:59.067Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-21T10:13:59.068Z] PipelineIterationInfo :
+[2025-12-21T10:13:59.063Z]
+[2025-12-21T10:13:59.069Z]       0
+[2025-12-21T10:13:59.070Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
+[2025-12-21T10:13:59.071Z]       1
+[2025-12-21T10:13:59.072Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1:63 char:9
+[2025-12-21T10:13:59.073Z]       0
+[2025-12-21T10:13:59.074Z]                        +         Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Ou …
+[2025-12-21T10:13:59.076Z]
+[2025-12-21T10:13:59.077Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-21T10:13:59.078Z]
+[2025-12-21T10:13:59.079Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics
+[2025-12-21T10:13:59.081Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.079Z] Result: ERROR: Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:59.081Z]     InvocationName   : Add-AzDataTableEntity
+[2025-12-21T10:13:59.082Z]
+[2025-12-21T10:13:59.083Z]     CommandOrigin    : Internal
+[2025-12-21T10:13:59.084Z] Exception             :
+[2025-12-21T10:13:59.085Z] ScriptStackTrace      : at Write-AnalyticsEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1: line 63
+[2025-12-21T10:13:59.087Z]     Type       : System.NotSupportedException
+[2025-12-21T10:13:59.088Z]                         at Invoke-PublicGetUserProfile, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PublicApi\Public\Invoke-PublicGetUserProfile.ps1: line 71
+[2025-12-21T10:13:59.091Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
+[2025-12-21T10:13:59.089Z]     TargetSite :
+[2025-12-21T10:13:59.092Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-21T10:13:59.093Z]         Name          : WriteObjectValue
+[2025-12-21T10:13:59.095Z] PipelineIterationInfo :
+[2025-12-21T10:13:59.097Z]         DeclaringType : [Azure.Data.Tables.ModelSerializationExtensions]
+[2025-12-21T10:13:59.098Z]       0
+[2025-12-21T10:13:59.101Z]       1
+[2025-12-21T10:13:59.099Z]         MemberType    : Method
+[2025-12-21T10:13:59.102Z]       0
+[2025-12-21T10:13:59.104Z]
+[2025-12-21T10:13:59.105Z]
+[2025-12-21T10:13:59.105Z] Result: ERROR: Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:59.103Z]         Module        : Azure.Data.Tables.dll
+[2025-12-21T10:13:59.107Z]
+[2025-12-21T10:13:59.108Z]     Message    : Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:59.109Z] Exception             :
+[2025-12-21T10:13:59.110Z]     Source     : Azure.Data.Tables
+[2025-12-21T10:13:59.111Z]     Type       : System.NotSupportedException
+[2025-12-21T10:13:59.113Z]     HResult    : -2146233067
+[2025-12-21T10:13:59.115Z]     TargetSite :
+[2025-12-21T10:13:59.116Z]     StackTrace :
+[2025-12-21T10:13:59.117Z]         Name          : WriteObjectValue
+[2025-12-21T10:13:59.118Z]    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
+[2025-12-21T10:13:59.120Z]         DeclaringType : [Azure.Data.Tables.ModelSerializationExtensions]
+[2025-12-21T10:13:59.122Z]         MemberType    : Method
+[2025-12-21T10:13:59.121Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
+[2025-12-21T10:13:59.123Z]         Module        : Azure.Data.Tables.dll
+[2025-12-21T10:13:59.127Z]     Message    : Not supported type System.Management.Automation.PSObject
+[2025-12-21T10:13:59.128Z]     Source     : Azure.Data.Tables
+[2025-12-21T10:13:59.125Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
+[2025-12-21T10:13:59.129Z]     HResult    : -2146233067
+[2025-12-21T10:13:59.131Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
+[2025-12-21T10:13:59.133Z]     StackTrace :
+[2025-12-21T10:13:59.135Z]    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
+[2025-12-21T10:13:59.134Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.137Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
+[2025-12-21T10:13:59.138Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
+[2025-12-21T10:13:59.139Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
+[2025-12-21T10:13:59.141Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
+[2025-12-21T10:13:59.140Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.143Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.144Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
+[2025-12-21T10:13:59.146Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273
+[2025-12-21T10:13:59.145Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
+[2025-12-21T10:13:59.147Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], NotSupportedException
+[2025-12-21T10:13:59.148Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.149Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
+[2025-12-21T10:13:59.150Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
+[2025-12-21T10:13:59.151Z] InvocationInfo        :
+[2025-12-21T10:13:59.153Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273
+[2025-12-21T10:13:59.154Z]     MyCommand        : Add-AzDataTableEntity
+[2025-12-21T10:13:59.155Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], NotSupportedException
+[2025-12-21T10:13:59.156Z]     ScriptLineNumber : 63
+[2025-12-21T10:13:59.157Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
+[2025-12-21T10:13:59.158Z]     OffsetInLine     : 9
+[2025-12-21T10:13:59.159Z] InvocationInfo        :
+[2025-12-21T10:13:59.161Z]     HistoryId        : 1
+[2025-12-21T10:13:59.162Z]     MyCommand        : Add-AzDataTableEntity
+[2025-12-21T10:13:59.163Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.164Z]     ScriptLineNumber : 63
+[2025-12-21T10:13:59.165Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+[2025-12-21T10:13:59.166Z]     OffsetInLine     : 9
+[2025-12-21T10:13:59.168Z]
+[2025-12-21T10:13:59.169Z]     HistoryId        : 1
+[2025-12-21T10:13:59.170Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
+[2025-12-21T10:13:59.173Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.174Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1:63 char:9
+[2025-12-21T10:13:59.175Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+[2025-12-21T10:13:59.177Z]
+[2025-12-21T10:13:59.176Z]                        +         Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Ou …
+[2025-12-21T10:13:59.179Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
+[2025-12-21T10:13:59.180Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-21T10:13:59.181Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1:63 char:9
+[2025-12-21T10:13:59.182Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics
+[2025-12-21T10:13:59.183Z]                        +         Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Ou …
+[2025-12-21T10:13:59.184Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.185Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-21T10:13:59.187Z]     InvocationName   : Add-AzDataTableEntity
+[2025-12-21T10:13:59.189Z]     CommandOrigin    : Internal
+[2025-12-21T10:13:59.188Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics
+[2025-12-21T10:13:59.191Z] ScriptStackTrace      : at Write-AnalyticsEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1: line 63
+[2025-12-21T10:13:59.192Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1
+[2025-12-21T10:13:59.193Z]                         at Invoke-PublicGetUserProfile, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PublicApi\Public\Invoke-PublicGetUserProfile.ps1: line 71
+[2025-12-21T10:13:59.194Z]     InvocationName   : Add-AzDataTableEntity
+[2025-12-21T10:13:59.196Z]     CommandOrigin    : Internal
+[2025-12-21T10:13:59.195Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
+[2025-12-21T10:13:59.197Z] ScriptStackTrace      : at Write-AnalyticsEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Analytics\Write-AnalyticsEvent.ps1: line 63
+[2025-12-21T10:13:59.199Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-21T10:13:59.200Z] PipelineIterationInfo :
+[2025-12-21T10:13:59.200Z]                         at Invoke-PublicGetUserProfile, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PublicApi\Public\Invoke-PublicGetUserProfile.ps1: line 71
+[2025-12-21T10:13:59.202Z]       0
+[2025-12-21T10:13:59.203Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
+[2025-12-21T10:13:59.205Z]       1
+[2025-12-21T10:13:59.206Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-21T10:13:59.207Z]       0
+[2025-12-21T10:13:59.208Z] PipelineIterationInfo :
+[2025-12-21T10:13:59.211Z]       0
+[2025-12-21T10:13:59.210Z]
+[2025-12-21T10:13:59.212Z]       1
+[2025-12-21T10:13:59.212Z]
+Type:
+Exception: Not supported type System.Management.Automation.PSObject
+Stack:    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
+[2025-12-21T10:13:59.214Z]       0
+[2025-12-21T10:13:59.215Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
+[2025-12-21T10:13:59.216Z]
+[2025-12-21T10:13:59.218Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
+[2025-12-21T10:13:59.218Z]
+Type:
+Exception: Not supported type System.Management.Automation.PSObject
+Stack:    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
+[2025-12-21T10:13:59.220Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
+[2025-12-21T10:13:59.221Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
+[2025-12-21T10:13:59.222Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.223Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
+[2025-12-21T10:13:59.224Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
+[2025-12-21T10:13:59.225Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
+[2025-12-21T10:13:59.227Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.226Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.229Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
+[2025-12-21T10:13:59.230Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
+[2025-12-21T10:13:59.231Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
+[2025-12-21T10:13:59.232Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273.
+[2025-12-21T10:13:59.233Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
+[2025-12-21T10:13:59.235Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=3b8b8844-ae5e-4af9-b74d-d8cdad49651e, Duration=479ms)
+[2025-12-21T10:13:59.235Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273.
+[2025-12-21T10:13:59.239Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=96a208cb-90ab-40d9-a9b5-5d7ba4af5e77, Duration=412ms)
