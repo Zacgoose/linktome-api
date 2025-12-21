@@ -82,6 +82,10 @@ function Invoke-PublicSignup {
         $PasswordData = New-PasswordHash -Password $Body.password
         $UserId = 'user-' + (New-Guid).ToString()
         
+        # Assign default role and permissions
+        $DefaultRole = 'user'
+        $DefaultPermissions = Get-DefaultRolePermissions -Role $DefaultRole
+        
         $NewUser = @{
             PartitionKey = $Body.email.ToLower()
             RowKey = $UserId
@@ -92,6 +96,8 @@ function Invoke-PublicSignup {
             PasswordHash = $PasswordData.Hash
             PasswordSalt = $PasswordData.Salt
             IsActive = $true
+            Roles = @($DefaultRole)
+            Permissions = $DefaultPermissions
         }
         
         Add-AzDataTableEntity @Table -Entity $NewUser -Force
@@ -99,15 +105,23 @@ function Invoke-PublicSignup {
         # Log successful signup
         Write-SecurityEvent -EventType 'SignupSuccess' -UserId $UserId -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup'
         
-        $Token = New-LinkToMeJWT -UserId $UserId -Email $Body.email.ToLower() -Username $Body.username.ToLower()
+        $Token = New-LinkToMeJWT -UserId $UserId -Email $Body.email.ToLower() -Username $Body.username.ToLower() -Roles @($DefaultRole) -Permissions $DefaultPermissions
+        
+        # Generate refresh token
+        $RefreshToken = New-RefreshToken -UserId $UserId
+        $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
+        Save-RefreshToken -Token $RefreshToken -UserId $UserId -ExpiresAt $ExpiresAt
         
         $Results = @{
             user = @{
                 userId = $UserId
                 email = $Body.email.ToLower()
                 username = $Body.username.ToLower()
+                roles = @($DefaultRole)
+                permissions = $DefaultPermissions
             }
             accessToken = $Token
+            refreshToken = $RefreshToken
         }
         $StatusCode = [HttpStatusCode]::Created
         
