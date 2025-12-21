@@ -80,7 +80,7 @@ function Invoke-PublicLogin {
         $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyId $User.CompanyId
         
         # Generate refresh token
-        $RefreshToken = New-RefreshToken -UserId $User.RowKey
+        $RefreshToken = New-RefreshToken
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
         Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
         

@@ -72,7 +72,7 @@ function Invoke-PublicRefreshToken {
         $NewAccessToken = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyId $User.CompanyId
         
         # Generate new refresh token (rotation)
-        $NewRefreshToken = New-RefreshToken -UserId $User.RowKey
+        $NewRefreshToken = New-RefreshToken
         
         # Invalidate old refresh token
         Remove-RefreshToken -Token $Body.refreshToken
