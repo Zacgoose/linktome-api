@@ -58,6 +58,16 @@ function Write-SecurityEvent {
         try {
             $Table = Get-LinkToMeTable -TableName 'SecurityEvents'
             
+            # Serialize metadata properly - handle null, hashtable, or other types
+            $MetadataJsonValue = ''
+            if ($null -ne $Metadata) {
+                if ($Metadata -is [hashtable] -and $Metadata.Count -gt 0) {
+                    $MetadataJsonValue = ($Metadata | ConvertTo-Json -Compress)
+                } elseif ($Metadata -is [string]) {
+                    $MetadataJsonValue = $Metadata
+                }
+            }
+            
             $EventRecord = @{
                 PartitionKey = $EventType
                 RowKey = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
@@ -67,7 +77,7 @@ function Write-SecurityEvent {
                 Username = $Username
                 IpAddress = $IpAddress
                 Endpoint = $Endpoint
-                MetadataJson = if ($Metadata.Count -gt 0) { ($Metadata | ConvertTo-Json -Compress) } else { '' }
+                MetadataJson = $MetadataJsonValue
             }
             
             Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null

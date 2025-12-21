@@ -26,6 +26,7 @@ function Invoke-AdminUpdateAppearance {
         }
         
         # Validate and update appearance settings
+        # Note: Need to use Add-Member to add new properties to table entity objects
         if ($Body.theme) {
             if ($Body.theme -notin @('light', 'dark')) {
                 return [HttpResponseContext]@{
@@ -33,7 +34,11 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Theme must be 'light' or 'dark'" }
                 }
             }
-            $UserData.Theme = $Body.theme
+            if ($null -eq $UserData.Theme) {
+                $UserData | Add-Member -MemberType NoteProperty -Name 'Theme' -Value $Body.theme -Force
+            } else {
+                $UserData.Theme = $Body.theme
+            }
         }
         
         if ($Body.buttonStyle) {
@@ -43,7 +48,11 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Button style must be 'rounded', 'square', or 'pill'" }
                 }
             }
-            $UserData.ButtonStyle = $Body.buttonStyle
+            if ($null -eq $UserData.ButtonStyle) {
+                $UserData | Add-Member -MemberType NoteProperty -Name 'ButtonStyle' -Value $Body.buttonStyle -Force
+            } else {
+                $UserData.ButtonStyle = $Body.buttonStyle
+            }
         }
         
         # Validate hex color codes
@@ -56,7 +65,11 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Background color must be a valid hex color (e.g., #ffffff)" }
                 }
             }
-            $UserData.BackgroundColor = $Body.backgroundColor
+            if ($null -eq $UserData.BackgroundColor) {
+                $UserData | Add-Member -MemberType NoteProperty -Name 'BackgroundColor' -Value $Body.backgroundColor -Force
+            } else {
+                $UserData.BackgroundColor = $Body.backgroundColor
+            }
         }
         
         if ($Body.textColor) {
@@ -66,7 +79,11 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Text color must be a valid hex color (e.g., #000000)" }
                 }
             }
-            $UserData.TextColor = $Body.textColor
+            if ($null -eq $UserData.TextColor) {
+                $UserData | Add-Member -MemberType NoteProperty -Name 'TextColor' -Value $Body.textColor -Force
+            } else {
+                $UserData.TextColor = $Body.textColor
+            }
         }
         
         if ($Body.buttonColor) {
@@ -76,7 +93,11 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Button color must be a valid hex color (e.g., #000000)" }
                 }
             }
-            $UserData.ButtonColor = $Body.buttonColor
+            if ($null -eq $UserData.ButtonColor) {
+                $UserData | Add-Member -MemberType NoteProperty -Name 'ButtonColor' -Value $Body.buttonColor -Force
+            } else {
+                $UserData.ButtonColor = $Body.buttonColor
+            }
         }
         
         if ($Body.buttonTextColor) {
@@ -86,7 +107,11 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Button text color must be a valid hex color (e.g., #ffffff)" }
                 }
             }
-            $UserData.ButtonTextColor = $Body.buttonTextColor
+            if ($null -eq $UserData.ButtonTextColor) {
+                $UserData | Add-Member -MemberType NoteProperty -Name 'ButtonTextColor' -Value $Body.buttonTextColor -Force
+            } else {
+                $UserData.ButtonTextColor = $Body.buttonTextColor
+            }
         }
         
         # Save updated appearance
