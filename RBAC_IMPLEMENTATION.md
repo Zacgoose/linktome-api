@@ -43,6 +43,19 @@ This document summarizes the implementation of the Role-Based Access Control (RB
   - Output: `{ "success": true }`
   - Marks refresh token as invalid in database
 
+- **PUT /api/admin/AssignRole**: Assign role to a user (MVP)
+  - Input: `{ "userId": "string", "role": "user|admin|company_owner" }`
+  - Output: `{ "success": true, "userId": "string", "role": "string", "permissions": [...] }`
+  - Admin can assign any role; company_owner can only manage their company's users
+  - Automatically updates user permissions based on role
+  - Logs role assignment event
+
+- **GET /api/admin/GetUserRoles**: Get roles and permissions for a user (MVP)
+  - Input: Query param `userId`
+  - Output: `{ "success": true, "userId": "string", "username": "string", "roles": [...], "permissions": [...], "companyId": "string" }`
+  - Admin can view any user; company_owner can only view their company's users
+  - Returns user's current roles, permissions, and company affiliation
+
 #### 4. Updated Endpoints
 - **POST /api/public/Login**: Now returns refresh token and user roles/permissions
   - New output fields:
@@ -69,9 +82,9 @@ This document summarizes the implementation of the Role-Based Access Control (RB
 
 #### 6. Role System
 - **Get-DefaultRolePermissions**: Provides default permissions for each role
-  - `user`: Basic profile, links, appearance, analytics, dashboard access
-  - `admin`: User role permissions + user management (`read:users`, `write:users`, `manage:users`)
-  - `company_owner`: User role permissions + company management (`read:company`, `write:company`, `read:company_members`, `manage:company_members`)
+  - `user`: Basic profile, links, appearance, analytics, dashboard access (8 permissions)
+  - `admin`: User role permissions + user management (`read:users`, `write:users`, `manage:users`) (11 permissions)
+  - `company_owner`: User role permissions + user management + company management (`read:users`, `manage:users`, `read:company`, `write:company`, `read:company_members`, `manage:company_members`) (14 permissions)
 
 #### 7. Security Events
 - New security events logged:
@@ -107,6 +120,8 @@ This document summarizes the implementation of the Role-Based Access Control (RB
 | `/api/admin/createUser` | `write:users` |
 | `/api/admin/updateUser` | `write:users` |
 | `/api/admin/deleteUser` | `manage:users` |
+| `/api/admin/assignRole` | `manage:users` |
+| `/api/admin/getUserRoles` | `read:users` |
 | `/api/admin/getCompany` | `read:company` |
 | `/api/admin/updateCompany` | `write:company` |
 | `/api/admin/getCompanyMembers` | `read:company_members` |
@@ -130,6 +145,8 @@ This document summarizes the implementation of the Role-Based Access Control (RB
 ### New Endpoints
 - `Modules/PublicApi/Public/Invoke-PublicRefreshToken.ps1`
 - `Modules/PublicApi/Public/Invoke-PublicLogout.ps1`
+- `Modules/PrivateApi/Public/Invoke-AdminAssignRole.ps1`
+- `Modules/PrivateApi/Public/Invoke-AdminGetUserRoles.ps1`
 
 ## Files Modified
 

@@ -516,3 +516,198 @@ curl http://localhost:7071/api/admin/getUsers \
    - Implement company endpoints
    - Add role/permission management API
    - Add automated tests
+
+---
+
+## Scenario 11: Assign Role to User (MVP Feature)
+
+**Test**: Verify admin/company_owner can assign roles to users
+
+**Setup**: Need users with admin or company_owner role
+
+```bash
+# 1. Login as admin user
+curl -X POST http://localhost:7071/api/public/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "AdminPass123"
+  }'
+
+# Extract admin access token
+export ADMIN_TOKEN="eyJ..."
+
+# 2. Assign admin role to a user
+curl -X PUT http://localhost:7071/api/admin/assignRole \
+  -H "Authorization: ******" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user-xxxxx",
+    "role": "admin"
+  }'
+```
+
+**Expected Response**:
+```json
+{
+  "success": true,
+  "userId": "user-xxxxx",
+  "role": "admin",
+  "permissions": [
+    "read:dashboard",
+    "read:profile",
+    "write:profile",
+    "read:links",
+    "write:links",
+    "read:appearance",
+    "write:appearance",
+    "read:analytics",
+    "read:users",
+    "write:users",
+    "manage:users"
+  ]
+}
+```
+
+**Verification**:
+- ✅ Request succeeds with 200 OK
+- ✅ User role is updated in database
+- ✅ User permissions are automatically updated based on role
+- ✅ Security event logged for role assignment
+
+---
+
+## Scenario 12: Get User Roles and Permissions
+
+**Test**: Verify admin/company_owner can view user roles and permissions
+
+```bash
+# 1. Get roles for a specific user
+curl "http://localhost:7071/api/admin/getUserRoles?userId=user-xxxxx" \
+  -H "Authorization: ******"
+```
+
+**Expected Response**:
+```json
+{
+  "success": true,
+  "userId": "user-xxxxx",
+  "username": "testuser",
+  "email": "testuser@example.com",
+  "roles": ["admin"],
+  "permissions": [
+    "read:dashboard",
+    "read:profile",
+    "write:profile",
+    "read:links",
+    "write:links",
+    "read:appearance",
+    "write:appearance",
+    "read:analytics",
+    "read:users",
+    "write:users",
+    "manage:users"
+  ],
+  "companyId": null
+}
+```
+
+**Verification**:
+- ✅ Request succeeds with 200 OK
+- ✅ Returns current roles and permissions
+- ✅ Includes company information if applicable
+
+---
+
+## Scenario 13: Company Owner Access Control
+
+**Test**: Verify company_owner can only manage users in their company
+
+**Setup**: Need two users with company_owner role in different companies
+
+```bash
+# 1. Login as company_owner
+curl -X POST http://localhost:7071/api/public/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "owner1@company1.com",
+    "password": "Pass123"
+  }'
+
+export OWNER1_TOKEN="eyJ..."
+
+# 2. Try to view user from different company
+curl "http://localhost:7071/api/admin/getUserRoles?userId=user-from-company2" \
+  -H "Authorization: ******"
+```
+
+**Expected Response**:
+```json
+{
+  "success": false,
+  "error": "Company owners can only view users in their own company"
+}
+```
+
+**HTTP Status**: 403 Forbidden
+
+**Verification**:
+- ✅ Request is rejected with 403 status
+- ✅ Company_owner cannot view users from other companies
+- ✅ Company_owner cannot assign roles to users from other companies
+
+---
+
+## Scenario 14: Invalid Role Assignment
+
+**Test**: Verify system rejects invalid role values
+
+```bash
+# Try to assign invalid role
+curl -X PUT http://localhost:7071/api/admin/assignRole \
+  -H "Authorization: ******" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user-xxxxx",
+    "role": "superadmin"
+  }'
+```
+
+**Expected Response**:
+```json
+{
+  "success": false,
+  "error": "Invalid role. Allowed roles: user, admin, company_owner"
+}
+```
+
+**HTTP Status**: 400 Bad Request
+
+**Verification**:
+- ✅ Request is rejected with 400 status
+- ✅ Only valid roles are accepted
+- ✅ User's role remains unchanged
+
+---
+
+## Updated Testing Checklist
+
+- [ ] New user signup returns roles and permissions
+- [ ] Login returns refresh token
+- [ ] Access token expires after 15 minutes (or verify exp claim)
+- [ ] Refresh token generates new tokens
+- [ ] Old refresh tokens are invalidated after refresh
+- [ ] Logout invalidates refresh tokens
+- [ ] Users can access endpoints they have permission for
+- [ ] Users get 403 for endpoints they lack permission for
+- [ ] JWT contains all required claims
+- [ ] RefreshTokens table is created and populated
+- [ ] Users table stores roles and permissions
+- [ ] Security events are logged correctly
+- [ ] Admin users can access admin endpoints
+- [ ] Permission errors include which permission is required
+- [ ] **Admin can assign roles to users**
+- [ ] **Company_owner can assign roles to their company's users**
+- [ ] **Admin can view user roles and permissions**
+- [ ] **Company_owner can only manage their own company's users**
+- [ ] **Invalid roles are rejected**
