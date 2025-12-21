@@ -50,14 +50,14 @@ function Write-AnalyticsEvent {
         # Use timestamp + random ID for unique RowKey
         $EventRecord = @{
             PartitionKey = $UserId
-            RowKey = [DateTime]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
+            RowKey = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
             EventTimestamp = [DateTimeOffset]::UtcNow
             EventType = $EventType
             Username = $Username
             IpAddress = $IpAddress
             UserAgent = $UserAgent
             Referrer = $Referrer
-            MetadataJson = ($Metadata | ConvertTo-Json -Compress)
+            MetadataJson = if ($Metadata.Count -gt 0) { ($Metadata | ConvertTo-Json -Compress) } else { '' }
         }
         
         Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null

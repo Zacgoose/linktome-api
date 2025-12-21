@@ -43,7 +43,7 @@ function Test-RateLimit {
         $RowKey = $RowKey.Trim('-')  # Remove leading/trailing dashes
         
         # Get current timestamp
-        $Now = [DateTime]::UtcNow
+        $Now = [DateTimeOffset]::UtcNow
         $WindowStart = $Now.AddSeconds(-$WindowSeconds)
         
         # Try to get existing rate limit record
@@ -69,7 +69,7 @@ function Test-RateLimit {
         }
         
         # Check if we're still in the same time window
-        $RecordWindowStart = [DateTime]$RateLimitRecord.WindowStart
+        $RecordWindowStart = [DateTimeOffset]$RateLimitRecord.WindowStart
         
         if ($RecordWindowStart -lt $WindowStart) {
             # Window expired - reset counter
