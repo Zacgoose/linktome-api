@@ -16,8 +16,6 @@ function Write-SecurityEvent {
         Client IP address
     .PARAMETER Endpoint
         The endpoint being accessed
-    .PARAMETER Metadata
-        Additional metadata as hashtable
     .EXAMPLE
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.UserId -Email $User.Email -IpAddress $ClientIP
     #>
@@ -35,9 +33,7 @@ function Write-SecurityEvent {
         
         [string]$IpAddress,
         
-        [string]$Endpoint,
-        
-        [hashtable]$Metadata = @{}
+        [string]$Endpoint
     )
     
     try {
@@ -57,17 +53,6 @@ function Write-SecurityEvent {
         # Store all security events in Azure Table Storage for auditing
         try {
             $Table = Get-LinkToMeTable -TableName 'SecurityEvents'
-            
-            # Serialize metadata properly - handle null, hashtable, or other types
-            $MetadataJsonValue = ''
-            if ($null -ne $Metadata) {
-                if ($Metadata -is [hashtable] -and $Metadata.Count -gt 0) {
-                    $MetadataJsonValue = ($Metadata | ConvertTo-Json -Compress)
-                } elseif ($Metadata -is [string]) {
-                    $MetadataJsonValue = $Metadata
-                }
-            }
-            
             $EventRecord = @{
                 PartitionKey = $EventType
                 RowKey = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
@@ -77,9 +62,7 @@ function Write-SecurityEvent {
                 Username = $Username
                 IpAddress = $IpAddress
                 Endpoint = $Endpoint
-                MetadataJson = $MetadataJsonValue
             }
-            
             Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
         } catch {
             Write-Warning "Failed to store security event in table storage: $($_.Exception.Message)"
