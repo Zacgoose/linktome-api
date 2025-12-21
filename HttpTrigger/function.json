@@ -1,0 +1,19 @@
+{
+  "scriptFile": "../Modules/LinkTomeEntrypoints/LinkTomeEntrypoints.psm1",
+  "entryPoint": "Receive-LinkTomeHttpTrigger",
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "Request",
+      "methods": ["get", "post", "put", "delete"],
+      "route": "{*Endpoint}"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "Response"
+    }
+  ]
+}

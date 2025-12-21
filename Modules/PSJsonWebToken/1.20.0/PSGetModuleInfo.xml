@@ -1,0 +1,185 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.PowerShell.Commands.PSRepositoryItemInfo</T>
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <S N="Name">PSJsonWebToken</S>
+      <Version N="Version">1.20.0</Version>
+      <S N="Type">Module</S>
+      <S N="Description">This PowerShell module contains functions that facilitate the creation, validation, and decoding of JWTs (JSON Web Tokens) as well as the creation of JWKs (JSON Web Keys).</S>
+      <S N="Author">Tony Guimelli</S>
+      <S N="CompanyName">anthonyg-1</S>
+      <Nil N="Copyright" />
+      <DT N="PublishedDate">2025-12-05T22:35:31+08:00</DT>
+      <Obj N="InstalledDate" RefId="1">
+        <DT>2025-12-21T12:49:29.6590834+08:00</DT>
+        <MS>
+          <Obj N="DisplayHint" RefId="2">
+            <TN RefId="1">
+              <T>Microsoft.PowerShell.Commands.DisplayHintType</T>
+              <T>System.Enum</T>
+              <T>System.ValueType</T>
+              <T>System.Object</T>
+            </TN>
+            <ToString>DateTime</ToString>
+            <I32>2</I32>
+          </Obj>
+        </MS>
+      </Obj>
+      <Nil N="UpdatedDate" />
+      <URI N="LicenseUri">https://github.com/anthonyg-1/PSJsonWebToken/blob/main/LICENSE</URI>
+      <URI N="ProjectUri">https://github.com/anthonyg-1/PSJsonWebToken</URI>
+      <Nil N="IconUri" />
+      <Obj N="Tags" RefId="3">
+        <TN RefId="2">
+          <T>System.Object[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>jwt</S>
+          <S>jwk</S>
+          <S>jsonwebtoken</S>
+          <S>jsonwebkey</S>
+          <S>oidc</S>
+          <S>openidconnect</S>
+          <S>PSModule</S>
+          <S>PSEdition_Desktop</S>
+          <S>PSEdition_Core</S>
+        </LST>
+      </Obj>
+      <Obj N="Includes" RefId="4">
+        <TN RefId="3">
+          <T>System.Collections.Hashtable</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">DscResource</S>
+            <Obj N="Value" RefId="5">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Command</S>
+            <Obj N="Value" RefId="6">
+              <TNRef RefId="2" />
+              <LST>
+                <S>ConvertTo-Base64UrlEncodedString</S>
+                <S>ConvertFrom-Base64UrlEncodedString</S>
+                <S>Get-JwtKeyIdentifier</S>
+                <S>New-JwtSignature</S>
+                <S>New-JsonWebToken</S>
+                <S>Test-JsonWebToken</S>
+                <S>ConvertFrom-EncodedJsonWebToken</S>
+                <S>New-JsonWebKeySet</S>
+                <S>New-JsonWebKey</S>
+                <S>Get-JsonWebTokenHeader</S>
+                <S>Get-JsonWebTokenPayload</S>
+                <S>Get-JsonWebTokenSignature</S>
+                <S>ConvertTo-JwtPart</S>
+                <S>Test-JwtStructure</S>
+                <S>Test-JwtSignature</S>
+                <S>Convert-DateTimeToEpoch</S>
+                <S>Convert-EpochToDateTime</S>
+                <S>Test-JwtDateRange</S>
+                <S>Convert-X509CertificateToBase64</S>
+                <S>Get-JwkCollection</S>
+                <S>Show-DecodedJwt</S>
+                <S>Show-EncodedJwt</S>
+                <S>Test-JwtSecret</S>
+                <S>Convert-JwkToPem</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">RoleCapability</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+          <En>
+            <S N="Key">Cmdlet</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+          <En>
+            <S N="Key">Function</S>
+            <Obj N="Value" RefId="7">
+              <TNRef RefId="2" />
+              <LST>
+                <S>ConvertTo-Base64UrlEncodedString</S>
+                <S>ConvertFrom-Base64UrlEncodedString</S>
+                <S>Get-JwtKeyIdentifier</S>
+                <S>New-JwtSignature</S>
+                <S>New-JsonWebToken</S>
+                <S>Test-JsonWebToken</S>
+                <S>ConvertFrom-EncodedJsonWebToken</S>
+                <S>New-JsonWebKeySet</S>
+                <S>New-JsonWebKey</S>
+                <S>Get-JsonWebTokenHeader</S>
+                <S>Get-JsonWebTokenPayload</S>
+                <S>Get-JsonWebTokenSignature</S>
+                <S>ConvertTo-JwtPart</S>
+                <S>Test-JwtStructure</S>
+                <S>Test-JwtSignature</S>
+                <S>Convert-DateTimeToEpoch</S>
+                <S>Convert-EpochToDateTime</S>
+                <S>Test-JwtDateRange</S>
+                <S>Convert-X509CertificateToBase64</S>
+                <S>Get-JwkCollection</S>
+                <S>Show-DecodedJwt</S>
+                <S>Show-EncodedJwt</S>
+                <S>Test-JwtSecret</S>
+                <S>Convert-JwkToPem</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Workflow</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+        </DCT>
+      </Obj>
+      <Nil N="PowerShellGetFormatVersion" />
+      <Nil N="ReleaseNotes" />
+      <Obj N="Dependencies" RefId="8">
+        <TNRef RefId="2" />
+        <LST />
+      </Obj>
+      <S N="RepositorySourceLocation">https://www.powershellgallery.com/api/v2</S>
+      <S N="Repository">PSGallery</S>
+      <S N="PackageManagementProvider">NuGet</S>
+      <Obj N="AdditionalMetadata" RefId="9">
+        <TN RefId="4">
+          <T>System.Management.Automation.PSCustomObject</T>
+          <T>System.Object</T>
+        </TN>
+        <MS>
+          <S N="description">This PowerShell module contains functions that facilitate the creation, validation, and decoding of JWTs (JSON Web Tokens) as well as the creation of JWKs (JSON Web Keys).</S>
+          <S N="requireLicenseAcceptance">False</S>
+          <S N="isLatestVersion">True</S>
+          <S N="isAbsoluteLatestVersion">True</S>
+          <S N="versionDownloadCount">79</S>
+          <S N="downloadCount">9008</S>
+          <S N="packageSize">55481</S>
+          <S N="published">5/12/2025 10:35:31 PM +08:00</S>
+          <S N="created">5/12/2025 10:35:31 PM +08:00</S>
+          <S N="lastUpdated">21/12/2025 1:10:00 AM +08:00</S>
+          <S N="tags">jwt jwk jsonwebtoken jsonwebkey oidc openidconnect PSModule PSEdition_Desktop PSEdition_Core PSFunction_ConvertTo-Base64UrlEncodedString PSCommand_ConvertTo-Base64UrlEncodedString PSFunction_ConvertFrom-Base64UrlEncodedString PSCommand_ConvertFrom-Base64UrlEncodedString PSFunction_Get-JwtKeyIdentifier PSCommand_Get-JwtKeyIdentifier PSFunction_New-JwtSignature PSCommand_New-JwtSignature PSFunction_New-JsonWebToken PSCommand_New-JsonWebToken PSFunction_Test-JsonWebToken PSCommand_Test-JsonWebToken PSFunction_ConvertFrom-EncodedJsonWebToken PSCommand_ConvertFrom-EncodedJsonWebToken PSFunction_New-JsonWebKeySet PSCommand_New-JsonWebKeySet PSFunction_New-JsonWebKey PSCommand_New-JsonWebKey PSFunction_Get-JsonWebTokenHeader PSCommand_Get-JsonWebTokenHeader PSFunction_Get-JsonWebTokenPayload PSCommand_Get-JsonWebTokenPayload PSFunction_Get-JsonWebTokenSignature PSCommand_Get-JsonWebTokenSignature PSFunction_ConvertTo-JwtPart PSCommand_ConvertTo-JwtPart PSFunction_Test-JwtStructure PSCommand_Test-JwtStructure PSFunction_Test-JwtSignature PSCommand_Test-JwtSignature PSFunction_Convert-DateTimeToEpoch PSCommand_Convert-DateTimeToEpoch PSFunction_Convert-EpochToDateTime PSCommand_Convert-EpochToDateTime PSFunction_Test-JwtDateRange PSCommand_Test-JwtDateRange PSFunction_Convert-X509CertificateToBase64 PSCommand_Convert-X509CertificateToBase64 PSFunction_Get-JwkCollection PSCommand_Get-JwkCollection PSFunction_Show-DecodedJwt PSCommand_Show-DecodedJwt PSFunction_Show-EncodedJwt PSCommand_Show-EncodedJwt PSFunction_Test-JwtSecret PSCommand_Test-JwtSecret PSFunction_Convert-JwkToPem PSCommand_Convert-JwkToPem PSIncludes_Function</S>
+          <S N="developmentDependency">False</S>
+          <S N="updated">2025-12-21T01:10:00Z</S>
+          <S N="NormalizedVersion">1.20.0</S>
+          <S N="Authors">Tony Guimelli</S>
+          <S N="IsPrerelease">false</S>
+          <S N="ItemType">Module</S>
+          <S N="FileList">PSJsonWebToken.nuspec|Functions\New-JsonWebKey.ps1|PSJsonWebToken.psd1|Functions\New-JsonWebKeySet.ps1|PSJsonWebToken.psm1|Functions\New-JsonWebToken.ps1|ClassDefinitions\DecodedJsonWebToken.cs|Functions\New-JwtSignature.ps1|ClassDefinitions\PemFromJwkResult.cs|Functions\Show-DecodedJwt.ps1|Functions\Convert-DateTimeToEpoch.ps1|Functions\Show-EncodedJwt.ps1|Functions\Convert-EpochToDateTime.ps1|Functions\Test-JsonWebToken.ps1|Functions\Convert-JwkToPem.ps1|Functions\Test-JwtDateRange.ps1|Functions\Convert-X509CertificateToBase64.ps1|Functions\Test-JwtSecret.ps1|Functions\ConvertFrom-Base64UrlEncodedString.ps1|Functions\Test-JwtSignature.ps1|Functions\ConvertFrom-EncodedJsonWebToken.ps1|Functions\Test-JwtStructure.ps1|Functions\ConvertTo-Base64UrlEncodedString.ps1|PrivateFunctions\Convert-PSObjectToHashTable.ps1|Functions\ConvertTo-JwtPart.ps1|PrivateFunctions\ConvertFrom-EncodedJwtThumbprint.ps1|Functions\Get-JsonWebTokenHeader.ps1|PrivateFunctions\New-JwtPayloadString.ps1|Functions\Get-JsonWebTokenPayload.ps1|PrivateFunctions\New-JwtRsaSignature.ps1|Functions\Get-JsonWebTokenSignature.ps1|PrivateFunctions\Test-JwtJwkSignature.ps1|Functions\Get-JwkCollection.ps1|PrivateFunctions\Test-JwtRsaSignature.ps1|Functions\Get-JwtKeyIdentifier.ps1</S>
+          <S N="GUID">75bb4722-7360-4260-be02-20e413528df2</S>
+          <S N="PowerShellVersion">5.1</S>
+        </MS>
+      </Obj>
+      <S N="InstalledLocation">C:\Users\Zac\Documents\PowerShell\Modules\PSJsonWebToken\1.20.0</S>
+    </MS>
+  </Obj>
+</Objs>
