@@ -83,11 +83,66 @@ function New-LinkTomeCoreRequest {
     }
 
     try {
+        # Apply rate limiting for authentication endpoints
+        if ($Endpoint -match '^public/(login|signup)$') {
+            # Get client IP from headers
+            $ClientIP = $Request.Headers.'X-Forwarded-For'
+            if (-not $ClientIP) {
+                $ClientIP = $Request.Headers.'X-Real-IP'
+            }
+            if (-not $ClientIP) {
+                $ClientIP = 'unknown'
+            }
+            
+            # Extract first IP if multiple IPs in X-Forwarded-For
+            if ($ClientIP -like '*,*') {
+                $ClientIP = ($ClientIP -split ',')[0].Trim()
+            }
+            
+            # Define rate limits based on endpoint
+            $RateLimitConfig = @{
+                'public/login' = @{ MaxRequests = 5; WindowSeconds = 60 }  # 5 attempts per minute
+                'public/signup' = @{ MaxRequests = 3; WindowSeconds = 3600 }  # 3 signups per hour
+            }
+            
+            $Config = $RateLimitConfig[$Endpoint]
+            if ($Config) {
+                $RateCheck = Test-RateLimit -Identifier $ClientIP -Endpoint $Endpoint -MaxRequests $Config.MaxRequests -WindowSeconds $Config.WindowSeconds
+                
+                if (-not $RateCheck.Allowed) {
+                    Write-Warning "Rate limit exceeded for $Endpoint from $ClientIP"
+                    
+                    # Log rate limit event
+                    Write-SecurityEvent -EventType 'RateLimitExceeded' -IpAddress $ClientIP -Endpoint $Endpoint -Metadata @{
+                        RequestCount = $RateCheck.RequestCount
+                        MaxRequests = $RateCheck.MaxRequests
+                    }
+                    
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::TooManyRequests
+                        Headers = @{
+                            'Retry-After' = $RateCheck.RetryAfter.ToString()
+                            'X-RateLimit-Limit' = $Config.MaxRequests.ToString()
+                            'X-RateLimit-Remaining' = '0'
+                            'X-RateLimit-Reset' = $RateCheck.RetryAfter.ToString()
+                        }
+                        Body = @{ 
+                            error = "Too many requests. Please try again in $($RateCheck.RetryAfter) seconds."
+                            retryAfter = $RateCheck.RetryAfter
+                        }
+                    }
+                }
+            }
+        }
+        
         # Check authentication for admin endpoints
         if ($Endpoint -match '^admin/') {
             $User = Get-UserFromRequest -Request $Request
             
             if (-not $User) {
+                # Log failed authentication attempt
+                Write-SecurityEvent -EventType 'AuthFailed' -Endpoint $Endpoint -IpAddress ($Request.Headers.'X-Forwarded-For' ?? $Request.Headers.'X-Real-IP' ?? 'unknown')
+                
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized
                     Body = @{ error = "Authentication required" }
