@@ -37,7 +37,10 @@ function Test-RateLimit {
         
         # Create composite key from endpoint and identifier
         $PartitionKey = $Endpoint -replace '/', '-'
-        $RowKey = $Identifier -replace '[^a-zA-Z0-9-]', '-'
+        # Sanitize identifier for use as RowKey (remove invalid chars and normalize dashes)
+        $RowKey = $Identifier -replace '[^a-zA-Z0-9]', '-'
+        $RowKey = $RowKey -replace '-+', '-'  # Replace consecutive dashes with single dash
+        $RowKey = $RowKey.Trim('-')  # Remove leading/trailing dashes
         
         # Get current timestamp
         $Now = [DateTime]::UtcNow

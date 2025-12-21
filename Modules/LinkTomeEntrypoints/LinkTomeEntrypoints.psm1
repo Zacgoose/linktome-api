@@ -86,18 +86,7 @@ function New-LinkTomeCoreRequest {
         # Apply rate limiting for authentication endpoints
         if ($Endpoint -match '^public/(login|signup)$') {
             # Get client IP from headers
-            $ClientIP = $Request.Headers.'X-Forwarded-For'
-            if (-not $ClientIP) {
-                $ClientIP = $Request.Headers.'X-Real-IP'
-            }
-            if (-not $ClientIP) {
-                $ClientIP = 'unknown'
-            }
-            
-            # Extract first IP if multiple IPs in X-Forwarded-For
-            if ($ClientIP -like '*,*') {
-                $ClientIP = ($ClientIP -split ',')[0].Trim()
-            }
+            $ClientIP = Get-ClientIPAddress -Request $Request
             
             # Define rate limits based on endpoint
             $RateLimitConfig = @{
@@ -141,7 +130,8 @@ function New-LinkTomeCoreRequest {
             
             if (-not $User) {
                 # Log failed authentication attempt
-                Write-SecurityEvent -EventType 'AuthFailed' -Endpoint $Endpoint -IpAddress ($Request.Headers.'X-Forwarded-For' ?? $Request.Headers.'X-Real-IP' ?? 'unknown')
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-SecurityEvent -EventType 'AuthFailed' -Endpoint $Endpoint -IpAddress $ClientIP
                 
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized

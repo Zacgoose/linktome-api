@@ -44,13 +44,11 @@ function Write-SecurityEvent {
         # Redact email for privacy (keep first 3 chars and domain)
         $RedactedEmail = ''
         if ($Email) {
-            if ($Email.Length -gt 3) {
-                $EmailParts = $Email -split '@'
-                if ($EmailParts.Count -eq 2) {
-                    $RedactedEmail = $EmailParts[0].Substring(0, [Math]::Min(3, $EmailParts[0].Length)) + '***@' + $EmailParts[1]
-                } else {
-                    $RedactedEmail = $Email.Substring(0, 3) + '***'
-                }
+            $EmailParts = $Email -split '@'
+            if ($EmailParts.Count -eq 2) {
+                $LocalPart = $EmailParts[0]
+                $PrefixLength = [Math]::Min(3, $LocalPart.Length)
+                $RedactedEmail = $LocalPart.Substring(0, $PrefixLength) + '***@' + $EmailParts[1]
             } else {
                 $RedactedEmail = '***'
             }
