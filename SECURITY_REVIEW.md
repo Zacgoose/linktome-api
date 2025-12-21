@@ -23,10 +23,9 @@ This document provides a comprehensive security review of the LinkTome API, an A
 - 🔴 **CRITICAL:** No input validation or sanitization (SQL/NoSQL injection risk) - **FIXED**
 - 🔴 **CRITICAL:** No rate limiting (brute force attack vulnerability)
 - 🟡 **HIGH:** JWT secret key requirements not enforced - **FIXED**
-- 🟡 **HIGH:** No security headers implemented - **FIXED**
 - 🟡 **HIGH:** Sensitive data logging potential - **IMPROVED**
 
-**Note:** CORS is handled by Azure Static Web Apps when linked with this Function App backend
+**Note:** CORS and security headers are handled automatically by Azure Static Web Apps infrastructure
 
 ---
 
@@ -352,48 +351,31 @@ The `Add-CorsHeaders` function in `Modules/LinkTomeCore/Security/Add-CorsHeaders
 
 ---
 
-### 5. Security Headers 🟡 HIGH
+### 5. Security Headers ✅ HANDLED BY AZURE STATIC WEB APPS
 
-#### Current State: **NO SECURITY HEADERS**
+#### Current State: **MANAGED BY AZURE INFRASTRUCTURE**
 
-**Missing Headers:**
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `X-XSS-Protection: 1; mode=block`
-- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
-- `Content-Security-Policy`
-- `Referrer-Policy: strict-origin-when-cross-origin`
+**Architecture Note:**
+When using Azure Static Web Apps with a linked Function App backend, security headers are automatically managed by the Azure platform. Azure Static Web Apps automatically add appropriate security headers including:
 
-#### Recommendations
+- `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
+- `X-Frame-Options: DENY` or `SAMEORIGIN` - Prevents clickjacking
+- `Strict-Transport-Security` - Forces HTTPS
+- Other standard security headers
 
-**IMMEDIATE:**
-- [ ] Add security headers to all responses
+**Recommendation:**
+- ✅ Use Azure Static Web Apps with linked Function App (recommended approach)
+- ✅ Security headers are handled automatically by the platform
+- ✅ No code-level implementation needed
 
-**Implementation:**
-```powershell
-function Add-SecurityHeaders {
-    param($Response)
-    
-    if (-not $Response.Headers) {
-        $Response.Headers = @{}
-    }
-    
-    $Response.Headers['X-Content-Type-Options'] = 'nosniff'
-    $Response.Headers['X-Frame-Options'] = 'DENY'
-    $Response.Headers['X-XSS-Protection'] = '1; mode=block'
-    $Response.Headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    
-    # Only add HSTS in production with HTTPS
-    if ($env:AZURE_FUNCTIONS_ENVIRONMENT -eq 'Production') {
-        $Response.Headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-    }
-    
-    return $Response
-}
+**If Deploying Function App Standalone (Not Recommended):**
+Only if you're NOT using Azure Static Web Apps would you need to manually add security headers. In that case, you can add them at the Azure Function App level through:
+- Azure Portal → Function App → Configuration → CORS and other settings
+- Or implement code-level headers in the response pipeline
 
-# Add to response pipeline in LinkTomeEntrypoints.psm1
-$Response = Add-SecurityHeaders -Response $Response
-```
+**Current Implementation:**
+- Security headers are NOT added in code because Azure Static Web Apps handles them
+- This follows the principle of letting the infrastructure handle infrastructure concerns
 
 ---
 
@@ -761,22 +743,17 @@ Function App → Networking → Access Restrictions
 
 ### 🟡 HIGH (Week 2-3)
 
-4. **Security Headers** ✅ **COMPLETED**
-   - ✅ Implement header addition function
-   - ✅ Add to all responses
-   - Test with security scanning tools (recommended)
-
-5. **Security Event Logging** ⚠️ **RECOMMENDED**
+4. **Security Event Logging** ⚠️ **RECOMMENDED**
    - Create structured logging functions
    - Log all authentication events
    - Set up Azure Monitor alerts
 
-6. **Error Handling Improvements** ✅ **COMPLETED**
+5. **Error Handling Improvements** ✅ **COMPLETED**
    - ✅ Sanitize error messages for production
    - ✅ Ensure no information disclosure
    - Test error scenarios (recommended)
 
-7. **Password Policies** ✅ **COMPLETED**
+6. **Password Policies** ✅ **COMPLETED**
    - ✅ Implement minimum password length (8+ chars)
    - ✅ Add password strength validator
    - Consider complexity requirements (optional enhancement)

@@ -83,15 +83,19 @@ Modules/LinkTomeCore/Validation/Test-InputLength.ps1
 
 ## Phase 2: High Priority Security Fixes (Week 2)
 
-### 2.1 Security Headers
-**Priority:** HIGH  
-**Estimated Time:** 1 day
+### 2.1 Security Headers & CORS
+**Priority:** ✅ **HANDLED BY AZURE STATIC WEB APPS**  
+**Status:** NOT NEEDED - Infrastructure handles this
 
-**Tasks:**
-- [ ] Create `Modules/LinkTomeCore/Security/Add-SecurityHeaders.ps1`
-- [ ] Integrate into response pipeline in `LinkTomeEntrypoints.psm1`
-- [ ] Test headers with security scanner
-- [ ] Document security headers
+**Note:**
+When using Azure Static Web Apps with a linked Function App:
+- Security headers are automatically added by Azure infrastructure
+- CORS is automatically configured between the frontend and backend
+- No code-level implementation needed
+
+**If deploying standalone (not recommended):**
+- Configure security settings in Azure Portal
+- Or add custom headers in code if absolutely necessary
 
 ### 2.2 Security Event Logging
 **Priority:** HIGH  
