@@ -44,6 +44,13 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Server-side analytics (no additional frontend API calls required)
 - ✅ Tracks IP address, user agent, and referrer
 - ✅ Analytics dashboard data via admin endpoint
+- ✅ Dashboard statistics (total links, views, unique visitors)
+
+### Customization
+- ✅ Appearance customization (theme: light/dark)
+- ✅ Button style options (rounded, square, pill)
+- ✅ Custom colors (background, text, buttons)
+- ✅ Settings applied to public profile pages
 
 ### API Endpoints
 
@@ -58,6 +65,9 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - `GET /admin/getLinks` - Get user's links
 - `PUT /admin/updateLinks` - Create, update, or delete links
 - `GET /admin/getAnalytics` - Get analytics data (page views, unique visitors, views by day)
+- `GET /admin/getDashboardStats` - Get dashboard statistics (total links, views, visitors)
+- `GET /admin/getAppearance` - Get appearance settings (theme, colors, button style)
+- `PUT /admin/updateAppearance` - Update appearance settings
 
 ## Local Development Setup
 

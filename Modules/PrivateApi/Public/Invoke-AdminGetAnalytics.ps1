@@ -29,9 +29,9 @@ function Invoke-AdminGetAnalytics {
         }
         
         # Get recent page views (last 100)
-        $RecentPageViews = @($PageViews | Sort-Object Timestamp -Descending | Select-Object -First 100 | ForEach-Object {
+        $RecentPageViews = @($PageViews | Sort-Object EventTimestamp -Descending | Select-Object -First 100 | ForEach-Object {
             @{
-                timestamp = $_.Timestamp
+                timestamp = $_.EventTimestamp
                 ipAddress = $_.IpAddress
                 userAgent = $_.UserAgent
                 referrer = $_.Referrer
@@ -39,9 +39,9 @@ function Invoke-AdminGetAnalytics {
         })
         
         # Get page views by day (last 30 days)
-        $ThirtyDaysAgo = [DateTime]::UtcNow.AddDays(-30)
-        $ViewsByDay = @($PageViews | Where-Object { [DateTime]$_.Timestamp -gt $ThirtyDaysAgo } | 
-            Group-Object { ([DateTime]$_.Timestamp).ToString('yyyy-MM-dd') } | 
+        $ThirtyDaysAgo = [DateTimeOffset]::UtcNow.AddDays(-30)
+        $ViewsByDay = @($PageViews | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $ThirtyDaysAgo } | 
+            Group-Object { ([DateTimeOffset]$_.EventTimestamp).ToString('yyyy-MM-dd') } | 
             ForEach-Object {
                 @{
                     date = $_.Name

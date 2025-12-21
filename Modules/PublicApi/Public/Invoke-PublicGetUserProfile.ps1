@@ -44,6 +44,14 @@ function Invoke-PublicGetUserProfile {
                 displayName = $User.DisplayName
                 bio = $User.Bio
                 avatar = $User.Avatar
+                appearance = @{
+                    theme = if ($User.Theme) { $User.Theme } else { 'light' }
+                    buttonStyle = if ($User.ButtonStyle) { $User.ButtonStyle } else { 'rounded' }
+                    backgroundColor = if ($User.BackgroundColor) { $User.BackgroundColor } else { '#ffffff' }
+                    textColor = if ($User.TextColor) { $User.TextColor } else { '#000000' }
+                    buttonColor = if ($User.ButtonColor) { $User.ButtonColor } else { '#000000' }
+                    buttonTextColor = if ($User.ButtonTextColor) { $User.ButtonTextColor } else { '#ffffff' }
+                }
                 links = @($Links | ForEach-Object {
                     @{
                         id = $_.RowKey

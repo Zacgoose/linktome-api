@@ -51,7 +51,7 @@ function Write-AnalyticsEvent {
         $EventRecord = @{
             PartitionKey = $UserId
             RowKey = [DateTime]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
-            Timestamp = [DateTime]::UtcNow
+            EventTimestamp = [DateTimeOffset]::UtcNow
             EventType = $EventType
             Username = $Username
             IpAddress = $IpAddress
