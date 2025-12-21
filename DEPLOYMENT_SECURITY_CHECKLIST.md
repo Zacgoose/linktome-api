@@ -20,7 +20,10 @@ Configure these in Azure Function App → Configuration → Application settings
 - [ ] **`JWT_SECRET`** (CRITICAL)
   - Minimum 64 characters (128+ recommended)
   - Use cryptographically secure random string
-  - Generate with: `openssl rand -base64 96` or PowerShell: `[Convert]::ToBase64String((1..96 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))`
+  - Generate with: 
+    - Linux/Mac: `openssl rand -base64 96`
+    - Windows PowerShell: `$bytes = New-Object byte[] 96; [System.Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($bytes); [Convert]::ToBase64String($bytes)`
+    - Or simpler: `openssl rand -base64 96` (if OpenSSL is installed)
   - Never reuse dev secret in production
   - Store securely (consider Azure Key Vault)
 

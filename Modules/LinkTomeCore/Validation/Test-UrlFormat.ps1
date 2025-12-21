@@ -24,7 +24,9 @@ function Test-UrlFormat {
     
     # Only allow http and https protocols
     # Must have protocol, domain, and TLD
-    $UrlRegex = '^https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&\/=]*$'
+    # Note: This is a simplified validation. For more complex URL validation needs,
+    # consider using [System.Uri]::TryCreate()
+    $UrlRegex = '^https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9@:%._\+~#=]{0,256}\.[a-zA-Z]{2,}\b[-a-zA-Z0-9()@:%_\+.~#?&\/=]*$'
     
     return $Url -match $UrlRegex
 }
