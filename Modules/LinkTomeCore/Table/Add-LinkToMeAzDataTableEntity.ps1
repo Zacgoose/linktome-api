@@ -85,6 +85,21 @@ function Add-LinkToMeAzDataTableEntity {
                 Write-Warning "Error during entity validation: $($_.Exception.Message)"
             }
 
+            # Convert arrays to JSON strings for Azure Table Storage compatibility
+            if ($SingleEnt -is [hashtable]) {
+                foreach ($key in @($SingleEnt.Keys)) {
+                    if ($SingleEnt[$key] -is [array]) {
+                        $SingleEnt[$key] = $SingleEnt[$key] | ConvertTo-Json -Compress -Depth 10
+                    }
+                }
+            } elseif ($SingleEnt -is [PSCustomObject]) {
+                foreach ($prop in $SingleEnt.PSObject.Properties) {
+                    if ($prop.Value -is [array]) {
+                        $SingleEnt.($prop.Name) = $prop.Value | ConvertTo-Json -Compress -Depth 10
+                    }
+                }
+            }
+
             Add-AzDataTableEntity @Parameters -Entity $SingleEnt -ErrorAction Stop
 
         } catch [System.Exception] {

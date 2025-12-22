@@ -92,6 +92,17 @@ function Get-LinkToMeAzDataTableEntity {
             }
             $entity.PSObject.Properties.Remove('SplitOverProps')
         }
+        
+        # Deserialize JSON strings back to arrays
+        foreach ($prop in $entity.PSObject.Properties) {
+            if ($prop.Value -is [string] -and $prop.Value.StartsWith('[') -and $prop.Value.EndsWith(']')) {
+                try {
+                    $entity.($prop.Name) = $prop.Value | ConvertFrom-Json
+                } catch {
+                    # If deserialization fails, leave as string
+                }
+            }
+        }
     }
 
     return $finalResults
