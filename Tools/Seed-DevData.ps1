@@ -64,7 +64,7 @@ foreach ($TestUser in $TestUsers) {
     }
     
     Write-Host "Creating user: $($User.PartitionKey) (Role: $($TestUser.Role))" -ForegroundColor Yellow
-    Add-AzDataTableEntity @UsersTable -Entity $User -Force
+    Add-LinkToMeAzDataTableEntity @UsersTable -Entity $User -Force
     
     $CreatedUsers += @{
         UserId = $UserId

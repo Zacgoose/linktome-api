@@ -30,7 +30,7 @@ function Invoke-PublicLogin {
         
         # Sanitize email for query to prevent injection
         $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
-        $User = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
+        $User = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         
         # Get client IP for logging
         $ClientIP = Get-ClientIPAddress -Request $Request

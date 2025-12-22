@@ -28,7 +28,7 @@ function Invoke-AdminGetUserRoles {
         
         # Get the target user
         $SafeUserId = Protect-TableQueryValue -Value $UserId
-        $TargetUser = Get-AzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+        $TargetUser = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $TargetUser) {
             return [HttpResponseContext]@{
