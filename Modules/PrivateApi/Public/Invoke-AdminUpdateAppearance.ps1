@@ -16,7 +16,7 @@ function Invoke-AdminUpdateAppearance {
         
         # Get user data
         $SafeUserId = Protect-TableQueryValue -Value $User.UserId
-        $UserData = Get-AzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+        $UserData = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $UserData) {
             return [HttpResponseContext]@{
@@ -115,7 +115,7 @@ function Invoke-AdminUpdateAppearance {
         }
         
         # Save updated appearance
-        Add-AzDataTableEntity @Table -Entity $UserData -Force
+        Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
         $Results = @{
             success = $true
