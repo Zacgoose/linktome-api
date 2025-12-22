@@ -33,15 +33,6 @@ function Save-RefreshToken {
             TokenType = 'RefreshToken'  # Uncast string like CIPP's Results property
         }
         
-        Write-Information "DEBUG: TokenEntity properties:"
-        Write-Information "  PartitionKey type: $($TokenEntity.PartitionKey.GetType().FullName)"
-        Write-Information "  RowKey type: $($TokenEntity.RowKey.GetType().FullName)"
-        Write-Information "  UserId type: $($TokenEntity.UserId.GetType().FullName)"
-        Write-Information "  ExpiresAt type: $($TokenEntity.ExpiresAt.GetType().FullName)"
-        Write-Information "  CreatedAt type: $($TokenEntity.CreatedAt.GetType().FullName)"
-        Write-Information "  IsValid type: $($TokenEntity.IsValid.GetType().FullName), value: $($TokenEntity.IsValid)"
-        Write-Information "  TokenType type: $($TokenEntity.TokenType.GetType().FullName), value: $($TokenEntity.TokenType)"
-        
         Add-LinkToMeAzDataTableEntity @Table -Entity $TokenEntity -Force
         
         return $true
