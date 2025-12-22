@@ -92,15 +92,15 @@ function Invoke-PublicSignup {
         $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
         
         $NewUser = @{
-            PartitionKey = $Body.email.ToLower()
-            RowKey = $UserId
-            Username = $Body.username.ToLower()
-            DisplayName = $Body.username
-            Bio = ''
-            Avatar = "https://ui-avatars.com/api/?name=$($Body.username)&size=200"
-            PasswordHash = $PasswordData.Hash
-            PasswordSalt = $PasswordData.Salt
-            IsActive = $true
+            PartitionKey = [string]$Body.email.ToLower()
+            RowKey = [string]$UserId
+            Username = [string]$Body.username.ToLower()
+            DisplayName = [string]$Body.username
+            Bio = [string]''
+            Avatar = [string]"https://ui-avatars.com/api/?name=$($Body.username)&size=200"
+            PasswordHash = [string]$PasswordData.Hash
+            PasswordSalt = [string]$PasswordData.Salt
+            IsActive = [bool]$true
             Roles = $RolesJson
             Permissions = $PermissionsJson
         }

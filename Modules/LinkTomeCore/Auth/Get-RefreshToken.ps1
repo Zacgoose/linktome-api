@@ -15,7 +15,7 @@ function Get-RefreshToken {
         
         # Sanitize token for query
         $SafeToken = Protect-TableQueryValue -Value $Token
-        $Filter = "PartitionKey eq '$SafeToken' and IsValid eq 'true'"
+        $Filter = "PartitionKey eq '$SafeToken' and IsValid eq true"
         
         $TokenRecord = Get-LinkToMeAzDataTableEntity @Table -Filter $Filter | Select-Object -First 1
         
