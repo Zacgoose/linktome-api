@@ -87,19 +87,18 @@ function Invoke-PublicSignup {
         $DefaultPermissions = Get-DefaultRolePermissions -Role $DefaultRole
         
         # Convert arrays to JSON strings for Azure Table Storage compatibility
-        # Cast to [string] to ensure proper type (CIPP-API pattern)
         $RolesJson = [string](@($DefaultRole) | ConvertTo-Json -Compress)
         $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
         
         $NewUser = @{
-            PartitionKey = [string]$Body.email.ToLower()
+            PartitionKey = $Body.email.ToLower()
             RowKey = [string]$UserId
-            Username = [string]$Body.username.ToLower()
-            DisplayName = [string]$Body.username
-            Bio = [string]''
-            Avatar = [string]"https://ui-avatars.com/api/?name=$($Body.username)&size=200"
-            PasswordHash = [string]$PasswordData.Hash
-            PasswordSalt = [string]$PasswordData.Salt
+            Username = $Body.username.ToLower()
+            DisplayName = $Body.username
+            Bio = ''
+            Avatar = "https://ui-avatars.com/api/?name=$($Body.username)&size=200"
+            PasswordHash = $PasswordData.Hash
+            PasswordSalt = $PasswordData.Salt
             IsActive = [bool]$true
             Roles = $RolesJson
             Permissions = $PermissionsJson

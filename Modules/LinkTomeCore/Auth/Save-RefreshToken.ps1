@@ -21,9 +21,8 @@ function Save-RefreshToken {
         
         # Use token as PartitionKey for direct lookup, UserId as RowKey for user-based queries
         # Convert DateTime to ISO 8601 string for Azure Table Storage compatibility
-        # Cast ALL properties to ensure proper type (CIPP-API pattern)
         $TokenEntity = @{
-            PartitionKey = [string]$Token
+            PartitionKey = $Token
             RowKey = [string](New-Guid).ToString()
             UserId = [string]$UserId
             ExpiresAt = [string]$ExpiresAt.ToString('o')  # ISO 8601 format
