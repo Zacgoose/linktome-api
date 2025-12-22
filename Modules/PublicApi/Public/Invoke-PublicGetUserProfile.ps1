@@ -30,14 +30,14 @@ function Invoke-PublicGetUserProfile {
         
         # Sanitize username for query
         $SafeUsername = Protect-TableQueryValue -Value $Username.ToLower()
-        $User = Get-LinkToMeAzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
+        $User = Get-AzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
         
         if (-not $User) {
             $StatusCode = [HttpStatusCode]::NotFound
             $Results = @{ error = "Profile not found" }
         } else {
             $LinksTable = Get-LinkToMeTable -TableName 'Links'
-            $Links = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$($User.RowKey)' and Active eq true"
+            $Links = Get-AzDataTableEntity @LinksTable -Filter "PartitionKey eq '$($User.RowKey)' and Active eq true"
             
             $Results = @{
                 username = $User.Username
