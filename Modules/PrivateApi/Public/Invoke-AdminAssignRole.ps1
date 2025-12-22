@@ -71,7 +71,7 @@ function Invoke-AdminAssignRole {
         $TargetUser.Roles = @($Body.role)
         $TargetUser.Permissions = $DefaultPermissions
         
-        Update-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
+        Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
         
         # Log role assignment
         $ClientIP = Get-ClientIPAddress -Request $Request
