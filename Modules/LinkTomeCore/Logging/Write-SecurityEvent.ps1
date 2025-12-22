@@ -5,7 +5,7 @@ function Write-SecurityEvent {
     .DESCRIPTION
         Logs security events to Azure Table Storage for auditing
     .PARAMETER EventType
-        Type of security event (e.g., 'LoginSuccess', 'LoginFailed', 'SignupSuccess', 'SignupFailed', 'AuthFailed', 'RateLimitExceeded')
+        Type of security event (e.g., 'LoginSuccess', 'LoginFailed', 'TokenRefreshed', 'RoleAssigned'). Accepts any string to allow flexibility for future event types.
     .PARAMETER UserId
         User ID if available (may be 'unknown' for failed auth)
     .PARAMETER Email
@@ -22,7 +22,6 @@ function Write-SecurityEvent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('LoginSuccess', 'LoginFailed', 'SignupSuccess', 'SignupFailed', 'AuthFailed', 'RateLimitExceeded', 'TokenValidationFailed', 'InputValidationFailed', 'TokenRefreshed', 'RefreshTokenFailed', 'PermissionDenied', 'Logout', 'RoleAssigned')]
         [string]$EventType,
         
         [string]$UserId = 'unknown',
