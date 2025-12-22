@@ -15,7 +15,7 @@ function Invoke-AdminGetAnalytics {
         
         # Get analytics events for this user
         $SafeUserId = Protect-TableQueryValue -Value $User.UserId
-        $Events = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
+        $Events = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
         # Group events by type and calculate stats
         $PageViews = @($Events | Where-Object { $_.EventType -eq 'PageView' })
