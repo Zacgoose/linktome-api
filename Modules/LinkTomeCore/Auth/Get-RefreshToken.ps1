@@ -17,15 +17,17 @@ function Get-RefreshToken {
         $SafeToken = Protect-TableQueryValue -Value $Token
         $Filter = "PartitionKey eq '$SafeToken' and IsValid eq true"
         
-        $TokenRecord = Get-AzDataTableEntity @Table -Filter $Filter | Select-Object -First 1
+        $TokenRecord = Get-LinkToMeAzDataTableEntity @Table -Filter $Filter | Select-Object -First 1
         
         if (-not $TokenRecord) {
             return $null
         }
         
         # Check if token has expired
+        # Convert ISO 8601 string back to DateTime for comparison
         $Now = (Get-Date).ToUniversalTime()
-        if ($TokenRecord.ExpiresAt -lt $Now) {
+        $ExpiresAt = [DateTime]::Parse($TokenRecord.ExpiresAt)
+        if ($ExpiresAt -lt $Now) {
             return $null
         }
         

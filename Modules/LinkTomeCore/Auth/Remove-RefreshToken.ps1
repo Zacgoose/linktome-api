@@ -17,11 +17,11 @@ function Remove-RefreshToken {
         $SafeToken = Protect-TableQueryValue -Value $Token
         $Filter = "PartitionKey eq '$SafeToken'"
         
-        $TokenRecords = Get-AzDataTableEntity @Table -Filter $Filter
+        $TokenRecords = Get-LinkToMeAzDataTableEntity @Table -Filter $Filter
         
         foreach ($TokenRecord in $TokenRecords) {
             $TokenRecord.IsValid = $false
-            Update-AzDataTableEntity @Table -Entity $TokenRecord -Force
+            Add-LinkToMeAzDataTableEntity @Table -Entity $TokenRecord -Force
         }
         
         return $true
