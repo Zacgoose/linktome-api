@@ -69,9 +69,9 @@ function Invoke-AdminAssignRole {
 
         # Update user with new role and permissions
         # Convert arrays to JSON strings for Azure Table Storage compatibility
-        # Cast to [string] per CIPP-API pattern
-        $TargetUser.Roles = [string](@($Body.role) | ConvertTo-Json -Compress)
-        $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
+        # Roles stored without [string] cast (same format as Permissions)
+        $TargetUser.Roles = (@($Body.role) | ConvertTo-Json -Compress)
+        $TargetUser.Permissions = ($DefaultPermissions | ConvertTo-Json -Compress)
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
         

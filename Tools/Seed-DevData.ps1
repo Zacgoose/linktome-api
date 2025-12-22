@@ -50,9 +50,9 @@ foreach ($TestUser in $TestUsers) {
     $DefaultPermissions = Get-DefaultRolePermissions -Role $TestUser.Role
     
     # Convert arrays to JSON strings for Azure Table Storage compatibility
-    # Cast to [string] per CIPP-API pattern
-    $RolesJson = [string](@($TestUser.Role) | ConvertTo-Json -Compress)
-    $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
+    # Roles stored without [string] cast (same format as Permissions)
+    $RolesJson = (@($TestUser.Role) | ConvertTo-Json -Compress)
+    $PermissionsJson = ($DefaultPermissions | ConvertTo-Json -Compress)
     
     $User = @{
         PartitionKey = [string]$TestUser.Email
