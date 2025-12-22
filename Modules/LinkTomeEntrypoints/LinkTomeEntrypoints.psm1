@@ -31,13 +31,18 @@ function Receive-LinkTomeHttpTrigger {
     
     if ($Response -is [System.Array]) {
         if ($Response.Count -gt 0) {
-            $Response = $Response[0]
+            $CandidateResponse = $Response[0]
+            if ($CandidateResponse.PSObject.Properties.Name -contains 'StatusCode') {
+                $Response = $CandidateResponse
+            } else {
+                $Response = $null
+            }
         } else {
             $Response = $null
         }
     }
 
-    if ($Response -and $Response.StatusCode) {
+    if ($Response -and $null -ne $Response.StatusCode) {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
