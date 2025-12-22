@@ -29,20 +29,7 @@ function Receive-LinkTomeHttpTrigger {
     # Process request through central router
     $Response = New-LinkTomeCoreRequest -Request $Request -TriggerMetadata $TriggerMetadata
     
-    if ($Response -is [System.Array]) {
-        # Array responses can happen via pipeline; pick first element with a non-null StatusCode, otherwise null to trigger fallback
-        $FirstValid = $null
-        foreach ($item in $Response) {
-            if ($item -and $item.PSObject.Properties['StatusCode'] -and $null -ne $item.StatusCode) {
-                $FirstValid = $item
-                break
-            }
-        }
-        $Response = $FirstValid
-        # If no element matches, $Response will be $null and the fallback block below will run
-    }
-
-    if ($null -ne $Response -and $null -ne $Response.StatusCode) {
+    if ($Response.StatusCode) {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
@@ -148,34 +135,7 @@ function New-LinkTomeCoreRequest {
                 
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized
-                    Body = @{ 
-                        success = $false
-                        error = "Unauthorized: Invalid or expired token" 
-                    }
-                }
-            }
-            
-            # Check permissions for the endpoint
-            $RequiredPermissions = Get-EndpointPermissions -Endpoint $Endpoint
-            
-            if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
-                $HasPermission = Test-UserPermission -User $User -RequiredPermissions $RequiredPermissions
-                
-                if (-not $HasPermission) {
-                    # Log permission denied attempt
-                    $ClientIP = Get-ClientIPAddress -Request $Request
-                    Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -Metadata @{
-                        RequiredPermissions = ($RequiredPermissions -join ', ')
-                        UserPermissions = ($User.Permissions -join ', ')
-                    }
-                    
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::Forbidden
-                        Body = @{ 
-                            success = $false
-                            error = "Forbidden: Insufficient permissions. Required: $($RequiredPermissions -join ', ')"
-                        }
-                    }
+                    Body = @{ error = "Authentication required" }
                 }
             }
             

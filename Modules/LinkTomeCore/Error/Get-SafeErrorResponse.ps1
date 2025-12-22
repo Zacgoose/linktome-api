@@ -28,17 +28,15 @@ function Get-SafeErrorResponse {
         Write-Error "Stack Trace: $($ErrorRecord.ScriptStackTrace)"
     }
     
-    $Response = @{
-        error = @{
-            code    = 'InternalServerError'
-            message = $GenericMessage
-        }
-    }
-
+    # Return appropriate message based on environment
     if ($env:AZURE_FUNCTIONS_ENVIRONMENT -eq 'Development') {
-        $Response.error.detail = $ErrorRecord.Exception.Message
-        $Response.error.type   = $ErrorRecord.Exception.GetType().Name
+        # In development, return detailed error
+        return @{ 
+            error = $ErrorRecord.Exception.Message
+            type = $ErrorRecord.Exception.GetType().Name
+        }
+    } else {
+        # In production, return generic message
+        return @{ error = $GenericMessage }
     }
-
-    return $Response
 }

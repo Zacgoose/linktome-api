@@ -47,7 +47,7 @@ function Test-RateLimit {
         $WindowStart = $Now.AddSeconds(-$WindowSeconds)
         
         # Try to get existing rate limit record
-        $RateLimitRecord = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$PartitionKey' and RowKey eq '$RowKey'" -ErrorAction SilentlyContinue | Select-Object -First 1
+        $RateLimitRecord = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$PartitionKey' and RowKey eq '$RowKey'" -ErrorAction SilentlyContinue | Select-Object -First 1
         
         if (-not $RateLimitRecord) {
             # First request - create new record
@@ -58,7 +58,7 @@ function Test-RateLimit {
                 WindowStart = $Now
                 LastRequest = $Now
             }
-            Add-LinkToMeAzDataTableEntity @Table -Entity $NewRecord -Force | Out-Null
+            Add-AzDataTableEntity @Table -Entity $NewRecord -Force | Out-Null
             
             return @{
                 Allowed = $true
@@ -76,7 +76,7 @@ function Test-RateLimit {
             $RateLimitRecord.RequestCount = 1
             $RateLimitRecord.WindowStart = $Now
             $RateLimitRecord.LastRequest = $Now
-            Add-LinkToMeAzDataTableEntity @Table -Entity $RateLimitRecord -Force | Out-Null
+            Add-AzDataTableEntity @Table -Entity $RateLimitRecord -Force | Out-Null
             
             return @{
                 Allowed = $true
@@ -104,7 +104,7 @@ function Test-RateLimit {
         # Within limit - increment counter
         $RateLimitRecord.RequestCount = $CurrentCount + 1
         $RateLimitRecord.LastRequest = $Now
-        Add-LinkToMeAzDataTableEntity @Table -Entity $RateLimitRecord -Force | Out-Null
+        Add-AzDataTableEntity @Table -Entity $RateLimitRecord -Force | Out-Null
         
         return @{
             Allowed = $true

@@ -60,7 +60,7 @@ function Write-AnalyticsEvent {
             MetadataJson = if ($Metadata.Count -gt 0) { ($Metadata | ConvertTo-Json -Compress) } else { '' }
         }
         
-        Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+        Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
         
     } catch {
         # Don't fail the request if analytics tracking fails

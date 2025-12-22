@@ -5,7 +5,7 @@ function Write-SecurityEvent {
     .DESCRIPTION
         Logs security events to Azure Table Storage for auditing
     .PARAMETER EventType
-        Type of security event (e.g., 'LoginSuccess', 'LoginFailed', 'TokenRefreshed', 'RoleAssigned'). Accepts any string to allow flexibility for future event types.
+        Type of security event (e.g., 'LoginSuccess', 'LoginFailed', 'SignupSuccess', 'SignupFailed', 'AuthFailed', 'RateLimitExceeded')
     .PARAMETER UserId
         User ID if available (may be 'unknown' for failed auth)
     .PARAMETER Email
@@ -22,6 +22,7 @@ function Write-SecurityEvent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
+        [ValidateSet('LoginSuccess', 'LoginFailed', 'SignupSuccess', 'SignupFailed', 'AuthFailed', 'RateLimitExceeded', 'TokenValidationFailed', 'InputValidationFailed')]
         [string]$EventType,
         
         [string]$UserId = 'unknown',
@@ -32,9 +33,7 @@ function Write-SecurityEvent {
         
         [string]$IpAddress,
         
-        [string]$Endpoint,
-
-        [object]$Metadata
+        [string]$Endpoint
     )
     
     try {
@@ -55,21 +54,16 @@ function Write-SecurityEvent {
         try {
             $Table = Get-LinkToMeTable -TableName 'SecurityEvents'
             $EventRecord = @{
-                PartitionKey   = $EventType
-                RowKey         = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
+                PartitionKey = $EventType
+                RowKey = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
                 EventTimestamp = [DateTimeOffset]::UtcNow
-                UserId         = $UserId
-                Email          = $RedactedEmail
-                Username       = $Username
-                IpAddress      = $IpAddress
-                Endpoint       = $Endpoint
+                UserId = $UserId
+                Email = $RedactedEmail
+                Username = $Username
+                IpAddress = $IpAddress
+                Endpoint = $Endpoint
             }
-
-            if ($Metadata) {
-                $EventRecord['Metadata'] = [string]($Metadata | ConvertTo-Json -Depth 10 -Compress)
-            }
-
-            Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+            Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
         } catch {
             Write-Warning "Failed to store security event in table storage: $($_.Exception.Message)"
         }

@@ -14,12 +14,12 @@ function Invoke-AdminGetDashboardStats {
         # Get user's links count
         $LinksTable = Get-LinkToMeTable -TableName 'Links'
         $SafeUserId = Protect-TableQueryValue -Value $User.UserId
-        $Links = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+        $Links = Get-AzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
         $ActiveLinks = @($Links | Where-Object { $_.Active -eq $true })
         
         # Get analytics summary
         $AnalyticsTable = Get-LinkToMeTable -TableName 'Analytics'
-        $AnalyticsEvents = Get-LinkToMeAzDataTableEntity @AnalyticsTable -Filter "PartitionKey eq '$SafeUserId'"
+        $AnalyticsEvents = Get-AzDataTableEntity @AnalyticsTable -Filter "PartitionKey eq '$SafeUserId'"
         
         $PageViews = @($AnalyticsEvents | Where-Object { $_.EventType -eq 'PageView' })
         $LinkClicks = @($AnalyticsEvents | Where-Object { $_.EventType -eq 'LinkClick' })

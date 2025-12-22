@@ -55,7 +55,7 @@ function Invoke-AdminUpdateProfile {
         
         # Sanitize userId for query
         $SafeUserId = Protect-TableQueryValue -Value $User.UserId
-        $UserData = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+        $UserData = Get-AzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $UserData) {
             return [HttpResponseContext]@{
@@ -70,7 +70,7 @@ function Invoke-AdminUpdateProfile {
         if ($Body.avatar) { $UserData.Avatar = $Body.avatar }
         
         # Save changes
-        Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
+        Add-AzDataTableEntity @Table -Entity $UserData -Force
         
         $Results = @{
             userId = $UserData.RowKey

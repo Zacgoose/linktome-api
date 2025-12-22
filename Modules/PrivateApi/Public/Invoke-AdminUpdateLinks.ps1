@@ -76,7 +76,7 @@ function Invoke-AdminUpdateLinks {
         $SafeUserId = Protect-TableQueryValue -Value $User.UserId
         
         # Get existing links
-        $ExistingLinks = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
+        $ExistingLinks = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
         # Process each link in request
         foreach ($Link in $Body.links) {
@@ -88,7 +88,7 @@ function Invoke-AdminUpdateLinks {
                     $ExistingLink.Url = $Link.url
                     $ExistingLink.Order = $Link.order
                     $ExistingLink.Active = $Link.active
-                    Add-LinkToMeAzDataTableEntity @Table -Entity $ExistingLink -Force
+                    Add-AzDataTableEntity @Table -Entity $ExistingLink -Force
                 }
             } else {
                 # Create new link
@@ -100,7 +100,7 @@ function Invoke-AdminUpdateLinks {
                     Order = $Link.order
                     Active = $Link.active
                 }
-                Add-LinkToMeAzDataTableEntity @Table -Entity $NewLink -Force
+                Add-AzDataTableEntity @Table -Entity $NewLink -Force
             }
         }
         
