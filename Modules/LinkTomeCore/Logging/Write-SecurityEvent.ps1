@@ -63,7 +63,7 @@ function Write-SecurityEvent {
                 IpAddress = $IpAddress
                 Endpoint = $Endpoint
             }
-            Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+            Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
         } catch {
             Write-Warning "Failed to store security event in table storage: $($_.Exception.Message)"
         }
