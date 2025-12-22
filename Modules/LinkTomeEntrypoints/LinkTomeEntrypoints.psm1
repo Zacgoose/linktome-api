@@ -31,8 +31,12 @@ function Receive-LinkTomeHttpTrigger {
     
     if ($Response -is [System.Array]) {
         $Response = $Response |
-            Where-Object { $_ -ne $null -and $_.PSObject -and ($_.PSObject.Properties.Name -contains 'StatusCode') } |
+            Where-Object { $_ -and $_.PSObject.Properties['StatusCode'] } |
             Select-Object -First 1
+    }
+
+    if (-not $Response) {
+        $Response = $null
     }
 
     if ($Response -and $null -ne $Response.StatusCode) {
