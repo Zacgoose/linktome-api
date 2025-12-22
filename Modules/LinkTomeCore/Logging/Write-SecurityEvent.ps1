@@ -66,7 +66,7 @@ function Write-SecurityEvent {
             }
 
             if ($Metadata) {
-                $EventRecord['Metadata'] = $Metadata | ConvertTo-Json -Depth 10 -Compress
+                $EventRecord['Metadata'] = [string]($Metadata | ConvertTo-Json -Depth 10 -Compress)
             }
 
             Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
