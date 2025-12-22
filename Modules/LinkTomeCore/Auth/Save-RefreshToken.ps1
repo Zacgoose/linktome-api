@@ -21,14 +21,23 @@ function Save-RefreshToken {
         
         # Use token as PartitionKey for direct lookup, UserId as RowKey for user-based queries
         # Convert DateTime to ISO 8601 string for Azure Table Storage compatibility
+        # Cast ALL properties to [string] except booleans per CIPP-API pattern
         $TokenEntity = @{
-            PartitionKey = $Token
+            PartitionKey = [string]$Token
             RowKey = [string](New-Guid).ToString()
             UserId = [string]$UserId
             ExpiresAt = [string]$ExpiresAt.ToString('o')  # ISO 8601 format
             CreatedAt = [string](Get-Date).ToUniversalTime().ToString('o')  # ISO 8601 format
             IsValid = [bool]$true
         }
+        
+        Write-Information "DEBUG: TokenEntity properties:"
+        Write-Information "  PartitionKey type: $($TokenEntity.PartitionKey.GetType().FullName)"
+        Write-Information "  RowKey type: $($TokenEntity.RowKey.GetType().FullName)"
+        Write-Information "  UserId type: $($TokenEntity.UserId.GetType().FullName)"
+        Write-Information "  ExpiresAt type: $($TokenEntity.ExpiresAt.GetType().FullName)"
+        Write-Information "  CreatedAt type: $($TokenEntity.CreatedAt.GetType().FullName)"
+        Write-Information "  IsValid type: $($TokenEntity.IsValid.GetType().FullName), value: $($TokenEntity.IsValid)"
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $TokenEntity -Force
         
