@@ -32,12 +32,12 @@ function Receive-LinkTomeHttpTrigger {
     if ($Response -is [System.Array]) {
         # Array responses can happen via pipeline; pick first element with StatusCode, otherwise null to trigger fallback
         $Response = $Response |
-            Where-Object { $_ -and $_.PSObject.Properties['StatusCode'] } |
+            Where-Object { $_ -and $_.PSObject.Properties.StatusCode } |
             Select-Object -First 1
         # If no element matches, $Response will be $null and the fallback block below will run
     }
 
-    if ($Response -and $null -ne $Response.StatusCode) {
+    if ($null -ne $Response -and $null -ne $Response.StatusCode) {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
