@@ -48,7 +48,7 @@ function New-LinkToMeJWT {
         $Claims['companyId'] = $CompanyId
     }
     
-    $Token = New-JsonWebToken -Claims $Claims -HashAlgorithm SHA256 -SecureKey $Secret
+    $Token = New-JsonWebToken -Claims $Claims -HashAlgorithm SHA256 -SecureKey $Secret -TimeToLive ($ExpirationMinutes * 60)
     
     return $Token
 }
