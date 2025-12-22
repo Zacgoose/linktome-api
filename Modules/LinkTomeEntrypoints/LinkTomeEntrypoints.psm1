@@ -30,13 +30,10 @@ function Receive-LinkTomeHttpTrigger {
     $Response = New-LinkTomeCoreRequest -Request $Request -TriggerMetadata $TriggerMetadata
     
     if ($Response -is [System.Array]) {
+        # Array responses can happen via pipeline; pick first element with StatusCode, otherwise null to trigger fallback
         $Response = $Response |
             Where-Object { $_ -and $_.PSObject.Properties['StatusCode'] } |
             Select-Object -First 1
-    }
-
-    if (-not $Response) {
-        $Response = $null
     }
 
     if ($Response -and $null -ne $Response.StatusCode) {
