@@ -1,192 +1,307 @@
-[2025-12-22T06:26:35.417Z] INFORMATION: #### LinkToMe API Start ####
-[2025-12-22T06:26:38.688Z] INFORMATION: Function App: Local | API Version: 1.0.0 | PS Version: 7.4.12
-[2025-12-22T06:26:38.771Z] INFORMATION: Profile Load Timings: {"AllModules":3207.7,"Module_AzBobbyTables":26.64,"Module_LinkTomeCore":608.51,"Module_PrivateApi":325.95,"Module_PSJsonWebToken":2144.77,"Module_PublicApi":82.28,"Total":3239.49,"VersionCheck":31.53}
-[2025-12-22T06:26:38.910Z] INFORMATION: Processing endpoint: public/Login
-[2025-12-22T06:26:38.926Z] INFORMATION: Resolved: public/Login -> Invoke-PublicLogin
-[2025-12-22T06:26:39.498Z] INFORMATION: Invoking function: Invoke-PublicLogin
-[2025-12-22T06:26:39.974Z] INFORMATION: DEBUG: TokenEntity properties:
-[2025-12-22T06:26:39.979Z] INFORMATION:   PartitionKey type: System.String
-[2025-12-22T06:26:39.983Z] INFORMATION:   RowKey type: System.String
-[2025-12-22T06:26:39.989Z] INFORMATION:   UserId type: System.String
-[2025-12-22T06:26:39.995Z] INFORMATION:   ExpiresAt type: System.String
-[2025-12-22T06:26:39.998Z] INFORMATION:   CreatedAt type: System.String
-[2025-12-22T06:26:40.001Z] INFORMATION:   IsValid type: System.Boolean, value: True
-[2025-12-22T06:26:40.002Z] INFORMATION:   TokenType type: System.String, value: RefreshToken
-[2025-12-22T06:26:40.473Z] ERROR: Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.475Z]
-[2025-12-22T06:26:40.476Z] Exception             :
-[2025-12-22T06:26:40.479Z]     Type           : System.Management.Automation.RuntimeException
-[2025-12-22T06:26:40.481Z]     ErrorRecord    :
-[2025-12-22T06:26:40.483Z]         Exception             :
-[2025-12-22T06:26:40.485Z]             Type    : System.Management.Automation.ParentContainsErrorRecordException
-[2025-12-22T06:26:40.487Z]             Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.488Z]             HResult : -2146233087
-[2025-12-22T06:26:40.490Z]         CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
-[2025-12-22T06:26:40.492Z]         FullyQualifiedErrorId : ConvertToFinalInvalidCastException
-[2025-12-22T06:26:40.494Z]         InvocationInfo        :
-[2025-12-22T06:26:40.496Z]             ScriptLineNumber : 36
-[2025-12-22T06:26:40.498Z]             OffsetInLine     : 9
-[2025-12-22T06:26:40.499Z]             HistoryId        : 1
-[2025-12-22T06:26:40.501Z]             ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.502Z]             Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.504Z]
-[2025-12-22T06:26:40.505Z]             Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.507Z]             PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
-[2025-12-22T06:26:40.509Z]                                +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
-[2025-12-22T06:26:40.510Z]                                +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-22T06:26:40.512Z]             PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-22T06:26:40.513Z]             PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.515Z]             CommandOrigin    : Internal
-[2025-12-22T06:26:40.516Z]         ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
-[2025-12-22T06:26:40.518Z]     Message        : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.519Z]     InnerException :
-[2025-12-22T06:26:40.521Z]         Type        : System.Management.Automation.PSInvalidCastException
-[2025-12-22T06:26:40.522Z]         ErrorRecord :
-[2025-12-22T06:26:40.533Z]             Exception             :
-[2025-12-22T06:26:40.535Z]                 Type    : System.Management.Automation.ParentContainsErrorRecordException
-[2025-12-22T06:26:40.537Z]                 Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.538Z]                 HResult : -2146233087
-[2025-12-22T06:26:40.541Z]             CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
-[2025-12-22T06:26:40.542Z]             FullyQualifiedErrorId : ConvertToFinalInvalidCastException
-[2025-12-22T06:26:40.544Z]             InvocationInfo        :
-[2025-12-22T06:26:40.548Z]                 ScriptLineNumber : 36
-[2025-12-22T06:26:40.550Z]                 OffsetInLine     : 9
-[2025-12-22T06:26:40.554Z]                 HistoryId        : 1
-[2025-12-22T06:26:40.557Z]                 ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.562Z]                 Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.566Z]
-[2025-12-22T06:26:40.568Z]                 Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.569Z]                 PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
-[2025-12-22T06:26:40.571Z]                                    +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
-[2025-12-22T06:26:40.572Z]                                    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-22T06:26:40.574Z]                 PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-22T06:26:40.575Z]                 PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.577Z]                 CommandOrigin    : Internal
-[2025-12-22T06:26:40.578Z]             ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
-[2025-12-22T06:26:40.580Z]         TargetSite  :
-[2025-12-22T06:26:40.581Z]             Name          : ThrowInvalidCastException
-[2025-12-22T06:26:40.582Z]             DeclaringType : [System.Management.Automation.LanguagePrimitives]
-[2025-12-22T06:26:40.584Z]             MemberType    : Method
-[2025-12-22T06:26:40.585Z]             Module        : System.Management.Automation.dll
-[2025-12-22T06:26:40.588Z]         Message     : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.590Z]         Data        : System.Collections.ListDictionaryInternal
-[2025-12-22T06:26:40.592Z]         Source      : System.Management.Automation
-[2025-12-22T06:26:40.593Z]         HResult     : -2147467262
-[2025-12-22T06:26:40.595Z]         StackTrace  :
-[2025-12-22T06:26:40.597Z]    at System.Management.Automation.LanguagePrimitives.ThrowInvalidCastException(Object valueToConvert, Type resultType)
-[2025-12-22T06:26:40.598Z]    at System.Management.Automation.LanguagePrimitives.ConvertNoConversion(Object valueToConvert, Type resultType, Boolean recurse, PSObject originalValueToConvert, IFormatProvider formatProvider, TypeTable backupTable)
-[2025-12-22T06:26:40.600Z]    at CallSite.Target(Closure, CallSite, Object)
-[2025-12-22T06:26:40.602Z]    at System.Dynamic.UpdateDelegates.UpdateAndExecute1[T0,TRet](CallSite site, T0 arg0)
-[2025-12-22T06:26:40.614Z]    at System.Management.Automation.Interpreter.DynamicInstruction`2.Run(InterpretedFrame frame)
-[2025-12-22T06:26:40.616Z]    at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
-[2025-12-22T06:26:40.619Z]     HResult        : -2146233087
-[2025-12-22T06:26:40.621Z] CategoryInfo          : InvalidArgument: (:) [], RuntimeException
-[2025-12-22T06:26:40.623Z] FullyQualifiedErrorId : ConvertToFinalInvalidCastException
-[2025-12-22T06:26:40.625Z] InvocationInfo        :
-[2025-12-22T06:26:40.627Z]     ScriptLineNumber : 36
-[2025-12-22T06:26:40.628Z]     OffsetInLine     : 9
-[2025-12-22T06:26:40.630Z]     HistoryId        : 1
-[2025-12-22T06:26:40.631Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.633Z]     Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.635Z]
-[2025-12-22T06:26:40.637Z]     Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.638Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
-[2025-12-22T06:26:40.640Z]                        +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
-[2025-12-22T06:26:40.641Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-22T06:26:40.643Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-22T06:26:40.644Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.646Z]     CommandOrigin    : Internal
-[2025-12-22T06:26:40.647Z] ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
-[2025-12-22T06:26:40.651Z]
-[2025-12-22T06:26:40.652Z]
-[2025-12-22T06:26:40.653Z] Result: ERROR: Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.655Z]
-[2025-12-22T06:26:40.656Z] Exception             :
-[2025-12-22T06:26:40.658Z]     Type           : System.Management.Automation.RuntimeException
-[2025-12-22T06:26:40.659Z]     ErrorRecord    :
-[2025-12-22T06:26:40.661Z]         Exception             :
-[2025-12-22T06:26:40.663Z]             Type    : System.Management.Automation.ParentContainsErrorRecordException
-[2025-12-22T06:26:40.665Z]             Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.666Z]             HResult : -2146233087
-[2025-12-22T06:26:40.668Z]         CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
-[2025-12-22T06:26:40.670Z]         FullyQualifiedErrorId : ConvertToFinalInvalidCastException
-[2025-12-22T06:26:40.671Z]         InvocationInfo        :
-[2025-12-22T06:26:40.673Z]             ScriptLineNumber : 36
-[2025-12-22T06:26:40.675Z]             OffsetInLine     : 9
-[2025-12-22T06:26:40.676Z]             HistoryId        : 1
-[2025-12-22T06:26:40.678Z]             ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.680Z]             Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.683Z]
-[2025-12-22T06:26:40.685Z]             Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.686Z]             PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
-[2025-12-22T06:26:40.688Z]                                +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
-[2025-12-22T06:26:40.690Z]                                +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-22T06:26:40.691Z]             PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-22T06:26:40.693Z]             PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.695Z]             CommandOrigin    : Internal
-[2025-12-22T06:26:40.697Z]         ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
-[2025-12-22T06:26:40.698Z]     Message        : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.700Z]     InnerException :
-[2025-12-22T06:26:40.702Z]         Type        : System.Management.Automation.PSInvalidCastException
-[2025-12-22T06:26:40.704Z]         ErrorRecord :
-[2025-12-22T06:26:40.705Z]             Exception             :
-[2025-12-22T06:26:40.707Z]                 Type    : System.Management.Automation.ParentContainsErrorRecordException
-[2025-12-22T06:26:40.709Z]                 Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.710Z]                 HResult : -2146233087
-[2025-12-22T06:26:40.713Z]             CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
-[2025-12-22T06:26:40.715Z]             FullyQualifiedErrorId : ConvertToFinalInvalidCastException
-[2025-12-22T06:26:40.719Z]             InvocationInfo        :
-[2025-12-22T06:26:40.722Z]                 ScriptLineNumber : 36
-[2025-12-22T06:26:40.724Z]                 OffsetInLine     : 9
-[2025-12-22T06:26:40.726Z]                 HistoryId        : 1
-[2025-12-22T06:26:40.728Z]                 ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.730Z]                 Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.732Z]
-[2025-12-22T06:26:40.735Z]                 Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.737Z]                 PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
-[2025-12-22T06:26:40.739Z]                                    +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
-[2025-12-22T06:26:40.741Z]                                    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-22T06:26:40.744Z]                 PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-22T06:26:40.746Z]                 PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.748Z]                 CommandOrigin    : Internal
-[2025-12-22T06:26:40.750Z]             ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
-[2025-12-22T06:26:40.752Z]         TargetSite  :
-[2025-12-22T06:26:40.753Z]             Name          : ThrowInvalidCastException
-[2025-12-22T06:26:40.755Z]             DeclaringType : [System.Management.Automation.LanguagePrimitives]
-[2025-12-22T06:26:40.757Z]             MemberType    : Method
-[2025-12-22T06:26:40.758Z]             Module        : System.Management.Automation.dll
-[2025-12-22T06:26:40.760Z]         Message     : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
-[2025-12-22T06:26:40.762Z]         Data        : System.Collections.ListDictionaryInternal
-[2025-12-22T06:26:40.763Z]         Source      : System.Management.Automation
-[2025-12-22T06:26:40.765Z]         HResult     : -2147467262
-[2025-12-22T06:26:40.767Z]         StackTrace  :
-[2025-12-22T06:26:40.768Z]    at System.Management.Automation.LanguagePrimitives.ThrowInvalidCastException(Object valueToConvert, Type resultType)
-[2025-12-22T06:26:40.770Z]    at System.Management.Automation.LanguagePrimitives.ConvertNoConversion(Object valueToConvert, Type resultType, Boolean recurse, PSObject originalValueToConvert, IFormatProvider formatProvider, TypeTable backupTable)
-[2025-12-22T06:26:40.771Z]    at CallSite.Target(Closure, CallSite, Object)
-[2025-12-22T06:26:40.773Z]    at System.Dynamic.UpdateDelegates.UpdateAndExecute1[T0,TRet](CallSite site, T0 arg0)
-[2025-12-22T06:26:40.774Z]    at System.Management.Automation.Interpreter.DynamicInstruction`2.Run(InterpretedFrame frame)
-[2025-12-22T06:26:40.777Z]    at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
-[2025-12-22T06:26:40.779Z]     HResult        : -2146233087
-[2025-12-22T06:26:40.781Z] CategoryInfo          : InvalidArgument: (:) [], RuntimeException
-[2025-12-22T06:26:40.782Z] FullyQualifiedErrorId : ConvertToFinalInvalidCastException
-[2025-12-22T06:26:40.784Z] InvocationInfo        :
-[2025-12-22T06:26:40.786Z]     ScriptLineNumber : 36
-[2025-12-22T06:26:40.787Z]     OffsetInLine     : 9
-[2025-12-22T06:26:40.789Z]     HistoryId        : 1
-[2025-12-22T06:26:40.791Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.792Z]     Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.794Z]
-[2025-12-22T06:26:40.796Z]     Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-[2025-12-22T06:26:40.798Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
-[2025-12-22T06:26:40.799Z]                        +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
-[2025-12-22T06:26:40.801Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-22T06:26:40.803Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-22T06:26:40.804Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-22T06:26:40.807Z]     CommandOrigin    : Internal
-[2025-12-22T06:26:40.809Z] ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
-[2025-12-22T06:26:40.811Z]
-[2025-12-22T06:26:40.812Z]
+[2025-12-22T06:37:28.282Z] INFORMATION: #### LinkToMe API Start ####
+[2025-12-22T06:37:28.416Z] INFORMATION: Invoking function: Invoke-AdminGetProfile
+[2025-12-22T06:37:28.419Z] INFORMATION: Invoking function: Invoke-AdminGetProfile
+[2025-12-22T06:37:28.454Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=b28838f5-6301-495d-a27f-7e2588b9a936, Duration=1184ms)
+[2025-12-22T06:37:28.454Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=e29ffff1-ef76-43b6-8f5f-b8d9a085be6b, Duration=1189ms)
+[2025-12-22T06:37:29.048Z] INFORMATION: Function App: Local | API Version: 1.0.0 | PS Version: 7.4.12
+[2025-12-22T06:37:29.051Z] INFORMATION: Profile Load Timings: {"AllModules":764.99,"Module_AzBobbyTables":11.91,"Module_LinkTomeCore":332.04,"Module_PrivateApi":102.64,"Module_PSJsonWebToken":255.73,"Module_PublicApi":61.93,"Total":766.98,"VersionCheck":1.94}
+[2025-12-22T06:37:29.069Z] INFORMATION: Processing endpoint: public/RefreshToken
+[2025-12-22T06:37:29.072Z] INFORMATION: Resolved: public/RefreshToken -> Invoke-PublicRefreshToken
+[2025-12-22T06:37:29.075Z] INFORMATION: Invoking function: Invoke-PublicRefreshToken
+[2025-12-22T06:37:29.081Z] INFORMATION: Processing endpoint: admin/GetDashboardStats
+[2025-12-22T06:37:29.084Z] INFORMATION: Resolved: admin/GetDashboardStats -> Invoke-AdminGetDashboardStats
+[2025-12-22T06:37:29.150Z] INFORMATION: Invoking function: Invoke-AdminGetDashboardStats
+[2025-12-22T06:37:29.183Z] INFORMATION: DEBUG: TokenEntity properties:
+[2025-12-22T06:37:29.183Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=06f2eb47-cde9-47f0-ab30-2f713003af46, Duration=1821ms)
+[2025-12-22T06:37:29.188Z] INFORMATION:   PartitionKey type: System.String
+[2025-12-22T06:37:29.192Z] INFORMATION:   RowKey type: System.String
+[2025-12-22T06:37:29.194Z] INFORMATION:   UserId type: System.String
+[2025-12-22T06:37:29.196Z] INFORMATION:   ExpiresAt type: System.String
+[2025-12-22T06:37:29.197Z] INFORMATION:   CreatedAt type: System.String
+[2025-12-22T06:37:29.198Z] INFORMATION:   IsValid type: System.Boolean, value: True
+[2025-12-22T06:37:29.200Z] INFORMATION:   TokenType type: System.String, value: RefreshToken
+[2025-12-22T06:37:29.505Z] ERROR: Token refresh error: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.507Z]
+[2025-12-22T06:37:29.508Z] Exception             :
+[2025-12-22T06:37:29.510Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.512Z]     Message : Token refresh error: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.515Z]     HResult : -2146233087
+[2025-12-22T06:37:29.516Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.518Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Invoke-PublicRefreshToken
+[2025-12-22T06:37:29.519Z] InvocationInfo        :
+[2025-12-22T06:37:29.521Z]     MyCommand        : Invoke-PublicRefreshToken
+[2025-12-22T06:37:29.522Z]     ScriptLineNumber : 193
+[2025-12-22T06:37:29.524Z]     OffsetInLine     : 21
+[2025-12-22T06:37:29.525Z]     HistoryId        : 1
+[2025-12-22T06:37:29.526Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T06:37:29.530Z]     Line             : $Response = & $FunctionName @HttpTrigger
+[2025-12-22T06:37:29.531Z]
+[2025-12-22T06:37:29.533Z]     Statement        : & $FunctionName @HttpTrigger
+[2025-12-22T06:37:29.535Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:193 char:21
+[2025-12-22T06:37:29.536Z]                        +         $Response = & $FunctionName @HttpTrigger
+[2025-12-22T06:37:29.538Z]                        +                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.540Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T06:37:29.541Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T06:37:29.543Z]     InvocationName   : &
+[2025-12-22T06:37:29.544Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.546Z] ScriptStackTrace      : at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 107
+[2025-12-22T06:37:29.548Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.549Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.551Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.552Z]       0
+[2025-12-22T06:37:29.554Z]       1
+[2025-12-22T06:37:29.556Z]
+[2025-12-22T06:37:29.557Z]
+[2025-12-22T06:37:29.558Z] Result: ERROR: Token refresh error: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.561Z]
+[2025-12-22T06:37:29.562Z] Exception             :
+[2025-12-22T06:37:29.564Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.566Z]     Message : Token refresh error: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.568Z]     HResult : -2146233087
+[2025-12-22T06:37:29.569Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.571Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Invoke-PublicRefreshToken
+[2025-12-22T06:37:29.572Z] InvocationInfo        :
+[2025-12-22T06:37:29.574Z]     MyCommand        : Invoke-PublicRefreshToken
+[2025-12-22T06:37:29.575Z]     ScriptLineNumber : 193
+[2025-12-22T06:37:29.577Z]     OffsetInLine     : 21
+[2025-12-22T06:37:29.578Z]     HistoryId        : 1
+[2025-12-22T06:37:29.580Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T06:37:29.581Z]     Line             : $Response = & $FunctionName @HttpTrigger
+[2025-12-22T06:37:29.583Z]
+[2025-12-22T06:37:29.584Z]     Statement        : & $FunctionName @HttpTrigger
+[2025-12-22T06:37:29.586Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:193 char:21
+[2025-12-22T06:37:29.588Z]                        +         $Response = & $FunctionName @HttpTrigger
+[2025-12-22T06:37:29.589Z]                        +                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.593Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T06:37:29.595Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T06:37:29.597Z]     InvocationName   : &
+[2025-12-22T06:37:29.599Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.601Z] ScriptStackTrace      : at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 107
+[2025-12-22T06:37:29.602Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.604Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.605Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.606Z]       0
+[2025-12-22T06:37:29.608Z]       1
+[2025-12-22T06:37:29.609Z]
+[2025-12-22T06:37:29.610Z]
 Type:
-Exception: Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+Exception: Token refresh error: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
 Stack: .
-[2025-12-22T06:26:40.815Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=21d19370-e869-4d27-b131-950fedc75098, Duration=5832ms)
+[2025-12-22T06:37:29.613Z] ERROR: Error Details: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.615Z]
+[2025-12-22T06:37:29.616Z] Exception             :
+[2025-12-22T06:37:29.617Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.619Z]     Message : Error Details: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.620Z]     HResult : -2146233087
+[2025-12-22T06:37:29.625Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.627Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
+[2025-12-22T06:37:29.629Z] InvocationInfo        :
+[2025-12-22T06:37:29.630Z]     MyCommand        : Get-SafeErrorResponse
+[2025-12-22T06:37:29.632Z]     ScriptLineNumber : 108
+[2025-12-22T06:37:29.633Z]     OffsetInLine     : 20
+[2025-12-22T06:37:29.635Z]     HistoryId        : 1
+[2025-12-22T06:37:29.637Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.638Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.640Z]
+[2025-12-22T06:37:29.641Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.643Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1:108 char:20
+[2025-12-22T06:37:29.645Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "To …
+[2025-12-22T06:37:29.646Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.648Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T06:37:29.649Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.651Z]     InvocationName   : Get-SafeErrorResponse
+[2025-12-22T06:37:29.655Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.659Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 25
+[2025-12-22T06:37:29.660Z]                         at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 108
+[2025-12-22T06:37:29.662Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.663Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.665Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.666Z]       0
+[2025-12-22T06:37:29.668Z]       1
+[2025-12-22T06:37:29.669Z]
+[2025-12-22T06:37:29.670Z]
+[2025-12-22T06:37:29.671Z] Result: ERROR: Error Details: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.673Z]
+[2025-12-22T06:37:29.674Z] Exception             :
+[2025-12-22T06:37:29.676Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.678Z]     Message : Error Details: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+[2025-12-22T06:37:29.679Z]     HResult : -2146233087
+[2025-12-22T06:37:29.681Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.682Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
+[2025-12-22T06:37:29.687Z] InvocationInfo        :
+[2025-12-22T06:37:29.689Z]     MyCommand        : Get-SafeErrorResponse
+[2025-12-22T06:37:29.690Z]     ScriptLineNumber : 108
+[2025-12-22T06:37:29.692Z]     OffsetInLine     : 20
+[2025-12-22T06:37:29.693Z]     HistoryId        : 1
+[2025-12-22T06:37:29.695Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.696Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.698Z]
+[2025-12-22T06:37:29.700Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.701Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1:108 char:20
+[2025-12-22T06:37:29.703Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "To …
+[2025-12-22T06:37:29.705Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.706Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T06:37:29.707Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.709Z]     InvocationName   : Get-SafeErrorResponse
+[2025-12-22T06:37:29.711Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.712Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 25
+[2025-12-22T06:37:29.714Z]                         at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 108
+[2025-12-22T06:37:29.721Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.723Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.724Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.726Z]       0
+[2025-12-22T06:37:29.728Z]       1
+[2025-12-22T06:37:29.729Z]
+[2025-12-22T06:37:29.730Z]
+Type:
+Exception: Error Details: Cannot validate argument on parameter 'EventType'. The argument "TokenRefreshed" does not belong to the set "LoginSuccess,LoginFailed,SignupSuccess,SignupFailed,AuthFailed,RateLimitExceeded,TokenValidationFailed,InputValidationFailed" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again.
+Stack: .
+[2025-12-22T06:37:29.732Z] ERROR: Error Type: System.Management.Automation.ParameterBindingValidationException
+[2025-12-22T06:37:29.734Z]
+[2025-12-22T06:37:29.735Z] Exception             :
+[2025-12-22T06:37:29.737Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.738Z]     Message : Error Type: System.Management.Automation.ParameterBindingValidationException
+[2025-12-22T06:37:29.740Z]     HResult : -2146233087
+[2025-12-22T06:37:29.741Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.743Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
+[2025-12-22T06:37:29.744Z] InvocationInfo        :
+[2025-12-22T06:37:29.746Z]     MyCommand        : Get-SafeErrorResponse
+[2025-12-22T06:37:29.753Z]     ScriptLineNumber : 108
+[2025-12-22T06:37:29.755Z]     OffsetInLine     : 20
+[2025-12-22T06:37:29.756Z]     HistoryId        : 1
+[2025-12-22T06:37:29.757Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.759Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.761Z]
+[2025-12-22T06:37:29.762Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.764Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1:108 char:20
+[2025-12-22T06:37:29.765Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "To …
+[2025-12-22T06:37:29.767Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.768Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T06:37:29.770Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.771Z]     InvocationName   : Get-SafeErrorResponse
+[2025-12-22T06:37:29.773Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.774Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 26
+[2025-12-22T06:37:29.775Z]                         at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 108
+[2025-12-22T06:37:29.777Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.786Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.788Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.790Z]       0
+[2025-12-22T06:37:29.791Z]       1
+[2025-12-22T06:37:29.793Z]
+[2025-12-22T06:37:29.794Z]
+[2025-12-22T06:37:29.795Z] Result: ERROR: Error Type: System.Management.Automation.ParameterBindingValidationException
+[2025-12-22T06:37:29.796Z]
+[2025-12-22T06:37:29.798Z] Exception             :
+[2025-12-22T06:37:29.799Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.801Z]     Message : Error Type: System.Management.Automation.ParameterBindingValidationException
+[2025-12-22T06:37:29.803Z]     HResult : -2146233087
+[2025-12-22T06:37:29.804Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.806Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
+[2025-12-22T06:37:29.808Z] InvocationInfo        :
+[2025-12-22T06:37:29.816Z]     MyCommand        : Get-SafeErrorResponse
+[2025-12-22T06:37:29.819Z]     ScriptLineNumber : 108
+[2025-12-22T06:37:29.820Z]     OffsetInLine     : 20
+[2025-12-22T06:37:29.822Z]     HistoryId        : 1
+[2025-12-22T06:37:29.824Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.825Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.827Z]
+[2025-12-22T06:37:29.829Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.830Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1:108 char:20
+[2025-12-22T06:37:29.832Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "To …
+[2025-12-22T06:37:29.833Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.835Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T06:37:29.836Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.838Z]     InvocationName   : Get-SafeErrorResponse
+[2025-12-22T06:37:29.839Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.845Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 26
+[2025-12-22T06:37:29.847Z]                         at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 108
+[2025-12-22T06:37:29.848Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.850Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.851Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.853Z]       0
+[2025-12-22T06:37:29.854Z]       1
+[2025-12-22T06:37:29.856Z]
+[2025-12-22T06:37:29.857Z]
+Type:
+Exception: Error Type: System.Management.Automation.ParameterBindingValidationException
+Stack: .
+[2025-12-22T06:37:29.859Z] ERROR: Stack Trace: at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 98
+[2025-12-22T06:37:29.861Z] at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.862Z] at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.864Z]
+[2025-12-22T06:37:29.864Z] Exception             :
+[2025-12-22T06:37:29.866Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.867Z]     Message : Stack Trace: at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 98
+[2025-12-22T06:37:29.868Z]               at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.870Z]               at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.877Z]     HResult : -2146233087
+[2025-12-22T06:37:29.878Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.880Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
+[2025-12-22T06:37:29.881Z] InvocationInfo        :
+[2025-12-22T06:37:29.882Z]     MyCommand        : Get-SafeErrorResponse
+[2025-12-22T06:37:29.884Z]     ScriptLineNumber : 108
+[2025-12-22T06:37:29.885Z]     OffsetInLine     : 20
+[2025-12-22T06:37:29.886Z]     HistoryId        : 1
+[2025-12-22T06:37:29.887Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.889Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.890Z]
+[2025-12-22T06:37:29.891Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.893Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1:108 char:20
+[2025-12-22T06:37:29.894Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "To …
+[2025-12-22T06:37:29.896Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.897Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T06:37:29.898Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.899Z]     InvocationName   : Get-SafeErrorResponse
+[2025-12-22T06:37:29.901Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.902Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 28
+[2025-12-22T06:37:29.907Z]                         at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 108
+[2025-12-22T06:37:29.909Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.910Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.912Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.913Z]       0
+[2025-12-22T06:37:29.914Z]       1
+[2025-12-22T06:37:29.916Z]
+[2025-12-22T06:37:29.916Z]
+[2025-12-22T06:37:29.917Z] Result: ERROR: Stack Trace: at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 98
+[2025-12-22T06:37:29.919Z] at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.920Z] at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.921Z]
+[2025-12-22T06:37:29.922Z] Exception             :
+[2025-12-22T06:37:29.924Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T06:37:29.925Z]     Message : Stack Trace: at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 98
+[2025-12-22T06:37:29.926Z]               at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.927Z]               at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.929Z]     HResult : -2146233087
+[2025-12-22T06:37:29.930Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T06:37:29.931Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
+[2025-12-22T06:37:29.933Z] InvocationInfo        :
+[2025-12-22T06:37:29.938Z]     MyCommand        : Get-SafeErrorResponse
+[2025-12-22T06:37:29.940Z]     ScriptLineNumber : 108
+[2025-12-22T06:37:29.941Z]     OffsetInLine     : 20
+[2025-12-22T06:37:29.942Z]     HistoryId        : 1
+[2025-12-22T06:37:29.944Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.945Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.946Z]
+[2025-12-22T06:37:29.948Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
+[2025-12-22T06:37:29.949Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1:108 char:20
+[2025-12-22T06:37:29.950Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "To …
+[2025-12-22T06:37:29.952Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T06:37:29.953Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T06:37:29.955Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1
+[2025-12-22T06:37:29.956Z]     InvocationName   : Get-SafeErrorResponse
+[2025-12-22T06:37:29.957Z]     CommandOrigin    : Internal
+[2025-12-22T06:37:29.959Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 28
+[2025-12-22T06:37:29.960Z]                         at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 108
+[2025-12-22T06:37:29.961Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.962Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T06:37:29.964Z] PipelineIterationInfo :
+[2025-12-22T06:37:29.965Z]       0
+[2025-12-22T06:37:29.969Z]       1
+[2025-12-22T06:37:29.971Z]
+[2025-12-22T06:37:29.972Z]
+Type:
+Exception: Stack Trace: at Invoke-PublicRefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicRefreshToken.ps1: line 98
+[2025-12-22T06:37:29.973Z] at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 193
+[2025-12-22T06:37:29.974Z] at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+Stack: .
+[2025-12-22T06:37:29.976Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=14a715b6-6119-4b15-bd0c-4bff839ba80a, Duration=2615ms)
