@@ -100,6 +100,13 @@ function Invoke-PublicRefreshToken {
         $Results = @{
             accessToken = $NewAccessToken
             refreshToken = $NewRefreshToken
+            user = @{
+                userId = $User.RowKey
+                email = $User.PartitionKey
+                username = $User.Username
+                roles = $Roles
+                permissions = $Permissions
+            }
         }
         $StatusCode = [HttpStatusCode]::OK
         
