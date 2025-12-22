@@ -53,9 +53,7 @@ function Invoke-PublicSignup {
         $ExistingEmail = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         if ($ExistingEmail) {
             # Log failed signup attempt
-            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
-                Reason = 'EmailAlreadyRegistered'
-            }
+            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Reason 'EmailAlreadyRegistered'
             
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
@@ -68,9 +66,7 @@ function Invoke-PublicSignup {
         $ExistingUsername = Get-AzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
         if ($ExistingUsername) {
             # Log failed signup attempt
-            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
-                Reason = 'UsernameAlreadyTaken'
-            }
+            Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Reason 'UsernameAlreadyTaken'
             
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
