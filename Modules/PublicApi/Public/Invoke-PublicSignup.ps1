@@ -86,6 +86,10 @@ function Invoke-PublicSignup {
         $DefaultRole = 'user'
         $DefaultPermissions = Get-DefaultRolePermissions -Role $DefaultRole
         
+        # Convert arrays to JSON strings for Azure Table Storage compatibility
+        $RolesJson = @($DefaultRole) | ConvertTo-Json -Compress
+        $PermissionsJson = $DefaultPermissions | ConvertTo-Json -Compress
+        
         $NewUser = @{
             PartitionKey = $Body.email.ToLower()
             RowKey = $UserId
@@ -96,8 +100,8 @@ function Invoke-PublicSignup {
             PasswordHash = $PasswordData.Hash
             PasswordSalt = $PasswordData.Salt
             IsActive = $true
-            Roles = @($DefaultRole)
-            Permissions = $DefaultPermissions
+            Roles = $RolesJson
+            Permissions = $PermissionsJson
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force

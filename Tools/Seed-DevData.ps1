@@ -49,6 +49,10 @@ foreach ($TestUser in $TestUsers) {
     $UserId = 'user-' + (New-Guid).ToString()
     $DefaultPermissions = Get-DefaultRolePermissions -Role $TestUser.Role
     
+    # Convert arrays to JSON strings for Azure Table Storage compatibility
+    $RolesJson = @($TestUser.Role) | ConvertTo-Json -Compress
+    $PermissionsJson = $DefaultPermissions | ConvertTo-Json -Compress
+    
     $User = @{
         PartitionKey = $TestUser.Email
         RowKey = $UserId
@@ -59,8 +63,8 @@ foreach ($TestUser in $TestUsers) {
         PasswordHash = $PasswordData.Hash
         PasswordSalt = $PasswordData.Salt
         IsActive = $true
-        Roles = @($TestUser.Role)
-        Permissions = $DefaultPermissions
+        Roles = $RolesJson
+        Permissions = $PermissionsJson
     }
     
     Write-Host "Creating user: $($User.PartitionKey) (Role: $($TestUser.Role))" -ForegroundColor Yellow

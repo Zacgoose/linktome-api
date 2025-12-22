@@ -64,15 +64,27 @@ function Invoke-PublicLogin {
         # Log successful login
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
-        # Get roles and permissions
+        # Get roles and permissions (deserialize from JSON if needed)
         $Roles = if ($User.Roles) {
-            if ($User.Roles -is [array]) { $User.Roles } else { @($User.Roles) }
+            if ($User.Roles -is [string] -and $User.Roles.StartsWith('[')) {
+                $User.Roles | ConvertFrom-Json
+            } elseif ($User.Roles -is [array]) {
+                $User.Roles
+            } else {
+                @($User.Roles)
+            }
         } else {
             @('user')
         }
         
         $Permissions = if ($User.Permissions) {
-            if ($User.Permissions -is [array]) { $User.Permissions } else { @($User.Permissions) }
+            if ($User.Permissions -is [string] -and $User.Permissions.StartsWith('[')) {
+                $User.Permissions | ConvertFrom-Json
+            } elseif ($User.Permissions -is [array]) {
+                $User.Permissions
+            } else {
+                @($User.Permissions)
+            }
         } else {
             Get-DefaultRolePermissions -Role $Roles[0]
         }
