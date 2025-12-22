@@ -87,7 +87,7 @@ function Invoke-PublicSignup {
         $DefaultPermissions = Get-DefaultRolePermissions -Role $DefaultRole
         
         # Convert arrays to JSON strings for Azure Table Storage compatibility
-        # Cast ALL properties to [string] except booleans per CIPP-API pattern
+        # Cast to [string] per CIPP-API pattern
         $RolesJson = [string](@($DefaultRole) | ConvertTo-Json -Compress)
         $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
         
@@ -101,8 +101,8 @@ function Invoke-PublicSignup {
             PasswordHash = [string]$PasswordData.Hash
             PasswordSalt = [string]$PasswordData.Salt
             IsActive = [bool]$true
-            Roles = [string]$RolesJson
-            Permissions = [string]$PermissionsJson
+            Roles = $RolesJson
+            Permissions = $PermissionsJson
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force

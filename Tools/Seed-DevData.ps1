@@ -50,7 +50,7 @@ foreach ($TestUser in $TestUsers) {
     $DefaultPermissions = Get-DefaultRolePermissions -Role $TestUser.Role
     
     # Convert arrays to JSON strings for Azure Table Storage compatibility
-    # Cast ALL properties to [string] except booleans per CIPP-API pattern
+    # Cast to [string] per CIPP-API pattern
     $RolesJson = [string](@($TestUser.Role) | ConvertTo-Json -Compress)
     $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
     
@@ -64,8 +64,8 @@ foreach ($TestUser in $TestUsers) {
         PasswordHash = [string]$PasswordData.Hash
         PasswordSalt = [string]$PasswordData.Salt
         IsActive = [bool]$true
-        Roles = [string]$RolesJson
-        Permissions = [string]$PermissionsJson
+        Roles = $RolesJson
+        Permissions = $PermissionsJson
     }
     
     Write-Host "Creating user: $($User.PartitionKey) (Role: $($TestUser.Role))" -ForegroundColor Yellow
