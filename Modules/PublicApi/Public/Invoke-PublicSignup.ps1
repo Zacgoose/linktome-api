@@ -50,7 +50,7 @@ function Invoke-PublicSignup {
         
         # Check if email exists - sanitize for query
         $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
-        $ExistingEmail = Get-AzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
+        $ExistingEmail = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         if ($ExistingEmail) {
             # Log failed signup attempt
             Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
@@ -65,7 +65,7 @@ function Invoke-PublicSignup {
         
         # Check if username exists - sanitize for query
         $SafeUsername = Protect-TableQueryValue -Value $Body.username.ToLower()
-        $ExistingUsername = Get-AzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
+        $ExistingUsername = Get-LinkToMeAzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
         if ($ExistingUsername) {
             # Log failed signup attempt
             Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Metadata @{
@@ -100,7 +100,7 @@ function Invoke-PublicSignup {
             Permissions = $DefaultPermissions
         }
         
-        Add-AzDataTableEntity @Table -Entity $NewUser -Force
+        Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force
         
         # Log successful signup
         Write-SecurityEvent -EventType 'SignupSuccess' -UserId $UserId -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup'

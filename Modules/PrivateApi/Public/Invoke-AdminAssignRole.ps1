@@ -39,7 +39,7 @@ function Invoke-AdminAssignRole {
         
         # Get the target user
         $SafeUserId = Protect-TableQueryValue -Value $Body.userId
-        $TargetUser = Get-AzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+        $TargetUser = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $TargetUser) {
             return [HttpResponseContext]@{
@@ -71,7 +71,7 @@ function Invoke-AdminAssignRole {
         $TargetUser.Roles = @($Body.role)
         $TargetUser.Permissions = $DefaultPermissions
         
-        Update-AzDataTableEntity @Table -Entity $TargetUser -Force
+        Update-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
         
         # Log role assignment
         $ClientIP = Get-ClientIPAddress -Request $Request

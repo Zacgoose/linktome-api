@@ -43,7 +43,7 @@ function Invoke-PublicRefreshToken {
         # Get user with latest roles and permissions
         $Table = Get-LinkToMeTable -TableName 'Users'
         $SafeUserId = Protect-TableQueryValue -Value $TokenRecord.UserId
-        $User = Get-AzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+        $User = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $User) {
             return [HttpResponseContext]@{

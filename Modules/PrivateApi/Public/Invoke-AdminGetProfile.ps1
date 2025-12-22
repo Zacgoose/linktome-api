@@ -16,7 +16,7 @@ function Invoke-AdminGetProfile {
         # Sanitize userId for query
         $SafeUserId = Protect-TableQueryValue -Value $User.UserId
         $filter = "RowKey eq '$SafeUserId'"
-        $entities = Get-AzDataTableEntity @Table -Filter $filter
+        $entities = Get-LinkToMeAzDataTableEntity @Table -Filter $filter
         $UserData = $entities | Select-Object -First 1
 
         if (-not $UserData) {
