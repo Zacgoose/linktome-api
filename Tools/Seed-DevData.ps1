@@ -55,15 +55,15 @@ foreach ($TestUser in $TestUsers) {
     $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
     
     $User = @{
-        PartitionKey = $TestUser.Email
-        RowKey = $UserId
-        Username = $TestUser.Username
-        DisplayName = $TestUser.DisplayName
-        Bio = $TestUser.Bio
-        Avatar = "https://ui-avatars.com/api/?name=$($TestUser.DisplayName -replace ' ', '+')&size=200"
-        PasswordHash = $PasswordData.Hash
-        PasswordSalt = $PasswordData.Salt
-        IsActive = $true
+        PartitionKey = [string]$TestUser.Email
+        RowKey = [string]$UserId
+        Username = [string]$TestUser.Username
+        DisplayName = [string]$TestUser.DisplayName
+        Bio = [string]$TestUser.Bio
+        Avatar = [string]"https://ui-avatars.com/api/?name=$($TestUser.DisplayName -replace ' ', '+')&size=200"
+        PasswordHash = [string]$PasswordData.Hash
+        PasswordSalt = [string]$PasswordData.Salt
+        IsActive = [bool]$true
         Roles = $RolesJson
         Permissions = $PermissionsJson
     }

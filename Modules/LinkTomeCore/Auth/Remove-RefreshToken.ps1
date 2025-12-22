@@ -20,7 +20,7 @@ function Remove-RefreshToken {
         $TokenRecords = Get-LinkToMeAzDataTableEntity @Table -Filter $Filter
         
         foreach ($TokenRecord in $TokenRecords) {
-            $TokenRecord.IsValid = [string]'false'
+            $TokenRecord.IsValid = [bool]$false
             Add-LinkToMeAzDataTableEntity @Table -Entity $TokenRecord -Force
         }
         
