@@ -89,7 +89,7 @@ function Test-RateLimit {
         # Still in time window - check if limit exceeded
         $CurrentCount = [int]$RateLimitRecord.RequestCount
         
-        if ($CurrentCount ->= $MaxRequests) {
+        if ($CurrentCount -ge $MaxRequests) {
             # Rate limit exceeded
             $SecondsUntilReset = [int]($WindowSeconds - ($Now - $RecordWindowStart).TotalSeconds)
             

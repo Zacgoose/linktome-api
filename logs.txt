@@ -1,450 +1,672 @@
-[2025-12-21T10:15:36.576Z] INFORMATION: Processing endpoint: admin/UpdateAppearance
-[2025-12-21T10:15:36.579Z] INFORMATION: Resolved: admin/UpdateAppearance -> Invoke-AdminUpdateAppearance
-[2025-12-21T10:15:36.587Z] INFORMATION: Invoking function: Invoke-AdminUpdateAppearance
-[2025-12-21T10:15:36.682Z] ERROR: Update appearance error: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.685Z]
-[2025-12-21T10:15:36.687Z] Exception             :
-[2025-12-21T10:15:36.689Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:36.691Z]     Message : Update appearance error: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.694Z]     HResult : -2146233087
-[2025-12-21T10:15:36.696Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:36.698Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Invoke-AdminUpdateAppearance
-[2025-12-21T10:15:36.699Z] InvocationInfo        :
-[2025-12-21T10:15:36.701Z]     MyCommand        : Invoke-AdminUpdateAppearance
-[2025-12-21T10:15:36.702Z]     ScriptLineNumber : 153
-[2025-12-21T10:15:36.703Z]     OffsetInLine     : 21
-[2025-12-21T10:15:36.704Z]     HistoryId        : 1
-[2025-12-21T10:15:36.705Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-21T10:15:36.706Z]     Line             : $Response = & $FunctionName @HttpTrigger
-[2025-12-21T10:15:36.708Z]
-[2025-12-21T10:15:36.709Z]     Statement        : & $FunctionName @HttpTrigger
-[2025-12-21T10:15:36.710Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:153 char:21
-[2025-12-21T10:15:36.711Z]                        +         $Response = & $FunctionName @HttpTrigger
-[2025-12-21T10:15:36.712Z]                        +                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:36.713Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-21T10:15:36.714Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-21T10:15:36.715Z]     InvocationName   : &
-[2025-12-21T10:15:36.716Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:36.717Z] ScriptStackTrace      : at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 108
-[2025-12-21T10:15:36.718Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:36.719Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:36.720Z] PipelineIterationInfo :
-[2025-12-21T10:15:36.721Z]       0
-[2025-12-21T10:15:36.723Z]       1
-[2025-12-21T10:15:36.724Z]
-[2025-12-21T10:15:36.724Z]
-[2025-12-21T10:15:36.725Z] Result: ERROR: Update appearance error: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.727Z]
-[2025-12-21T10:15:36.727Z] Exception             :
-[2025-12-21T10:15:36.728Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:36.729Z]     Message : Update appearance error: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.730Z]     HResult : -2146233087
-[2025-12-21T10:15:36.731Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:36.733Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Invoke-AdminUpdateAppearance
-[2025-12-21T10:15:36.741Z] InvocationInfo        :
-[2025-12-21T10:15:36.744Z]     MyCommand        : Invoke-AdminUpdateAppearance
-[2025-12-21T10:15:36.747Z]     ScriptLineNumber : 153
-[2025-12-21T10:15:36.751Z]     OffsetInLine     : 21
-[2025-12-21T10:15:36.753Z]     HistoryId        : 1
-[2025-12-21T10:15:36.755Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-21T10:15:36.757Z]     Line             : $Response = & $FunctionName @HttpTrigger
-[2025-12-21T10:15:36.759Z]
-[2025-12-21T10:15:36.761Z]     Statement        : & $FunctionName @HttpTrigger
-[2025-12-21T10:15:36.765Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:153 char:21
-[2025-12-21T10:15:36.767Z]                        +         $Response = & $FunctionName @HttpTrigger
-[2025-12-21T10:15:36.769Z]                        +                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:36.771Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints
-[2025-12-21T10:15:36.772Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
-[2025-12-21T10:15:36.777Z]     InvocationName   : &
-[2025-12-21T10:15:36.779Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:36.782Z] ScriptStackTrace      : at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 108
-[2025-12-21T10:15:36.783Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:36.785Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:36.787Z] PipelineIterationInfo :
-[2025-12-21T10:15:36.789Z]       0
-[2025-12-21T10:15:36.791Z]       1
-[2025-12-21T10:15:36.796Z]
-[2025-12-21T10:15:36.797Z]
+[2025-12-22T05:20:55.462Z] INFORMATION: #### LinkToMe API Start ####
+[2025-12-22T05:20:56.106Z] Host lock lease acquired by instance ID '000000000000000000000000B82F0D84'.
+[2025-12-22T05:20:58.949Z] INFORMATION: Function App: Local | API Version: 1.0.0 | PS Version: 7.4.12
+[2025-12-22T05:20:59.043Z] INFORMATION: Profile Load Timings: {"AllModules":3427.09,"Module_AzBobbyTables":28.31,"Module_LinkTomeCore":625.6,"Module_PrivateApi":193.89,"Module_PSJsonWebToken":2461.83,"Module_PublicApi":103.76,"Total":3459.52,"VersionCheck":32.25}
+[2025-12-22T05:20:59.204Z] INFORMATION: Processing endpoint: public/Login
+[2025-12-22T05:20:59.227Z] INFORMATION: Resolved: public/Login -> Invoke-PublicLogin
+[2025-12-22T05:20:59.882Z] INFORMATION: Invoking function: Invoke-PublicLogin
+[2025-12-22T05:21:00.460Z] WARNING: Resulting JSON is truncated as serialization has exceeded the set depth of 2.
+[2025-12-22T05:21:00.522Z] INFORMATION: {
+[2025-12-22T05:21:00.524Z]   "FailedTransactionActionIndex": 0,
+[2025-12-22T05:21:00.527Z]   "Status": 400,
+[2025-12-22T05:21:00.529Z]   "ErrorCode": "InvalidInput",
+[2025-12-22T05:21:00.530Z]   "TargetSite": {
+[2025-12-22T05:21:00.532Z]     "Name": "SendBatchRequest",
+[2025-12-22T05:21:00.534Z]     "DeclaringType": {
+[2025-12-22T05:21:00.535Z]       "IsCollectible": false,
+[2025-12-22T05:21:00.537Z]       "DeclaringMethod": null,
+[2025-12-22T05:21:00.539Z]       "FullName": "Azure.Data.Tables.TableRestClient",
+[2025-12-22T05:21:00.541Z]       "AssemblyQualifiedName": "Azure.Data.Tables.TableRestClient, Azure.Data.Tables, Version=12.11.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.543Z]       "Namespace": "Azure.Data.Tables",
+[2025-12-22T05:21:00.545Z]       "GUID": "52dc3781-862b-3cf2-b4a4-67d3194e3d93",
+[2025-12-22T05:21:00.546Z]       "IsEnum": false,
+[2025-12-22T05:21:00.548Z]       "IsConstructedGenericType": false,
+[2025-12-22T05:21:00.549Z]       "IsGenericType": false,
+[2025-12-22T05:21:00.551Z]       "IsGenericTypeDefinition": false,
+[2025-12-22T05:21:00.553Z]       "GenericParameterAttributes": null,
+[2025-12-22T05:21:00.555Z]       "IsSZArray": false,
+[2025-12-22T05:21:00.556Z]       "GenericParameterPosition": null,
+[2025-12-22T05:21:00.558Z]       "ContainsGenericParameters": false,
+[2025-12-22T05:21:00.560Z]       "StructLayoutAttribute": "System.Runtime.InteropServices.StructLayoutAttribute",
+[2025-12-22T05:21:00.561Z]       "IsFunctionPointer": false,
+[2025-12-22T05:21:00.563Z]       "IsUnmanagedFunctionPointer": false,
+[2025-12-22T05:21:00.564Z]       "Name": "TableRestClient",
+[2025-12-22T05:21:00.566Z]       "DeclaringType": null,
+[2025-12-22T05:21:00.569Z]       "Assembly": "Azure.Data.Tables, Version=12.11.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.571Z]       "BaseType": "System.Object",
+[2025-12-22T05:21:00.573Z]       "IsByRefLike": false,
+[2025-12-22T05:21:00.574Z]       "IsGenericParameter": false,
+[2025-12-22T05:21:00.577Z]       "IsTypeDefinition": true,
+[2025-12-22T05:21:00.578Z]       "IsSecurityCritical": true,
+[2025-12-22T05:21:00.580Z]       "IsSecuritySafeCritical": false,
+[2025-12-22T05:21:00.582Z]       "IsSecurityTransparent": false,
+[2025-12-22T05:21:00.583Z]       "MemberType": 32,
+[2025-12-22T05:21:00.585Z]       "MetadataToken": 33554545,
+[2025-12-22T05:21:00.586Z]       "Module": "Azure.Data.Tables.dll",
+[2025-12-22T05:21:00.588Z]       "ReflectedType": null,
+[2025-12-22T05:21:00.590Z]       "TypeHandle": "System.RuntimeTypeHandle",
+[2025-12-22T05:21:00.591Z]       "UnderlyingSystemType": "Azure.Data.Tables.TableRestClient, Azure.Data.Tables, Version=12.11.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.593Z]       "GenericTypeParameters": "",
+[2025-12-22T05:21:00.595Z]       "DeclaredConstructors": "Void .ctor(Azure.Core.Pipeline.ClientDiagnostics, Azure.Core.Pipeline.HttpPipeline, System.String, System.String)",
+[2025-12-22T05:21:00.596Z]       "DeclaredEvents": "",
+[2025-12-22T05:21:00.598Z]       "DeclaredFields": "Azure.Core.Pipeline.HttpPipeline _pipeline System.String _url System.String _version Azure.Core.Pipeline.ClientDiagnostics <ClientDiagnostics>k__BackingField Azure.Core.ResponseClassifier _responseClassifier201204 Azure.Core.ResponseClassifier _responseClassifier204 Azure.Core.ResponseClassifier _responseClassifier200",
+[2025-12-22T05:21:00.601Z]       "DeclaredMembers": "Azure.Core.Pipeline.ClientDiagnostics get_ClientDiagnostics() Azure.Core.HttpMessage CreateQueryRequest(System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders]] QueryAsync(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders] Query(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders]] CreateAsync(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders] Create(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] CreateAsync(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Response Create(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateDeleteRequest(System.String) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders]] DeleteAsync(System.String, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders] Delete(System.String, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteRequest(System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] DeleteAsync(System.String, Azure.RequestContext) Azure.Response Delete(System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateQueryEntitiesRequest(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders]] QueryEntitiesAsync(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders] QueryEntities(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders]] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders] QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateUpdateEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders]] UpdateEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders] UpdateEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateMergeEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders]] MergeEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders] MergeEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteEntityRequest(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders]] DeleteEntityAsync(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders] DeleteEntity(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateInsertEntityRequest(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders]] InsertEntityAsync(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders] InsertEntity(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateGetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders]] GetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders] GetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.HttpMessage CreateSetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders]] SetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders] SetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseClassifier get_ResponseClassifier201204() Azure.Core.ResponseClassifier get_ResponseClassifier204() Azure.Core.ResponseClassifier get_ResponseClassifier200() System.String get_endpoint() System.String get_clientVersion() Azure.Core.HttpMessage CreateBatchRequest(Azure.Core.MultipartContent, System.String, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat]) Azure.Core.MultipartContent CreateBatchContent(System.Guid) System.Threading.Tasks.Task`1[Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]]] SendBatchRequestAsync(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]] SendBatchRequest(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) Void .ctor(Azure.Core.Pipeline.ClientDiagnostics, Azure.Core.Pipeline.HttpPipeline, System.String, System.String) Azure.Core.Pipeline.ClientDiagnostics ClientDiagnostics Azure.Core.ResponseClassifier ResponseClassifier201204 Azure.Core.ResponseClassifier ResponseClassifier204 Azure.Core.ResponseClassifier ResponseClassifier200 System.String endpoint System.String clientVersion Azure.Core.Pipeline.HttpPipeline _pipeline System.String _url System.String _version Azure.Core.Pipeline.ClientDiagnostics <ClientDiagnostics>k__BackingField Azure.Core.ResponseClassifier _responseClassifier201204 Azure.Core.ResponseClassifier _responseClassifier204 Azure.Core.ResponseClassifier _responseClassifier200 Azure.Data.Tables.TableRestClient+<>c Azure.Data.Tables.TableRestClient+<CreateAsync>d__11 Azure.Data.Tables.TableRestClient+<CreateAsync>d__14 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__17 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__20 Azure.Data.Tables.TableRestClient+<DeleteEntityAsync>d__36 Azure.Data.Tables.TableRestClient+<GetAccessPolicyAsync>d__42 Azure.Data.Tables.TableRestClient+<InsertEntityAsync>d__39 Azure.Data.Tables.TableRestClient+<MergeEntityAsync>d__33 Azure.Data.Tables.TableRestClient+<QueryAsync>d__8 Azure.Data.Tables.TableRestClient+<QueryEntitiesAsync>d__23 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__26 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__65 Azure.Data.Tables.TableRestClient+<SendBatchRequestAsync>d__62 Azure.Data.Tables.TableRestClient+<SetAccessPolicyAsync>d__45 Azure.Data.Tables.TableRestClient+<UpdateEntityAsync>d__30",
+[2025-12-22T05:21:00.606Z]       "DeclaredMethods": "Azure.Core.Pipeline.ClientDiagnostics get_ClientDiagnostics() Azure.Core.HttpMessage CreateQueryRequest(System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders]] QueryAsync(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders] Query(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders]] CreateAsync(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders] Create(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] CreateAsync(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Response Create(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateDeleteRequest(System.String) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders]] DeleteAsync(System.String, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders] Delete(System.String, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteRequest(System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] DeleteAsync(System.String, Azure.RequestContext) Azure.Response Delete(System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateQueryEntitiesRequest(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders]] QueryEntitiesAsync(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders] QueryEntities(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders]] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders] QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateUpdateEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders]] UpdateEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders] UpdateEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateMergeEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders]] MergeEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders] MergeEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteEntityRequest(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders]] DeleteEntityAsync(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders] DeleteEntity(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateInsertEntityRequest(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders]] InsertEntityAsync(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders] InsertEntity(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateGetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders]] GetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders] GetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.HttpMessage CreateSetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders]] SetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders] SetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseClassifier get_ResponseClassifier201204() Azure.Core.ResponseClassifier get_ResponseClassifier204() Azure.Core.ResponseClassifier get_ResponseClassifier200() System.String get_endpoint() System.String get_clientVersion() Azure.Core.HttpMessage CreateBatchRequest(Azure.Core.MultipartContent, System.String, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat]) Azure.Core.MultipartContent CreateBatchContent(System.Guid) System.Threading.Tasks.Task`1[Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]]] SendBatchRequestAsync(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]] SendBatchRequest(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext)",
+[2025-12-22T05:21:00.611Z]       "DeclaredNestedTypes": "Azure.Data.Tables.TableRestClient+<>c Azure.Data.Tables.TableRestClient+<CreateAsync>d__11 Azure.Data.Tables.TableRestClient+<CreateAsync>d__14 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__17 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__20 Azure.Data.Tables.TableRestClient+<DeleteEntityAsync>d__36 Azure.Data.Tables.TableRestClient+<GetAccessPolicyAsync>d__42 Azure.Data.Tables.TableRestClient+<InsertEntityAsync>d__39 Azure.Data.Tables.TableRestClient+<MergeEntityAsync>d__33 Azure.Data.Tables.TableRestClient+<QueryAsync>d__8 Azure.Data.Tables.TableRestClient+<QueryEntitiesAsync>d__23 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__26 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__65 Azure.Data.Tables.TableRestClient+<SendBatchRequestAsync>d__62 Azure.Data.Tables.TableRestClient+<SetAccessPolicyAsync>d__45 Azure.Data.Tables.TableRestClient+<UpdateEntityAsync>d__30",
+[2025-12-22T05:21:00.613Z]       "DeclaredProperties": "Azure.Core.Pipeline.ClientDiagnostics ClientDiagnostics Azure.Core.ResponseClassifier ResponseClassifier201204 Azure.Core.ResponseClassifier ResponseClassifier204 Azure.Core.ResponseClassifier ResponseClassifier200 System.String endpoint System.String clientVersion",
+[2025-12-22T05:21:00.614Z]       "ImplementedInterfaces": "",
+[2025-12-22T05:21:00.616Z]       "IsInterface": false,
+[2025-12-22T05:21:00.617Z]       "IsNested": false,
+[2025-12-22T05:21:00.619Z]       "IsArray": false,
+[2025-12-22T05:21:00.621Z]       "IsByRef": false,
+[2025-12-22T05:21:00.622Z]       "IsPointer": false,
+[2025-12-22T05:21:00.624Z]       "IsGenericTypeParameter": false,
+[2025-12-22T05:21:00.625Z]       "IsGenericMethodParameter": false,
+[2025-12-22T05:21:00.627Z]       "IsVariableBoundArray": false,
+[2025-12-22T05:21:00.629Z]       "HasElementType": false,
+[2025-12-22T05:21:00.632Z]       "GenericTypeArguments": "",
+[2025-12-22T05:21:00.633Z]       "Attributes": 1048576,
+[2025-12-22T05:21:00.635Z]       "IsAbstract": false,
+[2025-12-22T05:21:00.637Z]       "IsImport": false,
+[2025-12-22T05:21:00.639Z]       "IsSealed": false,
+[2025-12-22T05:21:00.640Z]       "IsSpecialName": false,
+[2025-12-22T05:21:00.642Z]       "IsClass": true,
+[2025-12-22T05:21:00.644Z]       "IsNestedAssembly": false,
+[2025-12-22T05:21:00.645Z]       "IsNestedFamANDAssem": false,
+[2025-12-22T05:21:00.647Z]       "IsNestedFamily": false,
+[2025-12-22T05:21:00.649Z]       "IsNestedFamORAssem": false,
+[2025-12-22T05:21:00.651Z]       "IsNestedPrivate": false,
+[2025-12-22T05:21:00.652Z]       "IsNestedPublic": false,
+[2025-12-22T05:21:00.654Z]       "IsNotPublic": true,
+[2025-12-22T05:21:00.655Z]       "IsPublic": false,
+[2025-12-22T05:21:00.657Z]       "IsAutoLayout": true,
+[2025-12-22T05:21:00.658Z]       "IsExplicitLayout": false,
+[2025-12-22T05:21:00.660Z]       "IsLayoutSequential": false,
+[2025-12-22T05:21:00.663Z]       "IsAnsiClass": true,
+[2025-12-22T05:21:00.665Z]       "IsAutoClass": false,
+[2025-12-22T05:21:00.667Z]       "IsUnicodeClass": false,
+[2025-12-22T05:21:00.668Z]       "IsCOMObject": false,
+[2025-12-22T05:21:00.670Z]       "IsContextful": false,
+[2025-12-22T05:21:00.672Z]       "IsMarshalByRef": false,
+[2025-12-22T05:21:00.673Z]       "IsPrimitive": false,
+[2025-12-22T05:21:00.675Z]       "IsValueType": false,
+[2025-12-22T05:21:00.677Z]       "IsSignatureType": false,
+[2025-12-22T05:21:00.678Z]       "TypeInitializer": null,
+[2025-12-22T05:21:00.680Z]       "IsSerializable": false,
+[2025-12-22T05:21:00.682Z]       "IsVisible": false,
+[2025-12-22T05:21:00.683Z]       "CustomAttributes": ""
+[2025-12-22T05:21:00.685Z]     },
+[2025-12-22T05:21:00.686Z]     "ReflectedType": {
+[2025-12-22T05:21:00.688Z]       "IsCollectible": false,
+[2025-12-22T05:21:00.689Z]       "DeclaringMethod": null,
+[2025-12-22T05:21:00.691Z]       "FullName": "Azure.Data.Tables.TableRestClient",
+[2025-12-22T05:21:00.692Z]       "AssemblyQualifiedName": "Azure.Data.Tables.TableRestClient, Azure.Data.Tables, Version=12.11.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.696Z]       "Namespace": "Azure.Data.Tables",
+[2025-12-22T05:21:00.698Z]       "GUID": "52dc3781-862b-3cf2-b4a4-67d3194e3d93",
+[2025-12-22T05:21:00.700Z]       "IsEnum": false,
+[2025-12-22T05:21:00.701Z]       "IsConstructedGenericType": false,
+[2025-12-22T05:21:00.703Z]       "IsGenericType": false,
+[2025-12-22T05:21:00.705Z]       "IsGenericTypeDefinition": false,
+[2025-12-22T05:21:00.707Z]       "GenericParameterAttributes": null,
+[2025-12-22T05:21:00.708Z]       "IsSZArray": false,
+[2025-12-22T05:21:00.712Z]       "GenericParameterPosition": null,
+[2025-12-22T05:21:00.714Z]       "ContainsGenericParameters": false,
+[2025-12-22T05:21:00.715Z]       "StructLayoutAttribute": "System.Runtime.InteropServices.StructLayoutAttribute",
+[2025-12-22T05:21:00.716Z]       "IsFunctionPointer": false,
+[2025-12-22T05:21:00.718Z]       "IsUnmanagedFunctionPointer": false,
+[2025-12-22T05:21:00.720Z]       "Name": "TableRestClient",
+[2025-12-22T05:21:00.722Z]       "DeclaringType": null,
+[2025-12-22T05:21:00.727Z]       "Assembly": "Azure.Data.Tables, Version=12.11.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.731Z]       "BaseType": "System.Object",
+[2025-12-22T05:21:00.733Z]       "IsByRefLike": false,
+[2025-12-22T05:21:00.735Z]       "IsGenericParameter": false,
+[2025-12-22T05:21:00.737Z]       "IsTypeDefinition": true,
+[2025-12-22T05:21:00.738Z]       "IsSecurityCritical": true,
+[2025-12-22T05:21:00.740Z]       "IsSecuritySafeCritical": false,
+[2025-12-22T05:21:00.742Z]       "IsSecurityTransparent": false,
+[2025-12-22T05:21:00.744Z]       "MemberType": 32,
+[2025-12-22T05:21:00.746Z]       "MetadataToken": 33554545,
+[2025-12-22T05:21:00.747Z]       "Module": "Azure.Data.Tables.dll",
+[2025-12-22T05:21:00.749Z]       "ReflectedType": null,
+[2025-12-22T05:21:00.751Z]       "TypeHandle": "System.RuntimeTypeHandle",
+[2025-12-22T05:21:00.754Z]       "UnderlyingSystemType": "Azure.Data.Tables.TableRestClient, Azure.Data.Tables, Version=12.11.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.758Z]       "GenericTypeParameters": "",
+[2025-12-22T05:21:00.760Z]       "DeclaredConstructors": "Void .ctor(Azure.Core.Pipeline.ClientDiagnostics, Azure.Core.Pipeline.HttpPipeline, System.String, System.String)",
+[2025-12-22T05:21:00.761Z]       "DeclaredEvents": "",
+[2025-12-22T05:21:00.763Z]       "DeclaredFields": "Azure.Core.Pipeline.HttpPipeline _pipeline System.String _url System.String _version Azure.Core.Pipeline.ClientDiagnostics <ClientDiagnostics>k__BackingField Azure.Core.ResponseClassifier _responseClassifier201204 Azure.Core.ResponseClassifier _responseClassifier204 Azure.Core.ResponseClassifier _responseClassifier200",
+[2025-12-22T05:21:00.765Z]       "DeclaredMembers": "Azure.Core.Pipeline.ClientDiagnostics get_ClientDiagnostics() Azure.Core.HttpMessage CreateQueryRequest(System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders]] QueryAsync(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders] Query(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders]] CreateAsync(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders] Create(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] CreateAsync(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Response Create(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateDeleteRequest(System.String) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders]] DeleteAsync(System.String, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders] Delete(System.String, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteRequest(System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] DeleteAsync(System.String, Azure.RequestContext) Azure.Response Delete(System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateQueryEntitiesRequest(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders]] QueryEntitiesAsync(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders] QueryEntities(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders]] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders] QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateUpdateEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders]] UpdateEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders] UpdateEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateMergeEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders]] MergeEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders] MergeEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteEntityRequest(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders]] DeleteEntityAsync(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders] DeleteEntity(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateInsertEntityRequest(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders]] InsertEntityAsync(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders] InsertEntity(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateGetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders]] GetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders] GetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.HttpMessage CreateSetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders]] SetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders] SetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseClassifier get_ResponseClassifier201204() Azure.Core.ResponseClassifier get_ResponseClassifier204() Azure.Core.ResponseClassifier get_ResponseClassifier200() System.String get_endpoint() System.String get_clientVersion() Azure.Core.HttpMessage CreateBatchRequest(Azure.Core.MultipartContent, System.String, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat]) Azure.Core.MultipartContent CreateBatchContent(System.Guid) System.Threading.Tasks.Task`1[Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]]] SendBatchRequestAsync(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]] SendBatchRequest(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) Void .ctor(Azure.Core.Pipeline.ClientDiagnostics, Azure.Core.Pipeline.HttpPipeline, System.String, System.String) Azure.Core.Pipeline.ClientDiagnostics ClientDiagnostics Azure.Core.ResponseClassifier ResponseClassifier201204 Azure.Core.ResponseClassifier ResponseClassifier204 Azure.Core.ResponseClassifier ResponseClassifier200 System.String endpoint System.String clientVersion Azure.Core.Pipeline.HttpPipeline _pipeline System.String _url System.String _version Azure.Core.Pipeline.ClientDiagnostics <ClientDiagnostics>k__BackingField Azure.Core.ResponseClassifier _responseClassifier201204 Azure.Core.ResponseClassifier _responseClassifier204 Azure.Core.ResponseClassifier _responseClassifier200 Azure.Data.Tables.TableRestClient+<>c Azure.Data.Tables.TableRestClient+<CreateAsync>d__11 Azure.Data.Tables.TableRestClient+<CreateAsync>d__14 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__17 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__20 Azure.Data.Tables.TableRestClient+<DeleteEntityAsync>d__36 Azure.Data.Tables.TableRestClient+<GetAccessPolicyAsync>d__42 Azure.Data.Tables.TableRestClient+<InsertEntityAsync>d__39 Azure.Data.Tables.TableRestClient+<MergeEntityAsync>d__33 Azure.Data.Tables.TableRestClient+<QueryAsync>d__8 Azure.Data.Tables.TableRestClient+<QueryEntitiesAsync>d__23 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__26 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__65 Azure.Data.Tables.TableRestClient+<SendBatchRequestAsync>d__62 Azure.Data.Tables.TableRestClient+<SetAccessPolicyAsync>d__45 Azure.Data.Tables.TableRestClient+<UpdateEntityAsync>d__30",
+[2025-12-22T05:21:00.769Z]       "DeclaredMethods": "Azure.Core.Pipeline.ClientDiagnostics get_ClientDiagnostics() Azure.Core.HttpMessage CreateQueryRequest(System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders]] QueryAsync(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableQueryResponse,Azure.Data.Tables.TableQueryHeaders] Query(System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders]] CreateAsync(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableResponse,Azure.Data.Tables.TableCreateHeaders] Create(Azure.Data.Tables.Models.TableProperties, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateCreateRequest(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] CreateAsync(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Response Create(Azure.Core.RequestContent, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateDeleteRequest(System.String) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders]] DeleteAsync(System.String, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteHeaders] Delete(System.String, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteRequest(System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] DeleteAsync(System.String, Azure.RequestContext) Azure.Response Delete(System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateQueryEntitiesRequest(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders]] QueryEntitiesAsync(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[Azure.Data.Tables.Models.TableEntityQueryResponse,Azure.Data.Tables.TableQueryEntitiesHeaders] QueryEntities(System.String, System.Nullable`1[System.Int32], System.String, System.String, Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders]] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableQueryEntityWithPartitionAndRowKeyHeaders] QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateQueryEntityWithPartitionAndRowKeyRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) Azure.Core.HttpMessage CreateUpdateEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders]] UpdateEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableUpdateEntityHeaders] UpdateEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateMergeEntityRequest(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders]] MergeEntityAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableMergeEntityHeaders] MergeEntity(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateDeleteEntityRequest(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders]] DeleteEntityAsync(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableDeleteEntityHeaders] DeleteEntity(System.String, System.String, System.String, System.String, System.Nullable`1[System.Int32], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateInsertEntityRequest(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders]] InsertEntityAsync(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyDictionary`2[System.String,System.Object],Azure.Data.Tables.TableInsertEntityHeaders] InsertEntity(System.String, System.Nullable`1[System.Int32], System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat], System.Collections.Generic.IDictionary`2[System.String,System.Object], Azure.Data.Tables.Models.QueryOptions, System.Threading.CancellationToken) Azure.Core.HttpMessage CreateGetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders]] GetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`2[System.Collections.Generic.IReadOnlyList`1[Azure.Data.Tables.Models.TableSignedIdentifier],Azure.Data.Tables.TableGetAccessPolicyHeaders] GetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Threading.CancellationToken) Azure.Core.HttpMessage CreateSetAccessPolicyRequest(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier]) System.Threading.Tasks.Task`1[Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders]] SetAccessPolicyAsync(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseWithHeaders`1[Azure.Data.Tables.TableSetAccessPolicyHeaders] SetAccessPolicy(System.String, System.Nullable`1[System.Int32], System.Collections.Generic.IEnumerable`1[Azure.Data.Tables.Models.TableSignedIdentifier], System.Threading.CancellationToken) Azure.Core.ResponseClassifier get_ResponseClassifier201204() Azure.Core.ResponseClassifier get_ResponseClassifier204() Azure.Core.ResponseClassifier get_ResponseClassifier200() System.String get_endpoint() System.String get_clientVersion() Azure.Core.HttpMessage CreateBatchRequest(Azure.Core.MultipartContent, System.String, System.Nullable`1[Azure.Data.Tables.Models.ResponseFormat]) Azure.Core.MultipartContent CreateBatchContent(System.Guid) System.Threading.Tasks.Task`1[Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]]] SendBatchRequestAsync(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]] SendBatchRequest(Azure.Core.HttpMessage, System.Threading.CancellationToken) Azure.Response QueryEntityWithPartitionAndRowKey(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext) System.Threading.Tasks.Task`1[Azure.Response] QueryEntityWithPartitionAndRowKeyAsync(System.String, System.String, System.String, System.Nullable`1[System.Int32], System.String, System.String, System.String, Azure.RequestContext)",
+[2025-12-22T05:21:00.774Z]       "DeclaredNestedTypes": "Azure.Data.Tables.TableRestClient+<>c Azure.Data.Tables.TableRestClient+<CreateAsync>d__11 Azure.Data.Tables.TableRestClient+<CreateAsync>d__14 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__17 Azure.Data.Tables.TableRestClient+<DeleteAsync>d__20 Azure.Data.Tables.TableRestClient+<DeleteEntityAsync>d__36 Azure.Data.Tables.TableRestClient+<GetAccessPolicyAsync>d__42 Azure.Data.Tables.TableRestClient+<InsertEntityAsync>d__39 Azure.Data.Tables.TableRestClient+<MergeEntityAsync>d__33 Azure.Data.Tables.TableRestClient+<QueryAsync>d__8 Azure.Data.Tables.TableRestClient+<QueryEntitiesAsync>d__23 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__26 Azure.Data.Tables.TableRestClient+<QueryEntityWithPartitionAndRowKeyAsync>d__65 Azure.Data.Tables.TableRestClient+<SendBatchRequestAsync>d__62 Azure.Data.Tables.TableRestClient+<SetAccessPolicyAsync>d__45 Azure.Data.Tables.TableRestClient+<UpdateEntityAsync>d__30",
+[2025-12-22T05:21:00.776Z]       "DeclaredProperties": "Azure.Core.Pipeline.ClientDiagnostics ClientDiagnostics Azure.Core.ResponseClassifier ResponseClassifier201204 Azure.Core.ResponseClassifier ResponseClassifier204 Azure.Core.ResponseClassifier ResponseClassifier200 System.String endpoint System.String clientVersion",
+[2025-12-22T05:21:00.777Z]       "ImplementedInterfaces": "",
+[2025-12-22T05:21:00.779Z]       "IsInterface": false,
+[2025-12-22T05:21:00.780Z]       "IsNested": false,
+[2025-12-22T05:21:00.782Z]       "IsArray": false,
+[2025-12-22T05:21:00.784Z]       "IsByRef": false,
+[2025-12-22T05:21:00.785Z]       "IsPointer": false,
+[2025-12-22T05:21:00.789Z]       "IsGenericTypeParameter": false,
+[2025-12-22T05:21:00.791Z]       "IsGenericMethodParameter": false,
+[2025-12-22T05:21:00.793Z]       "IsVariableBoundArray": false,
+[2025-12-22T05:21:00.795Z]       "HasElementType": false,
+[2025-12-22T05:21:00.796Z]       "GenericTypeArguments": "",
+[2025-12-22T05:21:00.798Z]       "Attributes": 1048576,
+[2025-12-22T05:21:00.800Z]       "IsAbstract": false,
+[2025-12-22T05:21:00.802Z]       "IsImport": false,
+[2025-12-22T05:21:00.803Z]       "IsSealed": false,
+[2025-12-22T05:21:00.805Z]       "IsSpecialName": false,
+[2025-12-22T05:21:00.807Z]       "IsClass": true,
+[2025-12-22T05:21:00.809Z]       "IsNestedAssembly": false,
+[2025-12-22T05:21:00.810Z]       "IsNestedFamANDAssem": false,
+[2025-12-22T05:21:00.812Z]       "IsNestedFamily": false,
+[2025-12-22T05:21:00.814Z]       "IsNestedFamORAssem": false,
+[2025-12-22T05:21:00.815Z]       "IsNestedPrivate": false,
+[2025-12-22T05:21:00.817Z]       "IsNestedPublic": false,
+[2025-12-22T05:21:00.821Z]       "IsNotPublic": true,
+[2025-12-22T05:21:00.823Z]       "IsPublic": false,
+[2025-12-22T05:21:00.824Z]       "IsAutoLayout": true,
+[2025-12-22T05:21:00.826Z]       "IsExplicitLayout": false,
+[2025-12-22T05:21:00.828Z]       "IsLayoutSequential": false,
+[2025-12-22T05:21:00.829Z]       "IsAnsiClass": true,
+[2025-12-22T05:21:00.831Z]       "IsAutoClass": false,
+[2025-12-22T05:21:00.833Z]       "IsUnicodeClass": false,
+[2025-12-22T05:21:00.834Z]       "IsCOMObject": false,
+[2025-12-22T05:21:00.836Z]       "IsContextful": false,
+[2025-12-22T05:21:00.838Z]       "IsMarshalByRef": false,
+[2025-12-22T05:21:00.839Z]       "IsPrimitive": false,
+[2025-12-22T05:21:00.841Z]       "IsValueType": false,
+[2025-12-22T05:21:00.842Z]       "IsSignatureType": false,
+[2025-12-22T05:21:00.844Z]       "TypeInitializer": null,
+[2025-12-22T05:21:00.845Z]       "IsSerializable": false,
+[2025-12-22T05:21:00.847Z]       "IsVisible": false,
+[2025-12-22T05:21:00.852Z]       "CustomAttributes": ""
+[2025-12-22T05:21:00.854Z]     },
+[2025-12-22T05:21:00.856Z]     "MemberType": 8,
+[2025-12-22T05:21:00.857Z]     "MetadataToken": 100664113,
+[2025-12-22T05:21:00.859Z]     "Module": {
+[2025-12-22T05:21:00.861Z]       "MDStreamVersion": 131072,
+[2025-12-22T05:21:00.862Z]       "FullyQualifiedName": "C:\\Users\\ZacR\\Documents\\GitHub\\linktome project\\linktome-api\\Modules\\AzBobbyTables\\3.4.0\\dependencies\\Azure.Data.Tables.dll",
+[2025-12-22T05:21:00.864Z]       "ModuleVersionId": "cb8ff0e7-dee1-4e16-bf4a-464ef25254e4",
+[2025-12-22T05:21:00.865Z]       "MetadataToken": 1,
+[2025-12-22T05:21:00.867Z]       "ScopeName": "Azure.Data.Tables.dll",
+[2025-12-22T05:21:00.869Z]       "Name": "Azure.Data.Tables.dll",
+[2025-12-22T05:21:00.870Z]       "Assembly": "Azure.Data.Tables, Version=12.11.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.872Z]       "ModuleHandle": "System.ModuleHandle",
+[2025-12-22T05:21:00.873Z]       "CustomAttributes": "[System.Security.UnverifiableCodeAttribute()] [System.Runtime.CompilerServices.RefSafetyRulesAttribute((Int32)11)]"
+[2025-12-22T05:21:00.875Z]     },
+[2025-12-22T05:21:00.877Z]     "IsSecurityCritical": true,
+[2025-12-22T05:21:00.878Z]     "IsSecuritySafeCritical": false,
+[2025-12-22T05:21:00.883Z]     "IsSecurityTransparent": false,
+[2025-12-22T05:21:00.885Z]     "MethodHandle": {
+[2025-12-22T05:21:00.886Z]       "Value": {
+[2025-12-22T05:21:00.888Z]         "value": 140734316499056
+[2025-12-22T05:21:00.890Z]       }
+[2025-12-22T05:21:00.891Z]     },
+[2025-12-22T05:21:00.893Z]     "Attributes": 134,
+[2025-12-22T05:21:00.895Z]     "CallingConvention": 33,
+[2025-12-22T05:21:00.896Z]     "ReturnType": {
+[2025-12-22T05:21:00.898Z]       "IsCollectible": false,
+[2025-12-22T05:21:00.900Z]       "DeclaringMethod": null,
+[2025-12-22T05:21:00.901Z]       "FullName": "Azure.Response`1[[System.Collections.Generic.IReadOnlyList`1[[Azure.Response, Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+[2025-12-22T05:21:00.903Z]       "AssemblyQualifiedName": "Azure.Response`1[[System.Collections.Generic.IReadOnlyList`1[[Azure.Response, Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.905Z]       "Namespace": "Azure",
+[2025-12-22T05:21:00.906Z]       "GUID": "76fe4cd9-db95-3766-894b-05b189a9398b",
+[2025-12-22T05:21:00.908Z]       "IsEnum": false,
+[2025-12-22T05:21:00.909Z]       "IsConstructedGenericType": true,
+[2025-12-22T05:21:00.914Z]       "IsGenericType": true,
+[2025-12-22T05:21:00.916Z]       "IsGenericTypeDefinition": false,
+[2025-12-22T05:21:00.917Z]       "GenericParameterAttributes": null,
+[2025-12-22T05:21:00.919Z]       "IsSZArray": false,
+[2025-12-22T05:21:00.920Z]       "GenericParameterPosition": null,
+[2025-12-22T05:21:00.922Z]       "ContainsGenericParameters": false,
+[2025-12-22T05:21:00.924Z]       "StructLayoutAttribute": "System.Runtime.InteropServices.StructLayoutAttribute",
+[2025-12-22T05:21:00.925Z]       "IsFunctionPointer": false,
+[2025-12-22T05:21:00.927Z]       "IsUnmanagedFunctionPointer": false,
+[2025-12-22T05:21:00.928Z]       "Name": "Response`1",
+[2025-12-22T05:21:00.930Z]       "DeclaringType": null,
+[2025-12-22T05:21:00.932Z]       "Assembly": "Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.933Z]       "BaseType": "Azure.NullableResponse`1[[System.Collections.Generic.IReadOnlyList`1[[Azure.Response, Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.935Z]       "IsByRefLike": false,
+[2025-12-22T05:21:00.936Z]       "IsGenericParameter": false,
+[2025-12-22T05:21:00.938Z]       "IsTypeDefinition": false,
+[2025-12-22T05:21:00.939Z]       "IsSecurityCritical": true,
+[2025-12-22T05:21:00.941Z]       "IsSecuritySafeCritical": false,
+[2025-12-22T05:21:00.945Z]       "IsSecurityTransparent": false,
+[2025-12-22T05:21:00.948Z]       "MemberType": 32,
+[2025-12-22T05:21:00.949Z]       "MetadataToken": 33554482,
+[2025-12-22T05:21:00.951Z]       "Module": "Azure.Core.dll",
+[2025-12-22T05:21:00.953Z]       "ReflectedType": null,
+[2025-12-22T05:21:00.954Z]       "TypeHandle": "System.RuntimeTypeHandle",
+[2025-12-22T05:21:00.956Z]       "UnderlyingSystemType": "Azure.Response`1[[System.Collections.Generic.IReadOnlyList`1[[Azure.Response, Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:00.958Z]       "GenericTypeParameters": "",
+[2025-12-22T05:21:00.960Z]       "DeclaredConstructors": "Void .ctor()",
+[2025-12-22T05:21:00.961Z]       "DeclaredEvents": "",
+[2025-12-22T05:21:00.963Z]       "DeclaredFields": "",
+[2025-12-22T05:21:00.965Z]       "DeclaredMembers": "Boolean get_HasValue() System.Collections.Generic.IReadOnlyList`1[Azure.Response] get_Value() System.Collections.Generic.IReadOnlyList`1[Azure.Response] op_Implicit(Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]]) Boolean Equals(System.Object) Int32 GetHashCode() Void .ctor() Boolean HasValue System.Collections.Generic.IReadOnlyList`1[Azure.Response] Value",
+[2025-12-22T05:21:00.966Z]       "DeclaredMethods": "Boolean get_HasValue() System.Collections.Generic.IReadOnlyList`1[Azure.Response] get_Value() System.Collections.Generic.IReadOnlyList`1[Azure.Response] op_Implicit(Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]]) Boolean Equals(System.Object) Int32 GetHashCode()",
+[2025-12-22T05:21:00.968Z]       "DeclaredNestedTypes": "",
+[2025-12-22T05:21:00.970Z]       "DeclaredProperties": "Boolean HasValue System.Collections.Generic.IReadOnlyList`1[Azure.Response] Value",
+[2025-12-22T05:21:00.971Z]       "ImplementedInterfaces": "",
+[2025-12-22T05:21:00.973Z]       "IsInterface": false,
+[2025-12-22T05:21:00.977Z]       "IsNested": false,
+[2025-12-22T05:21:00.979Z]       "IsArray": false,
+[2025-12-22T05:21:00.981Z]       "IsByRef": false,
+[2025-12-22T05:21:00.982Z]       "IsPointer": false,
+[2025-12-22T05:21:00.984Z]       "IsGenericTypeParameter": false,
+[2025-12-22T05:21:00.985Z]       "IsGenericMethodParameter": false,
+[2025-12-22T05:21:00.987Z]       "IsVariableBoundArray": false,
+[2025-12-22T05:21:00.988Z]       "HasElementType": false,
+[2025-12-22T05:21:00.990Z]       "GenericTypeArguments": "System.Collections.Generic.IReadOnlyList`1[Azure.Response]",
+[2025-12-22T05:21:00.992Z]       "Attributes": 1048705,
+[2025-12-22T05:21:00.993Z]       "IsAbstract": true,
+[2025-12-22T05:21:00.996Z]       "IsImport": false,
+[2025-12-22T05:21:00.998Z]       "IsSealed": false,
+[2025-12-22T05:21:01.000Z]       "IsSpecialName": false,
+[2025-12-22T05:21:01.001Z]       "IsClass": true,
+[2025-12-22T05:21:01.003Z]       "IsNestedAssembly": false,
+[2025-12-22T05:21:01.004Z]       "IsNestedFamANDAssem": false,
+[2025-12-22T05:21:01.009Z]       "IsNestedFamily": false,
+[2025-12-22T05:21:01.011Z]       "IsNestedFamORAssem": false,
+[2025-12-22T05:21:01.012Z]       "IsNestedPrivate": false,
+[2025-12-22T05:21:01.014Z]       "IsNestedPublic": false,
+[2025-12-22T05:21:01.015Z]       "IsNotPublic": false,
+[2025-12-22T05:21:01.017Z]       "IsPublic": true,
+[2025-12-22T05:21:01.018Z]       "IsAutoLayout": true,
+[2025-12-22T05:21:01.020Z]       "IsExplicitLayout": false,
+[2025-12-22T05:21:01.021Z]       "IsLayoutSequential": false,
+[2025-12-22T05:21:01.023Z]       "IsAnsiClass": true,
+[2025-12-22T05:21:01.024Z]       "IsAutoClass": false,
+[2025-12-22T05:21:01.026Z]       "IsUnicodeClass": false,
+[2025-12-22T05:21:01.028Z]       "IsCOMObject": false,
+[2025-12-22T05:21:01.029Z]       "IsContextful": false,
+[2025-12-22T05:21:01.031Z]       "IsMarshalByRef": false,
+[2025-12-22T05:21:01.032Z]       "IsPrimitive": false,
+[2025-12-22T05:21:01.034Z]       "IsValueType": false,
+[2025-12-22T05:21:01.035Z]       "IsSignatureType": false,
+[2025-12-22T05:21:01.039Z]       "TypeInitializer": null,
+[2025-12-22T05:21:01.041Z]       "IsSerializable": false,
+[2025-12-22T05:21:01.043Z]       "IsVisible": true,
+[2025-12-22T05:21:01.044Z]       "CustomAttributes": "[System.Runtime.CompilerServices.NullableContextAttribute((Byte)1)] [System.Runtime.CompilerServices.NullableAttribute(new Byte[2] { 0, 1 })] [System.Diagnostics.DebuggerTypeProxyAttribute(typeof(Azure.ResponseDebugView`1))]"
+[2025-12-22T05:21:01.046Z]     },
+[2025-12-22T05:21:01.047Z]     "ReturnTypeCustomAttributes": {
+[2025-12-22T05:21:01.049Z]       "ParameterType": "Azure.Response`1[[System.Collections.Generic.IReadOnlyList`1[[Azure.Response, Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:01.050Z]       "Name": null,
+[2025-12-22T05:21:01.052Z]       "HasDefaultValue": false,
+[2025-12-22T05:21:01.053Z]       "DefaultValue": null,
+[2025-12-22T05:21:01.055Z]       "RawDefaultValue": null,
+[2025-12-22T05:21:01.056Z]       "MetadataToken": 134217728,
+[2025-12-22T05:21:01.058Z]       "Attributes": 0,
+[2025-12-22T05:21:01.059Z]       "Member": "Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]] SendBatchRequest(Azure.Core.HttpMessage, System.Threading.CancellationToken)",
+[2025-12-22T05:21:01.061Z]       "Position": -1,
+[2025-12-22T05:21:01.063Z]       "IsIn": false,
+[2025-12-22T05:21:01.064Z]       "IsLcid": false,
+[2025-12-22T05:21:01.065Z]       "IsOptional": false,
+[2025-12-22T05:21:01.067Z]       "IsOut": false,
+[2025-12-22T05:21:01.072Z]       "IsRetval": false,
+[2025-12-22T05:21:01.073Z]       "CustomAttributes": ""
+[2025-12-22T05:21:01.074Z]     },
+[2025-12-22T05:21:01.076Z]     "ReturnParameter": {
+[2025-12-22T05:21:01.077Z]       "ParameterType": "Azure.Response`1[[System.Collections.Generic.IReadOnlyList`1[[Azure.Response, Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8",
+[2025-12-22T05:21:01.078Z]       "Name": null,
+[2025-12-22T05:21:01.080Z]       "HasDefaultValue": false,
+[2025-12-22T05:21:01.081Z]       "DefaultValue": null,
+[2025-12-22T05:21:01.082Z]       "RawDefaultValue": null,
+[2025-12-22T05:21:01.084Z]       "MetadataToken": 134217728,
+[2025-12-22T05:21:01.085Z]       "Attributes": 0,
+[2025-12-22T05:21:01.087Z]       "Member": "Azure.Response`1[System.Collections.Generic.IReadOnlyList`1[Azure.Response]] SendBatchRequest(Azure.Core.HttpMessage, System.Threading.CancellationToken)",
+[2025-12-22T05:21:01.089Z]       "Position": -1,
+[2025-12-22T05:21:01.090Z]       "IsIn": false,
+[2025-12-22T05:21:01.092Z]       "IsLcid": false,
+[2025-12-22T05:21:01.093Z]       "IsOptional": false,
+[2025-12-22T05:21:01.094Z]       "IsOut": false,
+[2025-12-22T05:21:01.096Z]       "IsRetval": false,
+[2025-12-22T05:21:01.097Z]       "CustomAttributes": ""
+[2025-12-22T05:21:01.099Z]     },
+[2025-12-22T05:21:01.102Z]     "IsCollectible": false,
+[2025-12-22T05:21:01.104Z]     "IsGenericMethod": false,
+[2025-12-22T05:21:01.105Z]     "IsGenericMethodDefinition": false,
+[2025-12-22T05:21:01.107Z]     "ContainsGenericParameters": false,
+[2025-12-22T05:21:01.108Z]     "MethodImplementationFlags": 0,
+[2025-12-22T05:21:01.109Z]     "IsAbstract": false,
+[2025-12-22T05:21:01.111Z]     "IsConstructor": false,
+[2025-12-22T05:21:01.112Z]     "IsFinal": false,
+[2025-12-22T05:21:01.114Z]     "IsHideBySig": true,
+[2025-12-22T05:21:01.115Z]     "IsSpecialName": false,
+[2025-12-22T05:21:01.117Z]     "IsStatic": false,
+[2025-12-22T05:21:01.118Z]     "IsVirtual": false,
+[2025-12-22T05:21:01.120Z]     "IsAssembly": false,
+[2025-12-22T05:21:01.121Z]     "IsFamily": false,
+[2025-12-22T05:21:01.123Z]     "IsFamilyAndAssembly": false,
+[2025-12-22T05:21:01.124Z]     "IsFamilyOrAssembly": false,
+[2025-12-22T05:21:01.125Z]     "IsPrivate": false,
+[2025-12-22T05:21:01.127Z]     "IsPublic": true,
+[2025-12-22T05:21:01.128Z]     "IsConstructedGenericMethod": false,
+[2025-12-22T05:21:01.132Z]     "CustomAttributes": []
+[2025-12-22T05:21:01.134Z]   },
+[2025-12-22T05:21:01.140Z]   "Message": "0:An error occurred while processing this request.\nRequestId:84892fe0-b712-4750-ab63-a9fe42d86cf6\nTime:2025-12-22T05:21:00.436Z\n The index of the entity that caused the error can be found in FailedTransactionActionIndex.\r\nStatus: 400 (Bad Request)\r\nErrorCode: InvalidInput\r\n\r\nAdditional Information:\r\nFailedEntity: 0\r\n\r\nService request succeeded. Response content and headers are not included to avoid logging sensitive data.\r\n",
+[2025-12-22T05:21:01.142Z]   "Data": {
+[2025-12-22T05:21:01.144Z]     "FailedEntity": "0"
+[2025-12-22T05:21:01.145Z]   },
+[2025-12-22T05:21:01.146Z]   "InnerException": null,
+[2025-12-22T05:21:01.148Z]   "HelpLink": null,
+[2025-12-22T05:21:01.149Z]   "Source": "Azure.Data.Tables",
+[2025-12-22T05:21:01.151Z]   "HResult": -2146233088,
+[2025-12-22T05:21:01.152Z]   "StackTrace": "   at Azure.Data.Tables.TableRestClient.SendBatchRequest(HttpMessage message, CancellationToken cancellationToken)\r\n   at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)\r\n   at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)\r\n   at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)\r\n   at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465\r\n   at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273"
+[2025-12-22T05:21:01.154Z] }
+[2025-12-22T05:21:01.155Z] INFORMATION: THE ERROR IS 0:An error occurred while processing this request.
+RequestId:84892fe0-b712-4750-ab63-a9fe42d86cf6
+Time:2025-12-22T05:21:00.436Z
+ The index of the entity that caused the error can be found in FailedTransactionActionIndex.
+[2025-12-22T05:21:01.157Z] Status: 400 (Bad Request)
+[2025-12-22T05:21:01.158Z] ErrorCode: InvalidInput
+[2025-12-22T05:21:01.160Z]
+[2025-12-22T05:21:01.161Z] Additional Information:
+[2025-12-22T05:21:01.165Z] FailedEntity: 0
+[2025-12-22T05:21:01.166Z]
+[2025-12-22T05:21:01.167Z] Service request succeeded. Response content and headers are not included to avoid logging sensitive data.
+[2025-12-22T05:21:01.168Z] . The size of the entity is .
+[2025-12-22T05:21:01.170Z] INFORMATION: Parameters are: {"Context":{"TableName":"RefreshTokens","ConnectionType":0},"Force":{"IsPresent":true},"CreateTableIfNotExists":{"IsPresent":false}}
+[2025-12-22T05:21:01.171Z] INFORMATION: At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Table\Add-LinkToMeAzDataTableEntity.ps1:88 char:13
+[2025-12-22T05:21:01.173Z] +             Add-AzDataTableEntity @Parameters -Entity $SingleEnt -Err …
+[2025-12-22T05:21:01.174Z] +             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.176Z] ERROR: Failed to save refresh token: 0:An error occurred while processing this request.
+RequestId:84892fe0-b712-4750-ab63-a9fe42d86cf6
+Time:2025-12-22T05:21:00.436Z
+ The index of the entity that caused the error can be found in FailedTransactionActionIndex.
+[2025-12-22T05:21:01.177Z] Status: 400 (Bad Request)
+[2025-12-22T05:21:01.179Z] ErrorCode: InvalidInput
+[2025-12-22T05:21:01.180Z]
+[2025-12-22T05:21:01.182Z] Additional Information:
+[2025-12-22T05:21:01.183Z] FailedEntity: 0
+[2025-12-22T05:21:01.184Z]
+[2025-12-22T05:21:01.185Z] Service request succeeded. Response content and headers are not included to avoid logging sensitive data.
+[2025-12-22T05:21:01.187Z]
+[2025-12-22T05:21:01.188Z]
+[2025-12-22T05:21:01.189Z] Exception             :
+[2025-12-22T05:21:01.190Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T05:21:01.192Z]     Message : Failed to save refresh token: 0:An error occurred while processing this request.
+[2025-12-22T05:21:01.195Z] RequestId:84892fe0-b712-4750-ab63-a9fe42d86cf6
+[2025-12-22T05:21:01.197Z] Time:2025-12-22T05:21:00.436Z
+[2025-12-22T05:21:01.198Z]  The index of the entity that caused the error can be found in FailedTransactionActionIndex.
+[2025-12-22T05:21:01.200Z]               Status: 400 (Bad Request)
+[2025-12-22T05:21:01.201Z]               ErrorCode: InvalidInput
+[2025-12-22T05:21:01.203Z]
+[2025-12-22T05:21:01.204Z]               Additional Information:
+[2025-12-22T05:21:01.206Z]               FailedEntity: 0
+[2025-12-22T05:21:01.207Z]
+[2025-12-22T05:21:01.209Z]               Service request succeeded. Response content and headers are not included to avoid logging sensitive data.
+[2025-12-22T05:21:01.210Z]
+[2025-12-22T05:21:01.212Z]     HResult : -2146233087
+[2025-12-22T05:21:01.213Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T05:21:01.215Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Save-RefreshToken
+[2025-12-22T05:21:01.216Z] InvocationInfo        :
+[2025-12-22T05:21:01.218Z]     MyCommand        : Save-RefreshToken
+[2025-12-22T05:21:01.219Z]     ScriptLineNumber : 97
+[2025-12-22T05:21:01.220Z]     OffsetInLine     : 9
+[2025-12-22T05:21:01.222Z]     HistoryId        : 1
+[2025-12-22T05:21:01.223Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1
+[2025-12-22T05:21:01.227Z]     Line             : Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
+[2025-12-22T05:21:01.228Z]
+[2025-12-22T05:21:01.229Z]     Statement        : Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
+[2025-12-22T05:21:01.231Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1:97 char:9
+[2025-12-22T05:21:01.232Z]                        +         Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey - …
+[2025-12-22T05:21:01.234Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.235Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T05:21:01.236Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1
+[2025-12-22T05:21:01.238Z]     InvocationName   : Save-RefreshToken
+[2025-12-22T05:21:01.239Z]     CommandOrigin    : Internal
+[2025-12-22T05:21:01.241Z] ScriptStackTrace      : at Save-RefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Auth\Save-RefreshToken.ps1: line 38
+[2025-12-22T05:21:01.242Z]                         at Invoke-PublicLogin, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1: line 97
+[2025-12-22T05:21:01.243Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 180
+[2025-12-22T05:21:01.245Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T05:21:01.246Z] PipelineIterationInfo :
+[2025-12-22T05:21:01.248Z]       0
+[2025-12-22T05:21:01.249Z]       1
+[2025-12-22T05:21:01.250Z]
+[2025-12-22T05:21:01.251Z]
+[2025-12-22T05:21:01.252Z] Result: ERROR: Failed to save refresh token: 0:An error occurred while processing this request.
+RequestId:84892fe0-b712-4750-ab63-a9fe42d86cf6
+Time:2025-12-22T05:21:00.436Z
+ The index of the entity that caused the error can be found in FailedTransactionActionIndex.
+[2025-12-22T05:21:01.253Z] Status: 400 (Bad Request)
+[2025-12-22T05:21:01.256Z] ErrorCode: InvalidInput
+[2025-12-22T05:21:01.258Z]
+[2025-12-22T05:21:01.259Z] Additional Information:
+[2025-12-22T05:21:01.261Z] FailedEntity: 0
+[2025-12-22T05:21:01.262Z]
+[2025-12-22T05:21:01.263Z] Service request succeeded. Response content and headers are not included to avoid logging sensitive data.
+[2025-12-22T05:21:01.264Z]
+[2025-12-22T05:21:01.265Z]
+[2025-12-22T05:21:01.266Z] Exception             :
+[2025-12-22T05:21:01.268Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
+[2025-12-22T05:21:01.269Z]     Message : Failed to save refresh token: 0:An error occurred while processing this request.
+[2025-12-22T05:21:01.270Z] RequestId:84892fe0-b712-4750-ab63-a9fe42d86cf6
+[2025-12-22T05:21:01.272Z] Time:2025-12-22T05:21:00.436Z
+[2025-12-22T05:21:01.273Z]  The index of the entity that caused the error can be found in FailedTransactionActionIndex.
+[2025-12-22T05:21:01.274Z]               Status: 400 (Bad Request)
+[2025-12-22T05:21:01.275Z]               ErrorCode: InvalidInput
+[2025-12-22T05:21:01.277Z]
+[2025-12-22T05:21:01.278Z]               Additional Information:
+[2025-12-22T05:21:01.279Z]               FailedEntity: 0
+[2025-12-22T05:21:01.281Z]
+[2025-12-22T05:21:01.282Z]               Service request succeeded. Response content and headers are not included to avoid logging sensitive data.
+[2025-12-22T05:21:01.283Z]
+[2025-12-22T05:21:01.285Z]     HResult : -2146233087
+[2025-12-22T05:21:01.289Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+[2025-12-22T05:21:01.290Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Save-RefreshToken
+[2025-12-22T05:21:01.292Z] InvocationInfo        :
+[2025-12-22T05:21:01.293Z]     MyCommand        : Save-RefreshToken
+[2025-12-22T05:21:01.294Z]     ScriptLineNumber : 97
+[2025-12-22T05:21:01.296Z]     OffsetInLine     : 9
+[2025-12-22T05:21:01.297Z]     HistoryId        : 1
+[2025-12-22T05:21:01.299Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1
+[2025-12-22T05:21:01.300Z]     Line             : Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
+[2025-12-22T05:21:01.302Z]
+[2025-12-22T05:21:01.303Z]     Statement        : Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
+[2025-12-22T05:21:01.305Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1:97 char:9
+[2025-12-22T05:21:01.306Z]                        +         Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey - …
+[2025-12-22T05:21:01.308Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.309Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public
+[2025-12-22T05:21:01.311Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1
+[2025-12-22T05:21:01.312Z]     InvocationName   : Save-RefreshToken
+[2025-12-22T05:21:01.314Z]     CommandOrigin    : Internal
+[2025-12-22T05:21:01.315Z] ScriptStackTrace      : at Save-RefreshToken, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeCore\Auth\Save-RefreshToken.ps1: line 38
+[2025-12-22T05:21:01.317Z]                         at Invoke-PublicLogin, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\PublicApi\Public\Invoke-PublicLogin.ps1: line 97
+[2025-12-22T05:21:01.321Z]                         at New-LinkTomeCoreRequest, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 180
+[2025-12-22T05:21:01.323Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
+[2025-12-22T05:21:01.324Z] PipelineIterationInfo :
+[2025-12-22T05:21:01.325Z]       0
+[2025-12-22T05:21:01.327Z]       1
+[2025-12-22T05:21:01.328Z]
+[2025-12-22T05:21:01.329Z]
 Type:
-Exception: Update appearance error: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
+Exception: Failed to save refresh token: 0:An error occurred while processing this request.
+RequestId:84892fe0-b712-4750-ab63-a9fe42d86cf6
+Time:2025-12-22T05:21:00.436Z
+ The index of the entity that caused the error can be found in FailedTransactionActionIndex.
+[2025-12-22T05:21:01.330Z] Status: 400 (Bad Request)
+[2025-12-22T05:21:01.331Z] ErrorCode: InvalidInput
+[2025-12-22T05:21:01.333Z]
+[2025-12-22T05:21:01.334Z] Additional Information:
+[2025-12-22T05:21:01.335Z] FailedEntity: 0
+[2025-12-22T05:21:01.336Z]
+[2025-12-22T05:21:01.338Z] Service request succeeded. Response content and headers are not included to avoid logging sensitive data.
+[2025-12-22T05:21:01.339Z]
 Stack: .
-[2025-12-21T10:15:36.801Z] ERROR: Error Details: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.803Z]
-[2025-12-21T10:15:36.804Z] Exception             :
-[2025-12-21T10:15:36.808Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:36.819Z]     Message : Error Details: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.820Z]     HResult : -2146233087
-[2025-12-21T10:15:36.826Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:36.826Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
-[2025-12-21T10:15:36.831Z] InvocationInfo        :
-[2025-12-21T10:15:36.832Z]     MyCommand        : Get-SafeErrorResponse
-[2025-12-21T10:15:36.833Z]     ScriptLineNumber : 109
-[2025-12-21T10:15:36.834Z]     OffsetInLine     : 20
-[2025-12-21T10:15:36.839Z]     HistoryId        : 1
-[2025-12-21T10:15:36.840Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.845Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.846Z]
-[2025-12-21T10:15:36.849Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.850Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1:109 char:20
-[2025-12-21T10:15:36.851Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Fa …
-[2025-12-21T10:15:36.855Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:36.856Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public
-[2025-12-21T10:15:36.857Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.859Z]     InvocationName   : Get-SafeErrorResponse
-[2025-12-21T10:15:36.860Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:36.861Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 25
-[2025-12-21T10:15:36.862Z]                         at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 109
-[2025-12-21T10:15:36.864Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:36.865Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:36.866Z] PipelineIterationInfo :
-[2025-12-21T10:15:36.867Z]       0
-[2025-12-21T10:15:36.869Z]       1
-[2025-12-21T10:15:36.870Z]
-[2025-12-21T10:15:36.874Z]
-[2025-12-21T10:15:36.875Z] Result: ERROR: Error Details: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.876Z]
-[2025-12-21T10:15:36.878Z] Exception             :
-[2025-12-21T10:15:36.879Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:36.880Z]     Message : Error Details: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
-[2025-12-21T10:15:36.881Z]     HResult : -2146233087
-[2025-12-21T10:15:36.882Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:36.884Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
-[2025-12-21T10:15:36.885Z] InvocationInfo        :
-[2025-12-21T10:15:36.886Z]     MyCommand        : Get-SafeErrorResponse
-[2025-12-21T10:15:36.888Z]     ScriptLineNumber : 109
-[2025-12-21T10:15:36.890Z]     OffsetInLine     : 20
-[2025-12-21T10:15:36.893Z]     HistoryId        : 1
-[2025-12-21T10:15:36.894Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.896Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.897Z]
-[2025-12-21T10:15:36.898Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.899Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1:109 char:20
-[2025-12-21T10:15:36.900Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Fa …
-[2025-12-21T10:15:36.904Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:36.906Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public
-[2025-12-21T10:15:36.912Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.915Z]     InvocationName   : Get-SafeErrorResponse
-[2025-12-21T10:15:36.917Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:36.918Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 25
-[2025-12-21T10:15:36.920Z]                         at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 109
-[2025-12-21T10:15:36.931Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:36.933Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:36.934Z] PipelineIterationInfo :
-[2025-12-21T10:15:36.935Z]       0
-[2025-12-21T10:15:36.936Z]       1
-[2025-12-21T10:15:36.937Z]
-[2025-12-21T10:15:36.938Z]
+[2025-12-22T05:21:01.341Z] ERROR: Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.343Z]
+[2025-12-22T05:21:01.344Z] Exception             :
+[2025-12-22T05:21:01.345Z]     Type           : System.Management.Automation.RuntimeException
+[2025-12-22T05:21:01.347Z]     ErrorRecord    :
+[2025-12-22T05:21:01.348Z]         Exception             :
+[2025-12-22T05:21:01.352Z]             Type    : System.Management.Automation.ParentContainsErrorRecordException
+[2025-12-22T05:21:01.353Z]             Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.355Z]             HResult : -2146233087
+[2025-12-22T05:21:01.356Z]         CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
+[2025-12-22T05:21:01.358Z]         FullyQualifiedErrorId : ConvertToFinalInvalidCastException
+[2025-12-22T05:21:01.359Z]         InvocationInfo        :
+[2025-12-22T05:21:01.361Z]             ScriptLineNumber : 36
+[2025-12-22T05:21:01.362Z]             OffsetInLine     : 9
+[2025-12-22T05:21:01.364Z]             HistoryId        : 1
+[2025-12-22T05:21:01.365Z]             ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.367Z]             Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.369Z]
+[2025-12-22T05:21:01.370Z]             Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.371Z]             PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
+[2025-12-22T05:21:01.373Z]                                +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
+[2025-12-22T05:21:01.374Z]                                +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.376Z]             PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T05:21:01.377Z]             PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.378Z]             CommandOrigin    : Internal
+[2025-12-22T05:21:01.380Z]         ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
+[2025-12-22T05:21:01.384Z]     Message        : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.385Z]     InnerException :
+[2025-12-22T05:21:01.386Z]         Type        : System.Management.Automation.PSInvalidCastException
+[2025-12-22T05:21:01.388Z]         ErrorRecord :
+[2025-12-22T05:21:01.389Z]             Exception             :
+[2025-12-22T05:21:01.390Z]                 Type    : System.Management.Automation.ParentContainsErrorRecordException
+[2025-12-22T05:21:01.392Z]                 Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.393Z]                 HResult : -2146233087
+[2025-12-22T05:21:01.395Z]             CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
+[2025-12-22T05:21:01.396Z]             FullyQualifiedErrorId : ConvertToFinalInvalidCastException
+[2025-12-22T05:21:01.398Z]             InvocationInfo        :
+[2025-12-22T05:21:01.399Z]                 ScriptLineNumber : 36
+[2025-12-22T05:21:01.400Z]                 OffsetInLine     : 9
+[2025-12-22T05:21:01.402Z]                 HistoryId        : 1
+[2025-12-22T05:21:01.404Z]                 ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.405Z]                 Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.407Z]
+[2025-12-22T05:21:01.408Z]                 Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.409Z]                 PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
+[2025-12-22T05:21:01.411Z]                                    +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
+[2025-12-22T05:21:01.414Z]                                    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.416Z]                 PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T05:21:01.417Z]                 PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.418Z]                 CommandOrigin    : Internal
+[2025-12-22T05:21:01.420Z]             ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
+[2025-12-22T05:21:01.421Z]         TargetSite  :
+[2025-12-22T05:21:01.423Z]             Name          : ThrowInvalidCastException
+[2025-12-22T05:21:01.424Z]             DeclaringType : [System.Management.Automation.LanguagePrimitives]
+[2025-12-22T05:21:01.425Z]             MemberType    : Method
+[2025-12-22T05:21:01.427Z]             Module        : System.Management.Automation.dll
+[2025-12-22T05:21:01.428Z]         Message     : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.429Z]         Data        : System.Collections.ListDictionaryInternal
+[2025-12-22T05:21:01.431Z]         Source      : System.Management.Automation
+[2025-12-22T05:21:01.432Z]         HResult     : -2147467262
+[2025-12-22T05:21:01.434Z]         StackTrace  :
+[2025-12-22T05:21:01.435Z]    at System.Management.Automation.LanguagePrimitives.ThrowInvalidCastException(Object valueToConvert, Type resultType)
+[2025-12-22T05:21:01.436Z]    at System.Management.Automation.LanguagePrimitives.ConvertNoConversion(Object valueToConvert, Type resultType, Boolean recurse, PSObject originalValueToConvert, IFormatProvider formatProvider, TypeTable backupTable)
+[2025-12-22T05:21:01.438Z]    at CallSite.Target(Closure, CallSite, Object)
+[2025-12-22T05:21:01.439Z]    at System.Dynamic.UpdateDelegates.UpdateAndExecute1[T0,TRet](CallSite site, T0 arg0)
+[2025-12-22T05:21:01.440Z]    at System.Management.Automation.Interpreter.DynamicInstruction`2.Run(InterpretedFrame frame)
+[2025-12-22T05:21:01.442Z]    at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+[2025-12-22T05:21:01.445Z]     HResult        : -2146233087
+[2025-12-22T05:21:01.447Z] CategoryInfo          : InvalidArgument: (:) [], RuntimeException
+[2025-12-22T05:21:01.448Z] FullyQualifiedErrorId : ConvertToFinalInvalidCastException
+[2025-12-22T05:21:01.450Z] InvocationInfo        :
+[2025-12-22T05:21:01.451Z]     ScriptLineNumber : 36
+[2025-12-22T05:21:01.453Z]     OffsetInLine     : 9
+[2025-12-22T05:21:01.454Z]     HistoryId        : 1
+[2025-12-22T05:21:01.456Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.457Z]     Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.458Z]
+[2025-12-22T05:21:01.460Z]     Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.461Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
+[2025-12-22T05:21:01.463Z]                        +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
+[2025-12-22T05:21:01.464Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.466Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T05:21:01.467Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.468Z]     CommandOrigin    : Internal
+[2025-12-22T05:21:01.469Z] ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
+[2025-12-22T05:21:01.471Z]
+[2025-12-22T05:21:01.472Z]
+[2025-12-22T05:21:01.473Z] Result: ERROR: Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.476Z]
+[2025-12-22T05:21:01.477Z] Exception             :
+[2025-12-22T05:21:01.479Z]     Type           : System.Management.Automation.RuntimeException
+[2025-12-22T05:21:01.480Z]     ErrorRecord    :
+[2025-12-22T05:21:01.481Z]         Exception             :
+[2025-12-22T05:21:01.483Z]             Type    : System.Management.Automation.ParentContainsErrorRecordException
+[2025-12-22T05:21:01.484Z]             Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.485Z]             HResult : -2146233087
+[2025-12-22T05:21:01.487Z]         CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
+[2025-12-22T05:21:01.488Z]         FullyQualifiedErrorId : ConvertToFinalInvalidCastException
+[2025-12-22T05:21:01.489Z]         InvocationInfo        :
+[2025-12-22T05:21:01.491Z]             ScriptLineNumber : 36
+[2025-12-22T05:21:01.492Z]             OffsetInLine     : 9
+[2025-12-22T05:21:01.494Z]             HistoryId        : 1
+[2025-12-22T05:21:01.495Z]             ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.496Z]             Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.498Z]
+[2025-12-22T05:21:01.499Z]             Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.501Z]             PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
+[2025-12-22T05:21:01.502Z]                                +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
+[2025-12-22T05:21:01.504Z]                                +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.508Z]             PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T05:21:01.509Z]             PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.511Z]             CommandOrigin    : Internal
+[2025-12-22T05:21:01.512Z]         ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
+[2025-12-22T05:21:01.513Z]     Message        : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.515Z]     InnerException :
+[2025-12-22T05:21:01.516Z]         Type        : System.Management.Automation.PSInvalidCastException
+[2025-12-22T05:21:01.517Z]         ErrorRecord :
+[2025-12-22T05:21:01.519Z]             Exception             :
+[2025-12-22T05:21:01.520Z]                 Type    : System.Management.Automation.ParentContainsErrorRecordException
+[2025-12-22T05:21:01.521Z]                 Message : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.523Z]                 HResult : -2146233087
+[2025-12-22T05:21:01.524Z]             CategoryInfo          : InvalidArgument: (:) [], ParentContainsErrorRecordException
+[2025-12-22T05:21:01.526Z]             FullyQualifiedErrorId : ConvertToFinalInvalidCastException
+[2025-12-22T05:21:01.527Z]             InvocationInfo        :
+[2025-12-22T05:21:01.528Z]                 ScriptLineNumber : 36
+[2025-12-22T05:21:01.530Z]                 OffsetInLine     : 9
+[2025-12-22T05:21:01.531Z]                 HistoryId        : 1
+[2025-12-22T05:21:01.532Z]                 ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.534Z]                 Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.535Z]
+[2025-12-22T05:21:01.538Z]                 Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.540Z]                 PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
+[2025-12-22T05:21:01.541Z]                                    +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
+[2025-12-22T05:21:01.543Z]                                    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.544Z]                 PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T05:21:01.546Z]                 PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.547Z]                 CommandOrigin    : Internal
+[2025-12-22T05:21:01.549Z]             ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
+[2025-12-22T05:21:01.550Z]         TargetSite  :
+[2025-12-22T05:21:01.551Z]             Name          : ThrowInvalidCastException
+[2025-12-22T05:21:01.553Z]             DeclaringType : [System.Management.Automation.LanguagePrimitives]
+[2025-12-22T05:21:01.554Z]             MemberType    : Method
+[2025-12-22T05:21:01.556Z]             Module        : System.Management.Automation.dll
+[2025-12-22T05:21:01.557Z]         Message     : Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
+[2025-12-22T05:21:01.558Z]         Data        : System.Collections.ListDictionaryInternal
+[2025-12-22T05:21:01.560Z]         Source      : System.Management.Automation
+[2025-12-22T05:21:01.561Z]         HResult     : -2147467262
+[2025-12-22T05:21:01.562Z]         StackTrace  :
+[2025-12-22T05:21:01.563Z]    at System.Management.Automation.LanguagePrimitives.ThrowInvalidCastException(Object valueToConvert, Type resultType)
+[2025-12-22T05:21:01.564Z]    at System.Management.Automation.LanguagePrimitives.ConvertNoConversion(Object valueToConvert, Type resultType, Boolean recurse, PSObject originalValueToConvert, IFormatProvider formatProvider, TypeTable backupTable)
+[2025-12-22T05:21:01.566Z]    at CallSite.Target(Closure, CallSite, Object)
+[2025-12-22T05:21:01.568Z]    at System.Dynamic.UpdateDelegates.UpdateAndExecute1[T0,TRet](CallSite site, T0 arg0)
+[2025-12-22T05:21:01.570Z]    at System.Management.Automation.Interpreter.DynamicInstruction`2.Run(InterpretedFrame frame)
+[2025-12-22T05:21:01.572Z]    at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+[2025-12-22T05:21:01.573Z]     HResult        : -2146233087
+[2025-12-22T05:21:01.574Z] CategoryInfo          : InvalidArgument: (:) [], RuntimeException
+[2025-12-22T05:21:01.576Z] FullyQualifiedErrorId : ConvertToFinalInvalidCastException
+[2025-12-22T05:21:01.577Z] InvocationInfo        :
+[2025-12-22T05:21:01.578Z]     ScriptLineNumber : 36
+[2025-12-22T05:21:01.580Z]     OffsetInLine     : 9
+[2025-12-22T05:21:01.581Z]     HistoryId        : 1
+[2025-12-22T05:21:01.583Z]     ScriptName       : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.584Z]     Line             : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.585Z]
+[2025-12-22T05:21:01.586Z]     Statement        : Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+[2025-12-22T05:21:01.588Z]     PositionMessage  : At C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1:36 char:9
+[2025-12-22T05:21:01.589Z]                        +         Push-OutputBinding -Name Response -Value ([HttpResponseContex …
+[2025-12-22T05:21:01.590Z]                        +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[2025-12-22T05:21:01.592Z]     PSScriptRoot     : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints
+[2025-12-22T05:21:01.593Z]     PSCommandPath    : C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1
+[2025-12-22T05:21:01.594Z]     CommandOrigin    : Internal
+[2025-12-22T05:21:01.596Z] ScriptStackTrace      : at Receive-LinkTomeHttpTrigger, C:\Users\ZacR\Documents\GitHub\linktome project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 36
+[2025-12-22T05:21:01.597Z]
+[2025-12-22T05:21:01.598Z]
 Type:
-Exception: Error Details: Exception setting "Theme": "The property 'Theme' cannot be found on this object. Verify that the property exists and can be set."
+Exception: Cannot convert the "System.Object[]" value of type "System.Object[]" to type "Microsoft.Azure.Functions.PowerShellWorker.HttpResponseContext".
 Stack: .
-[2025-12-21T10:15:36.939Z] ERROR: Error Type: System.Management.Automation.SetValueInvocationException
-[2025-12-21T10:15:36.940Z]
-[2025-12-21T10:15:36.941Z] Exception             :
-[2025-12-21T10:15:36.942Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:36.943Z]     Message : Error Type: System.Management.Automation.SetValueInvocationException
-[2025-12-21T10:15:36.944Z]     HResult : -2146233087
-[2025-12-21T10:15:36.945Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:36.946Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
-[2025-12-21T10:15:36.947Z] InvocationInfo        :
-[2025-12-21T10:15:36.949Z]     MyCommand        : Get-SafeErrorResponse
-[2025-12-21T10:15:36.950Z]     ScriptLineNumber : 109
-[2025-12-21T10:15:36.951Z]     OffsetInLine     : 20
-[2025-12-21T10:15:36.952Z]     HistoryId        : 1
-[2025-12-21T10:15:36.953Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.954Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.955Z]
-[2025-12-21T10:15:36.956Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.957Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1:109 char:20
-[2025-12-21T10:15:36.958Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Fa …
-[2025-12-21T10:15:36.959Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:36.960Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public
-[2025-12-21T10:15:36.961Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.962Z]     InvocationName   : Get-SafeErrorResponse
-[2025-12-21T10:15:36.963Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:36.964Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 26
-[2025-12-21T10:15:36.965Z]                         at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 109
-[2025-12-21T10:15:36.966Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:36.968Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:36.969Z] PipelineIterationInfo :
-[2025-12-21T10:15:36.970Z]       0
-[2025-12-21T10:15:36.971Z]       1
-[2025-12-21T10:15:36.971Z]
-[2025-12-21T10:15:36.972Z]
-[2025-12-21T10:15:36.973Z] Result: ERROR: Error Type: System.Management.Automation.SetValueInvocationException
-[2025-12-21T10:15:36.974Z]
-[2025-12-21T10:15:36.975Z] Exception             :
-[2025-12-21T10:15:36.976Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:36.977Z]     Message : Error Type: System.Management.Automation.SetValueInvocationException
-[2025-12-21T10:15:36.978Z]     HResult : -2146233087
-[2025-12-21T10:15:36.979Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:36.980Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
-[2025-12-21T10:15:36.981Z] InvocationInfo        :
-[2025-12-21T10:15:36.982Z]     MyCommand        : Get-SafeErrorResponse
-[2025-12-21T10:15:36.983Z]     ScriptLineNumber : 109
-[2025-12-21T10:15:36.984Z]     OffsetInLine     : 20
-[2025-12-21T10:15:36.985Z]     HistoryId        : 1
-[2025-12-21T10:15:36.986Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.988Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.989Z]
-[2025-12-21T10:15:36.990Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:36.991Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1:109 char:20
-[2025-12-21T10:15:36.992Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Fa …
-[2025-12-21T10:15:36.993Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:36.994Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public
-[2025-12-21T10:15:36.996Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:36.997Z]     InvocationName   : Get-SafeErrorResponse
-[2025-12-21T10:15:36.998Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:37.000Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 26
-[2025-12-21T10:15:37.001Z]                         at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 109
-[2025-12-21T10:15:37.002Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.003Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:37.004Z] PipelineIterationInfo :
-[2025-12-21T10:15:37.005Z]       0
-[2025-12-21T10:15:37.006Z]       1
-[2025-12-21T10:15:37.007Z]
-[2025-12-21T10:15:37.008Z]
-Type:
-Exception: Error Type: System.Management.Automation.SetValueInvocationException
-Stack: .
-[2025-12-21T10:15:37.010Z] ERROR: Stack Trace: at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 36
-[2025-12-21T10:15:37.011Z] at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.012Z] at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:37.013Z]
-[2025-12-21T10:15:37.014Z] Exception             :
-[2025-12-21T10:15:37.015Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:37.016Z]     Message : Stack Trace: at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 36
-[2025-12-21T10:15:37.017Z]               at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.018Z]               at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:37.019Z]     HResult : -2146233087
-[2025-12-21T10:15:37.020Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:37.021Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
-[2025-12-21T10:15:37.022Z] InvocationInfo        :
-[2025-12-21T10:15:37.023Z]     MyCommand        : Get-SafeErrorResponse
-[2025-12-21T10:15:37.024Z]     ScriptLineNumber : 109
-[2025-12-21T10:15:37.026Z]     OffsetInLine     : 20
-[2025-12-21T10:15:37.027Z]     HistoryId        : 1
-[2025-12-21T10:15:37.028Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:37.029Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:37.030Z]
-[2025-12-21T10:15:37.031Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:37.032Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1:109 char:20
-[2025-12-21T10:15:37.034Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Fa …
-[2025-12-21T10:15:37.035Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:37.036Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public
-[2025-12-21T10:15:37.037Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:37.038Z]     InvocationName   : Get-SafeErrorResponse
-[2025-12-21T10:15:37.039Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:37.040Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 28
-[2025-12-21T10:15:37.042Z]                         at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 109
-[2025-12-21T10:15:37.043Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.044Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:37.045Z] PipelineIterationInfo :
-[2025-12-21T10:15:37.046Z]       0
-[2025-12-21T10:15:37.047Z]       1
-[2025-12-21T10:15:37.048Z]
-[2025-12-21T10:15:37.049Z]
-[2025-12-21T10:15:37.050Z] Result: ERROR: Stack Trace: at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 36
-[2025-12-21T10:15:37.051Z] at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.052Z] at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:37.053Z]
-[2025-12-21T10:15:37.054Z] Exception             :
-[2025-12-21T10:15:37.055Z]     Type    : Microsoft.PowerShell.Commands.WriteErrorException
-[2025-12-21T10:15:37.055Z]     Message : Stack Trace: at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 36
-[2025-12-21T10:15:37.057Z]               at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.059Z]               at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:37.060Z]     HResult : -2146233087
-[2025-12-21T10:15:37.061Z] CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-[2025-12-21T10:15:37.062Z] FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Get-SafeErrorResponse
-[2025-12-21T10:15:37.063Z] InvocationInfo        :
-[2025-12-21T10:15:37.064Z]     MyCommand        : Get-SafeErrorResponse
-[2025-12-21T10:15:37.065Z]     ScriptLineNumber : 109
-[2025-12-21T10:15:37.066Z]     OffsetInLine     : 20
-[2025-12-21T10:15:37.067Z]     HistoryId        : 1
-[2025-12-21T10:15:37.068Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:37.069Z]     Line             : $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:37.070Z]
-[2025-12-21T10:15:37.071Z]     Statement        : Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update appearance"
-[2025-12-21T10:15:37.072Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1:109 char:20
-[2025-12-21T10:15:37.074Z]                        + …  $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Fa …
-[2025-12-21T10:15:37.075Z]                        +               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:15:37.076Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public
-[2025-12-21T10:15:37.077Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1
-[2025-12-21T10:15:37.078Z]     InvocationName   : Get-SafeErrorResponse
-[2025-12-21T10:15:37.079Z]     CommandOrigin    : Internal
-[2025-12-21T10:15:37.080Z] ScriptStackTrace      : at Get-SafeErrorResponse, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Error\Get-SafeErrorResponse.ps1: line 28
-[2025-12-21T10:15:37.081Z]                         at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 109
-[2025-12-21T10:15:37.082Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.083Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:15:37.084Z] PipelineIterationInfo :
-[2025-12-21T10:15:37.085Z]       0
-[2025-12-21T10:15:37.086Z]       1
-[2025-12-21T10:15:37.088Z]
-[2025-12-21T10:15:37.089Z]
-Type:
-Exception: Stack Trace: at Invoke-AdminUpdateAppearance, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\PrivateApi\Public\Invoke-AdminUpdateAppearance.ps1: line 36
-[2025-12-21T10:15:37.090Z] at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 153
-[2025-12-21T10:15:37.091Z] at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-Stack: .
-[2025-12-21T10:15:37.093Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=c81bca71-49cb-4f8e-9edc-2cd182546f37, Duration=529ms)
-
-[2025-12-21T10:25:00.333Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=1f138171-b588-42c6-affe-32bfac903780)
-[2025-12-21T10:25:00.333Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=43e6321e-1e8c-4c57-8571-116e75fb210d)
-[2025-12-21T10:25:00.343Z] INFORMATION: Processing endpoint: admin/GetDashboardStats
-[2025-12-21T10:25:00.344Z] INFORMATION: Resolved: admin/GetDashboardStats -> Invoke-AdminGetDashboardStats
-[2025-12-21T10:25:00.343Z] INFORMATION: Processing endpoint: admin/GetProfile
-[2025-12-21T10:25:00.346Z] INFORMATION: Resolved: admin/GetProfile -> Invoke-AdminGetProfile
-[2025-12-21T10:25:00.369Z] INFORMATION: Invoking function: Invoke-AdminGetDashboardStats
-[2025-12-21T10:25:00.369Z] INFORMATION: Invoking function: Invoke-AdminGetProfile
-[2025-12-21T10:25:00.378Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=43e6321e-1e8c-4c57-8571-116e75fb210d, Duration=44ms)
-[2025-12-21T10:25:00.425Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=1f138171-b588-42c6-affe-32bfac903780, Duration=92ms)
-[2025-12-21T10:25:09.384Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=d1747aff-0d7e-4ecd-a49e-debd38f3f1ed)
-[2025-12-21T10:25:09.401Z] INFORMATION: Processing endpoint: admin/GetAnalytics
-[2025-12-21T10:25:09.404Z] INFORMATION: Resolved: admin/GetAnalytics -> Invoke-AdminGetAnalytics
-[2025-12-21T10:25:09.417Z] INFORMATION: Invoking function: Invoke-AdminGetAnalytics
-[2025-12-21T10:25:09.430Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=d1747aff-0d7e-4ecd-a49e-debd38f3f1ed, Duration=46ms)
-[2025-12-21T10:25:33.268Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=679d0390-0514-4e17-b170-be71ed4a7df1)
-[2025-12-21T10:25:33.268Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=4425fbc2-990f-4003-b6cf-b0d72dc2de70)
-[2025-12-21T10:25:33.285Z] INFORMATION: Processing endpoint: admin/GetDashboardStats
-[2025-12-21T10:25:33.287Z] INFORMATION: Processing endpoint: admin/GetProfile
-[2025-12-21T10:25:33.290Z] INFORMATION: Resolved: admin/GetDashboardStats -> Invoke-AdminGetDashboardStats
-[2025-12-21T10:25:33.295Z] INFORMATION: Resolved: admin/GetProfile -> Invoke-AdminGetProfile
-[2025-12-21T10:25:33.316Z] INFORMATION: Invoking function: Invoke-AdminGetProfile[2025-12-21T10:25:33.317Z] INFORMATION: Invoking function: Invoke-AdminGetDashboardStats
-
-[2025-12-21T10:25:33.338Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=679d0390-0514-4e17-b170-be71ed4a7df1, Duration=69ms)
-[2025-12-21T10:25:33.351Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=4425fbc2-990f-4003-b6cf-b0d72dc2de70, Duration=83ms)
-[2025-12-21T10:25:59.157Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=564e5612-51df-4133-b545-6b145391951a)
-[2025-12-21T10:25:59.157Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=767083c9-6de7-434b-bbf0-6eb37375fd3d)
-[2025-12-21T10:25:59.173Z] INFORMATION: Processing endpoint: public/GetUserProfile
-[2025-12-21T10:25:59.174Z] INFORMATION: Processing endpoint: public/GetUserProfile
-[2025-12-21T10:25:59.174Z] INFORMATION: Resolved: public/GetUserProfile -> Invoke-PublicGetUserProfile
-[2025-12-21T10:25:59.177Z] INFORMATION: Resolved: public/GetUserProfile -> Invoke-PublicGetUserProfile
-[2025-12-21T10:25:59.178Z] INFORMATION: Invoking function: Invoke-PublicGetUserProfile
-[2025-12-21T10:25:59.180Z] INFORMATION: Invoking function: Invoke-PublicGetUserProfile
-[2025-12-21T10:25:59.220Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=564e5612-51df-4133-b545-6b145391951a, Duration=62ms)
-[2025-12-21T10:25:59.223Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=767083c9-6de7-434b-bbf0-6eb37375fd3d, Duration=65ms)
-[2025-12-21T10:29:12.191Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=d0f8d546-9ea5-44a2-aa28-10627f7ff271)
-[2025-12-21T10:29:12.203Z] INFORMATION: Processing endpoint: admin/GetLinks
-[2025-12-21T10:29:12.205Z] INFORMATION: Resolved: admin/GetLinks -> Invoke-AdminGetLinks
-[2025-12-21T10:29:12.213Z] INFORMATION: Invoking function: Invoke-AdminGetLinks
-[2025-12-21T10:29:12.228Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=d0f8d546-9ea5-44a2-aa28-10627f7ff271, Duration=38ms)
-[2025-12-21T10:30:39.986Z] Executing 'Functions.HttpTrigger' (Reason='This function was programmatically called via the host APIs.', Id=f8ad0a3f-9007-4376-bc0a-33f4484dc05f)
-[2025-12-21T10:30:39.996Z] INFORMATION: Processing endpoint: admin/GetProfile
-[2025-12-21T10:30:39.999Z] INFORMATION: Resolved: admin/GetProfile -> Invoke-AdminGetProfile
-[2025-12-21T10:30:40.008Z] WARNING: An input entity has at least one property with a potentially unsupported type, please ensure that the input entities have only supported data types. Unsupported property types found:
-MetadataJson
-
-https://docs.microsoft.com/en-us/rest/api/storageservices/understanding-the-table-service-data-model#property-types
-[2025-12-21T10:30:40.084Z] ERROR: Not supported type System.Management.Automation.PSObject
-[2025-12-21T10:30:40.087Z]
-[2025-12-21T10:30:40.088Z] Exception             :
-[2025-12-21T10:30:40.089Z]     Type       : System.NotSupportedException
-[2025-12-21T10:30:40.091Z]     TargetSite :
-[2025-12-21T10:30:40.092Z]         Name          : WriteObjectValue
-[2025-12-21T10:30:40.116Z]         DeclaringType : [Azure.Data.Tables.ModelSerializationExtensions]
-[2025-12-21T10:30:40.117Z]         MemberType    : Method
-[2025-12-21T10:30:40.118Z]         Module        : Azure.Data.Tables.dll
-[2025-12-21T10:30:40.119Z]     Message    : Not supported type System.Management.Automation.PSObject
-[2025-12-21T10:30:40.120Z]     Source     : Azure.Data.Tables
-[2025-12-21T10:30:40.121Z]     HResult    : -2146233067
-[2025-12-21T10:30:40.122Z]     StackTrace :
-[2025-12-21T10:30:40.123Z]    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
-[2025-12-21T10:30:40.124Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
-[2025-12-21T10:30:40.124Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
-[2025-12-21T10:30:40.125Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
-[2025-12-21T10:30:40.126Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
-[2025-12-21T10:30:40.127Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
-[2025-12-21T10:30:40.128Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
-[2025-12-21T10:30:40.129Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
-[2025-12-21T10:30:40.131Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273
-[2025-12-21T10:30:40.132Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], NotSupportedException
-[2025-12-21T10:30:40.133Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
-[2025-12-21T10:30:40.134Z] InvocationInfo        :
-[2025-12-21T10:30:40.134Z]     MyCommand        : Add-AzDataTableEntity
-[2025-12-21T10:30:40.135Z]     ScriptLineNumber : 73
-[2025-12-21T10:30:40.136Z]     OffsetInLine     : 13
-[2025-12-21T10:30:40.137Z]     HistoryId        : 1
-[2025-12-21T10:30:40.138Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
-[2025-12-21T10:30:40.139Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
-[2025-12-21T10:30:40.140Z]
-[2025-12-21T10:30:40.141Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
-[2025-12-21T10:30:40.142Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1:73 char:13
-[2025-12-21T10:30:40.143Z]                        +             Add-AzDataTableEntity @Table -Entity $EventRecord -Force  …
-[2025-12-21T10:30:40.144Z]                        +             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:30:40.145Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging
-[2025-12-21T10:30:40.146Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
-[2025-12-21T10:30:40.147Z]     InvocationName   : Add-AzDataTableEntity
-[2025-12-21T10:30:40.148Z]     CommandOrigin    : Internal
-[2025-12-21T10:30:40.149Z] ScriptStackTrace      : at Write-SecurityEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1: line 73
-[2025-12-21T10:30:40.150Z]                         at Test-LinkToMeJWT, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Auth\Test-LinkToMeJWT.ps1: line 17
-[2025-12-21T10:30:40.151Z]                         at Get-UserFromRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Auth\Get-UserFromRequest.ps1: line 22
-[2025-12-21T10:30:40.152Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 129
-[2025-12-21T10:30:40.153Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:30:40.154Z] PipelineIterationInfo :
-[2025-12-21T10:30:40.155Z]       0
-[2025-12-21T10:30:40.156Z]       1
-[2025-12-21T10:30:40.157Z]       0
-[2025-12-21T10:30:40.158Z]
-[2025-12-21T10:30:40.159Z]
-[2025-12-21T10:30:40.160Z] Result: ERROR: Not supported type System.Management.Automation.PSObject
-[2025-12-21T10:30:40.161Z]
-[2025-12-21T10:30:40.162Z] Exception             :
-[2025-12-21T10:30:40.164Z]     Type       : System.NotSupportedException
-[2025-12-21T10:30:40.164Z]     TargetSite :
-[2025-12-21T10:30:40.165Z]         Name          : WriteObjectValue
-[2025-12-21T10:30:40.166Z]         DeclaringType : [Azure.Data.Tables.ModelSerializationExtensions]
-[2025-12-21T10:30:40.167Z]         MemberType    : Method
-[2025-12-21T10:30:40.168Z]         Module        : Azure.Data.Tables.dll
-[2025-12-21T10:30:40.170Z]     Message    : Not supported type System.Management.Automation.PSObject
-[2025-12-21T10:30:40.171Z]     Source     : Azure.Data.Tables
-[2025-12-21T10:30:40.172Z]     HResult    : -2146233067
-[2025-12-21T10:30:40.173Z]     StackTrace :
-[2025-12-21T10:30:40.174Z]    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
-[2025-12-21T10:30:40.175Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
-[2025-12-21T10:30:40.176Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
-[2025-12-21T10:30:40.177Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
-[2025-12-21T10:30:40.178Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
-[2025-12-21T10:30:40.179Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
-[2025-12-21T10:30:40.180Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
-[2025-12-21T10:30:40.181Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
-[2025-12-21T10:30:40.183Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273
-[2025-12-21T10:30:40.184Z] CategoryInfo          : InvalidOperation: (:) [Add-AzDataTableEntity], NotSupportedException
-[2025-12-21T10:30:40.185Z] FullyQualifiedErrorId : AddEntitiesError,PipeHow.AzBobbyTables.Cmdlets.AddAzDataTableEntity
-[2025-12-21T10:30:40.186Z] InvocationInfo        :
-[2025-12-21T10:30:40.188Z]     MyCommand        : Add-AzDataTableEntity
-[2025-12-21T10:30:40.189Z]     ScriptLineNumber : 73
-[2025-12-21T10:30:40.190Z]     OffsetInLine     : 13
-[2025-12-21T10:30:40.191Z]     HistoryId        : 1
-[2025-12-21T10:30:40.192Z]     ScriptName       : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
-[2025-12-21T10:30:40.193Z]     Line             : Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
-[2025-12-21T10:30:40.194Z]
-[2025-12-21T10:30:40.196Z]     Statement        : Add-AzDataTableEntity @Table -Entity $EventRecord -Force
-[2025-12-21T10:30:40.197Z]     PositionMessage  : At C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1:73 char:13
-[2025-12-21T10:30:40.198Z]                        +             Add-AzDataTableEntity @Table -Entity $EventRecord -Force  …
-[2025-12-21T10:30:40.199Z]                        +             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[2025-12-21T10:30:40.200Z]     PSScriptRoot     : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging
-[2025-12-21T10:30:40.201Z]     PSCommandPath    : C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1
-[2025-12-21T10:30:40.202Z]     InvocationName   : Add-AzDataTableEntity
-[2025-12-21T10:30:40.203Z]     CommandOrigin    : Internal
-[2025-12-21T10:30:40.204Z] ScriptStackTrace      : at Write-SecurityEvent, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Logging\Write-SecurityEvent.ps1: line 73
-[2025-12-21T10:30:40.205Z]                         at Test-LinkToMeJWT, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Auth\Test-LinkToMeJWT.ps1: line 17
-[2025-12-21T10:30:40.206Z]                         at Get-UserFromRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeCore\Auth\Get-UserFromRequest.ps1: line 22
-[2025-12-21T10:30:40.207Z]                         at New-LinkTomeCoreRequest, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 129
-[2025-12-21T10:30:40.208Z]                         at Receive-LinkTomeHttpTrigger, C:\Users\Zac\GitHub\link to me project\linktome-api\Modules\LinkTomeEntrypoints\LinkTomeEntrypoints.psm1: line 30
-[2025-12-21T10:30:40.209Z] PipelineIterationInfo :
-[2025-12-21T10:30:40.210Z]       0
-[2025-12-21T10:30:40.211Z]       1
-[2025-12-21T10:30:40.212Z]       0
-[2025-12-21T10:30:40.213Z]
-[2025-12-21T10:30:40.214Z]
-Type:
-Exception: Not supported type System.Management.Automation.PSObject
-Stack:    at Azure.Data.Tables.ModelSerializationExtensions.WriteObjectValue[T](Utf8JsonWriter writer, T value)
-[2025-12-21T10:30:40.214Z]    at Azure.Data.Tables.TableRestClient.CreateUpdateEntityRequest(String table, String partitionKey, String rowKey, Nullable`1 timeout, String ifMatch, IDictionary`2 tableEntityProperties, QueryOptions queryOptions)
-[2025-12-21T10:30:40.215Z]    at Azure.Data.Tables.TableClient.CreateUpdateOrMergeRequest(TableRestClient batchOperations, ITableEntity entity, TableUpdateMode mode, ETag ifMatch)
-[2025-12-21T10:30:40.216Z]    at Azure.Data.Tables.TableClient.BuildChangeSet(TableRestClient batchOperations, IEnumerator`1 batchEnumerator, Dictionary`2 requestLookup, Guid batchId, Guid changesetId)
-[2025-12-21T10:30:40.218Z]    at Azure.Data.Tables.TableClient.SubmitTransactionInternalAsync(IEnumerable`1 transactionalBatch, Guid batchId, Guid changesetId, Boolean async, CancellationToken cancellationToken)
-[2025-12-21T10:30:40.219Z]    at Azure.Core.Pipeline.TaskExtensions.EnsureCompleted[T](Task`1 task)
-[2025-12-21T10:30:40.220Z]    at Azure.Data.Tables.TableClient.SubmitTransaction(IEnumerable`1 transactionActions, CancellationToken cancellationToken)
-[2025-12-21T10:30:40.221Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.SubmitTransaction(IList`1 transactions) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 465
-[2025-12-21T10:30:40.222Z]    at PipeHow.AzBobbyTables.Core.AzDataTableService.AddEntitiesToTable(IEnumerable`1 entities, OperationTypeEnum operationType) in /home/runner/work/AzBobbyTables/AzBobbyTables/source/AzBobbyTables.Core/AzDataTableService.cs:line 273.
-[2025-12-21T10:30:40.223Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=f8ad0a3f-9007-4376-bc0a-33f4484dc05f, Duration=237ms)
+[2025-12-22T05:21:01.601Z] Executed 'Functions.HttpTrigger' (Succeeded, Id=62ed06f3-08e1-49c7-8291-67aa052dbee3, Duration=6600ms)
