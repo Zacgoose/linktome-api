@@ -12,7 +12,8 @@ function New-RefreshToken {
     $RNG.GetBytes($TokenBytes)
     $RNG.Dispose()
     
-    $Token = [Convert]::ToBase64String($TokenBytes)
+    # Base64URL encode to avoid Azure Table Storage PartitionKey invalid characters (+, /, =)
+    $Token = [Convert]::ToBase64String($TokenBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
     
     return $Token
 }
