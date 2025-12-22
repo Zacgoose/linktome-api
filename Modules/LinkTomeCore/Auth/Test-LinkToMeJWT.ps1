@@ -14,9 +14,7 @@ function Test-LinkToMeJWT {
         $IsValid = Test-JsonWebToken -JsonWebToken $Token -HashAlgorithm SHA256 -SecureKey $Secret
         
         if (-not $IsValid) {
-            Write-SecurityEvent -EventType 'TokenValidationFailed' -Metadata @{
-                Reason = 'InvalidSignature'
-            }
+            Write-SecurityEvent -EventType 'TokenValidationFailed' -Reason 'InvalidSignature'
             return $null
         }
         
@@ -31,10 +29,7 @@ function Test-LinkToMeJWT {
         }
     } catch {
         Write-Warning "Token validation failed: $($_.Exception.Message)"
-        Write-SecurityEvent -EventType 'TokenValidationFailed' -Metadata @{
-            Reason = 'Exception'
-            Error = $_.Exception.Message
-        }
+        Write-SecurityEvent -EventType 'TokenValidationFailed' -Reason 'Exception'
         return $null
     }
 }

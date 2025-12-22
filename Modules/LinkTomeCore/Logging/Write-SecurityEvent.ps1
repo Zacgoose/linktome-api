@@ -19,6 +19,7 @@ function Write-SecurityEvent {
     .EXAMPLE
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.UserId -Email $User.Email -IpAddress $ClientIP
     #>
+<<<<<<< Updated upstream
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -35,6 +36,19 @@ function Write-SecurityEvent {
         
         [string]$Endpoint
     )
+=======
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory)]
+            [string]$EventType,
+            [string]$UserId = 'unknown',
+            [string]$Email,
+            [string]$Username,
+            [string]$IpAddress,
+            [string]$Endpoint,
+            [string]$Reason
+        )
+>>>>>>> Stashed changes
     
     try {
         # Redact email for privacy (keep first 3 chars and domain)
@@ -63,7 +77,15 @@ function Write-SecurityEvent {
                 IpAddress = $IpAddress
                 Endpoint = $Endpoint
             }
+<<<<<<< Updated upstream
             Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+=======
+            if ($Reason) {
+                $EventRecord['Reason'] = $Reason
+            }
+
+            Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
+>>>>>>> Stashed changes
         } catch {
             Write-Warning "Failed to store security event in table storage: $($_.Exception.Message)"
         }

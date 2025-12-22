@@ -37,9 +37,7 @@ function Invoke-PublicLogin {
         
         if (-not $User) {
             # Log failed login attempt
-            Write-SecurityEvent -EventType 'LoginFailed' -Email $Body.email -IpAddress $ClientIP -Endpoint 'public/login' -Metadata @{
-                Reason = 'UserNotFound'
-            }
+            Write-SecurityEvent -EventType 'LoginFailed' -Email $Body.email -IpAddress $ClientIP -Endpoint 'public/login' -Reason 'UserNotFound'
             
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
@@ -51,9 +49,7 @@ function Invoke-PublicLogin {
         
         if (-not $Valid) {
             # Log failed login attempt
-            Write-SecurityEvent -EventType 'LoginFailed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login' -Metadata @{
-                Reason = 'InvalidPassword'
-            }
+            Write-SecurityEvent -EventType 'LoginFailed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login' -Reason 'InvalidPassword'
             
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
