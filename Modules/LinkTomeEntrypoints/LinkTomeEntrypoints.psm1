@@ -30,10 +30,14 @@ function Receive-LinkTomeHttpTrigger {
     $Response = New-LinkTomeCoreRequest -Request $Request -TriggerMetadata $TriggerMetadata
     
     if ($Response -is [System.Array]) {
-        $Response = $Response[0]
+        if ($Response.Count -gt 0) {
+            $Response = $Response[0]
+        } else {
+            $Response = $null
+        }
     }
 
-    if ($Response.StatusCode) {
+    if ($Response -and $Response.StatusCode) {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
