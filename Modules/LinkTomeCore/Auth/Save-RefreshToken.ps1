@@ -20,16 +20,17 @@ function Save-RefreshToken {
         $Table = Get-LinkToMeTable -TableName 'RefreshTokens'
         
         # Use token as PartitionKey for direct lookup, UserId as RowKey for user-based queries
+        # Convert DateTime to ISO 8601 string for Azure Table Storage compatibility
         $TokenEntity = @{
             PartitionKey = $Token
             RowKey = (New-Guid).ToString()
             UserId = $UserId
-            ExpiresAt = $ExpiresAt
-            CreatedAt = (Get-Date).ToUniversalTime()
+            ExpiresAt = $ExpiresAt.ToString('o')  # ISO 8601 format
+            CreatedAt = (Get-Date).ToUniversalTime().ToString('o')  # ISO 8601 format
             IsValid = $true
         }
         
-        Add-AzDataTableEntity @Table -Entity $TokenEntity -Force
+        Add-LinkToMeAzDataTableEntity @Table -Entity $TokenEntity -Force
         
         return $true
     } catch {
