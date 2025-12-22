@@ -96,7 +96,7 @@ foreach ($Link in $Links) {
         Order = $Link.Order
         Active = $Link.Active
     }
-    Add-AzDataTableEntity @LinksTable -Entity $Entity -Force
+    Add-LinkToMeAzDataTableEntity @LinksTable -Entity $Entity -Force
 }
 
 Write-Host "`n✅ Test users created successfully!" -ForegroundColor Green
