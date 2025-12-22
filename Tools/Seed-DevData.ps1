@@ -50,9 +50,9 @@ foreach ($TestUser in $TestUsers) {
     $DefaultPermissions = Get-DefaultRolePermissions -Role $TestUser.Role
     
     # Convert arrays to JSON strings for Azure Table Storage compatibility
-    # Ensure these are strings, not PSCustomObjects
-    $RolesJson = (@($TestUser.Role) | ConvertTo-Json -Compress).ToString()
-    $PermissionsJson = ($DefaultPermissions | ConvertTo-Json -Compress).ToString()
+    # Cast to [string] to ensure proper type (CIPP-API pattern)
+    $RolesJson = [string](@($TestUser.Role) | ConvertTo-Json -Compress)
+    $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
     
     $User = @{
         PartitionKey = $TestUser.Email
