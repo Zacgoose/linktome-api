@@ -29,7 +29,20 @@ function Receive-LinkTomeHttpTrigger {
     # Process request through central router
     $Response = New-LinkTomeCoreRequest -Request $Request -TriggerMetadata $TriggerMetadata
     
-    if ($Response.StatusCode) {
+    if ($Response -is [System.Array]) {
+        # Array responses can happen via pipeline; pick first element with a non-null StatusCode, otherwise null to trigger fallback
+        $FirstValid = $null
+        foreach ($item in $Response) {
+            if ($item -and $item.PSObject.Properties['StatusCode'] -and $null -ne $item.StatusCode) {
+                $FirstValid = $item
+                break
+            }
+        }
+        $Response = $FirstValid
+        # If no element matches, $Response will be $null and the fallback block below will run
+    }
+
+    if ($null -ne $Response -and $null -ne $Response.StatusCode) {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
