@@ -87,8 +87,9 @@ function Invoke-PublicSignup {
         $DefaultPermissions = Get-DefaultRolePermissions -Role $DefaultRole
         
         # Convert arrays to JSON strings for Azure Table Storage compatibility
-        $RolesJson = @($DefaultRole) | ConvertTo-Json -Compress
-        $PermissionsJson = $DefaultPermissions | ConvertTo-Json -Compress
+        # Ensure these are strings, not PSCustomObjects
+        $RolesJson = (@($DefaultRole) | ConvertTo-Json -Compress).ToString()
+        $PermissionsJson = ($DefaultPermissions | ConvertTo-Json -Compress).ToString()
         
         $NewUser = @{
             PartitionKey = $Body.email.ToLower()
