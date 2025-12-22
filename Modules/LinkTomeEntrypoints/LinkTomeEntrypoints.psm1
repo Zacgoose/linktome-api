@@ -30,16 +30,9 @@ function Receive-LinkTomeHttpTrigger {
     $Response = New-LinkTomeCoreRequest -Request $Request -TriggerMetadata $TriggerMetadata
     
     if ($Response -is [System.Array]) {
-        if ($Response.Count -gt 0) {
-            $CandidateResponse = $Response[0]
-            if ($CandidateResponse.PSObject.Properties.Name -contains 'StatusCode') {
-                $Response = $CandidateResponse
-            } else {
-                $Response = $null
-            }
-        } else {
-            $Response = $null
-        }
+        $Response = $Response |
+            Where-Object { $_ -ne $null -and $_.PSObject -and ($_.PSObject.Properties.Name -contains 'StatusCode') } |
+            Select-Object -First 1
     }
 
     if ($Response -and $null -ne $Response.StatusCode) {
