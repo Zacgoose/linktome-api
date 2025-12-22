@@ -69,7 +69,7 @@ function Invoke-AdminAssignRole {
 
         # Update user with new role and permissions
         # Convert arrays to JSON strings for Azure Table Storage compatibility
-        # Cast to [string] to ensure proper type (CIPP-API pattern)
+        # Cast to [string] per CIPP-API pattern
         $TargetUser.Roles = [string](@($Body.role) | ConvertTo-Json -Compress)
         $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
         
