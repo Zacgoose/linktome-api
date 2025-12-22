@@ -29,6 +29,10 @@ function Receive-LinkTomeHttpTrigger {
     # Process request through central router
     $Response = New-LinkTomeCoreRequest -Request $Request -TriggerMetadata $TriggerMetadata
     
+    if ($Response -is [System.Array]) {
+        $Response = $Response[0]
+    }
+
     if ($Response.StatusCode) {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
