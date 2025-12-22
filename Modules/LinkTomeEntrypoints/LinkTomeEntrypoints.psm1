@@ -34,6 +34,7 @@ function Receive-LinkTomeHttpTrigger {
         $Response = $Response |
             Where-Object { $_ -and $_.PSObject.Properties['StatusCode'] } |
             Select-Object -First 1
+        # If no element matches, $Response will be $null and the fallback block below will run
     }
 
     if ($Response -and $null -ne $Response.StatusCode) {
