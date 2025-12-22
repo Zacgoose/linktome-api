@@ -53,15 +53,27 @@ function Invoke-AdminGetUserRoles {
             }
         }
 
-        # Get roles and permissions
+        # Get roles and permissions (deserialize from JSON if needed)
         $Roles = if ($TargetUser.Roles) {
-            if ($TargetUser.Roles -is [array]) { $TargetUser.Roles } else { @($TargetUser.Roles) }
+            if ($TargetUser.Roles -is [string] -and $TargetUser.Roles.StartsWith('[')) {
+                $TargetUser.Roles | ConvertFrom-Json
+            } elseif ($TargetUser.Roles -is [array]) {
+                $TargetUser.Roles
+            } else {
+                @($TargetUser.Roles)
+            }
         } else {
             @('user')
         }
         
         $Permissions = if ($TargetUser.Permissions) {
-            if ($TargetUser.Permissions -is [array]) { $TargetUser.Permissions } else { @($TargetUser.Permissions) }
+            if ($TargetUser.Permissions -is [string] -and $TargetUser.Permissions.StartsWith('[')) {
+                $TargetUser.Permissions | ConvertFrom-Json
+            } elseif ($TargetUser.Permissions -is [array]) {
+                $TargetUser.Permissions
+            } else {
+                @($TargetUser.Permissions)
+            }
         } else {
             Get-DefaultRolePermissions -Role $Roles[0]
         }
