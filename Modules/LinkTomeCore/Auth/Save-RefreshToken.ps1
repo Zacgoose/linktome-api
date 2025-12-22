@@ -28,7 +28,7 @@ function Save-RefreshToken {
             UserId = $UserId
             ExpiresAt = [string]$ExpiresAt.ToString('o')  # ISO 8601 format
             CreatedAt = [string](Get-Date).ToUniversalTime().ToString('o')  # ISO 8601 format
-            IsValid = $true
+            IsValid = [string]'true'
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $TokenEntity -Force
