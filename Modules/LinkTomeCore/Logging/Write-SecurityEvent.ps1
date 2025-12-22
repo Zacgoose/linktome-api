@@ -5,7 +5,7 @@ function Write-SecurityEvent {
     .DESCRIPTION
         Logs security events to Azure Table Storage for auditing
     .PARAMETER EventType
-        Type of security event (e.g., 'LoginSuccess', 'LoginFailed', 'SignupSuccess', 'SignupFailed', 'AuthFailed', 'RateLimitExceeded')
+        Type of security event (e.g., 'LoginSuccess', 'LoginFailed', 'TokenRefreshed', 'RoleAssigned'). Accepts any string to allow flexibility for future event types.
     .PARAMETER UserId
         User ID if available (may be 'unknown' for failed auth)
     .PARAMETER Email
@@ -19,24 +19,6 @@ function Write-SecurityEvent {
     .EXAMPLE
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.UserId -Email $User.Email -IpAddress $ClientIP
     #>
-<<<<<<< Updated upstream
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)]
-        [ValidateSet('LoginSuccess', 'LoginFailed', 'SignupSuccess', 'SignupFailed', 'AuthFailed', 'RateLimitExceeded', 'TokenValidationFailed', 'InputValidationFailed')]
-        [string]$EventType,
-        
-        [string]$UserId = 'unknown',
-        
-        [string]$Email,
-        
-        [string]$Username,
-        
-        [string]$IpAddress,
-        
-        [string]$Endpoint
-    )
-=======
         [CmdletBinding()]
         param(
             [Parameter(Mandatory)]
@@ -48,7 +30,6 @@ function Write-SecurityEvent {
             [string]$Endpoint,
             [string]$Reason
         )
->>>>>>> Stashed changes
     
     try {
         # Redact email for privacy (keep first 3 chars and domain)
@@ -68,24 +49,22 @@ function Write-SecurityEvent {
         try {
             $Table = Get-LinkToMeTable -TableName 'SecurityEvents'
             $EventRecord = @{
-                PartitionKey = $EventType
-                RowKey = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
+                PartitionKey   = $EventType
+                RowKey         = [DateTimeOffset]::UtcNow.Ticks.ToString() + '-' + (New-Guid).ToString().Substring(0, 8)
                 EventTimestamp = [DateTimeOffset]::UtcNow
-                UserId = $UserId
-                Email = $RedactedEmail
-                Username = $Username
-                IpAddress = $IpAddress
-                Endpoint = $Endpoint
+                UserId         = $UserId
+                Email          = $RedactedEmail
+                Username       = $Username
+                IpAddress      = $IpAddress
+                Endpoint       = $Endpoint
             }
-<<<<<<< Updated upstream
-            Add-AzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
-=======
+
             if ($Reason) {
                 $EventRecord['Reason'] = $Reason
             }
 
             Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
->>>>>>> Stashed changes
+
         } catch {
             Write-Warning "Failed to store security event in table storage: $($_.Exception.Message)"
         }

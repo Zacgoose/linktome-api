@@ -69,7 +69,7 @@ function Invoke-AdminAssignRole {
 
         # Update user with new role and permissions
         # Convert arrays to JSON strings for Azure Table Storage compatibility
-        # Cast to [string] to ensure proper type (CIPP-API pattern)
+        # Both Roles and Permissions use [string] cast for JSON conversion
         $TargetUser.Roles = [string](@($Body.role) | ConvertTo-Json -Compress)
         $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
         
@@ -77,7 +77,11 @@ function Invoke-AdminAssignRole {
         
         # Log role assignment
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-SecurityEvent -EventType 'RoleAssigned' -UserId $AuthUser.UserId -Endpoint 'admin/assignRole' -IpAddress $ClientIP -TargetUserId $Body.userId -AssignedRole $Body.role -AssignedBy $AuthUser.UserId
+        Write-SecurityEvent -EventType 'RoleAssigned' -UserId $AuthUser.UserId -Endpoint 'admin/assignRole' -IpAddress $ClientIP -Metadata @{
+            TargetUserId = $Body.userId
+            AssignedRole = $Body.role
+            AssignedBy = $AuthUser.UserId
+        }
         
         $Results = @{
             success = $true
