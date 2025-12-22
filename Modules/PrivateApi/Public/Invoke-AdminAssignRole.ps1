@@ -69,8 +69,9 @@ function Invoke-AdminAssignRole {
 
         # Update user with new role and permissions
         # Convert arrays to JSON strings for Azure Table Storage compatibility
-        $TargetUser.Roles = @($Body.role) | ConvertTo-Json -Compress
-        $TargetUser.Permissions = $DefaultPermissions | ConvertTo-Json -Compress
+        # Ensure these are strings, not PSCustomObjects
+        $TargetUser.Roles = (@($Body.role) | ConvertTo-Json -Compress).ToString()
+        $TargetUser.Permissions = ($DefaultPermissions | ConvertTo-Json -Compress).ToString()
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
         
