@@ -16,8 +16,16 @@ function Write-AnalyticsEvent {
         User agent string from the request
     .PARAMETER Referrer
         Referrer URL if available
+    .PARAMETER LinkId
+        Link ID for LinkClick events
+    .PARAMETER LinkTitle
+        Link title for LinkClick events
+    .PARAMETER LinkUrl
+        Link URL for LinkClick events
     .EXAMPLE
         Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP
+    .EXAMPLE
+        Write-AnalyticsEvent -EventType 'LinkClick' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -LinkId $LinkId -LinkTitle $LinkTitle -LinkUrl $LinkUrl
     #>
     [CmdletBinding()]
     param(
@@ -35,7 +43,13 @@ function Write-AnalyticsEvent {
         
         [string]$UserAgent,
         
-        [string]$Referrer
+        [string]$Referrer,
+        
+        [string]$LinkId,
+        
+        [string]$LinkTitle,
+        
+        [string]$LinkUrl
     )
     
     try {
@@ -53,6 +67,17 @@ function Write-AnalyticsEvent {
             IpAddress = $IpAddress
             UserAgent = $UserAgent
             Referrer = $Referrer
+        }
+        
+        # Add link-specific properties if provided
+        if ($LinkId) {
+            $EventRecord.LinkId = $LinkId
+        }
+        if ($LinkTitle) {
+            $EventRecord.LinkTitle = $LinkTitle
+        }
+        if ($LinkUrl) {
+            $EventRecord.LinkUrl = $LinkUrl
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
