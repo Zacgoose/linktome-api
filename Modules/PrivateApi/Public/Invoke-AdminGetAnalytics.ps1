@@ -38,6 +38,30 @@ function Invoke-AdminGetAnalytics {
             }
         })
         
+        # Get recent link clicks (last 100)
+        $RecentLinkClicks = @($LinkClicks | Sort-Object EventTimestamp -Descending | Select-Object -First 100 | ForEach-Object {
+            @{
+                timestamp = $_.EventTimestamp
+                ipAddress = $_.IpAddress
+                userAgent = $_.UserAgent
+                referrer = $_.Referrer
+                linkId = $_.LinkId
+                linkTitle = $_.LinkTitle
+                linkUrl = $_.LinkUrl
+            }
+        })
+        
+        # Get link clicks grouped by link (most popular links)
+        $LinkClicksByLink = @($LinkClicks | Group-Object LinkId | ForEach-Object {
+            $FirstClick = $_.Group | Select-Object -First 1
+            @{
+                linkId = $_.Name
+                linkTitle = $FirstClick.LinkTitle
+                linkUrl = $FirstClick.LinkUrl
+                clickCount = $_.Count
+            }
+        } | Sort-Object clickCount -Descending)
+        
         # Get page views by day (last 30 days)
         $ThirtyDaysAgo = [DateTimeOffset]::UtcNow.AddDays(-30)
         $ViewsByDay = @($PageViews | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $ThirtyDaysAgo } | 
@@ -49,10 +73,23 @@ function Invoke-AdminGetAnalytics {
                 }
             } | Sort-Object date)
         
+        # Get link clicks by day (last 30 days)
+        $ClicksByDay = @($LinkClicks | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $ThirtyDaysAgo } | 
+            Group-Object { ([DateTimeOffset]$_.EventTimestamp).ToString('yyyy-MM-dd') } | 
+            ForEach-Object {
+                @{
+                    date = $_.Name
+                    count = $_.Count
+                }
+            } | Sort-Object date)
+        
         $Results = @{
             summary = $Summary
             recentPageViews = $RecentPageViews
+            recentLinkClicks = $RecentLinkClicks
+            linkClicksByLink = $LinkClicksByLink
             viewsByDay = $ViewsByDay
+            clicksByDay = $ClicksByDay
         }
         
         $StatusCode = [HttpStatusCode]::OK

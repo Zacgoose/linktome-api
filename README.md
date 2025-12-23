@@ -41,10 +41,12 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 
 ### Analytics
 - ✅ Automatic page view tracking on profile loads
-- ✅ Server-side analytics (no additional frontend API calls required)
+- ✅ Link click tracking via public endpoint
+- ✅ Server-side analytics storage
 - ✅ Tracks IP address, user agent, and referrer
-- ✅ Analytics dashboard data via admin endpoint
-- ✅ Dashboard statistics (total links, views, unique visitors)
+- ✅ Analytics dashboard data via admin endpoint (views, clicks, popular links)
+- ✅ Dashboard statistics (total links, views, clicks, unique visitors)
+- ✅ Time-series data (views and clicks by day)
 
 ### Customization
 - ✅ Appearance customization (theme: light/dark)
@@ -58,13 +60,14 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - `POST /public/signup` - Register new user
 - `POST /public/login` - Authenticate user
 - `GET /public/getUserProfile?username={username}` - Get public profile and links (auto-tracks page view)
+- `POST /public/trackLinkClick` - Track link click analytics (requires username and linkId)
 
 #### Admin Endpoints (Requires JWT Authentication)
 - `GET /admin/getProfile` - Get authenticated user's profile
 - `PUT /admin/updateProfile` - Update profile (displayName, bio, avatar)
 - `GET /admin/getLinks` - Get user's links
 - `PUT /admin/updateLinks` - Create, update, or delete links
-- `GET /admin/getAnalytics` - Get analytics data (page views, unique visitors, views by day)
+- `GET /admin/getAnalytics` - Get analytics data (page views, link clicks, unique visitors, views/clicks by day, most popular links)
 - `GET /admin/getDashboardStats` - Get dashboard statistics (total links, views, visitors)
 - `GET /admin/getAppearance` - Get appearance settings (theme, colors, button style)
 - `PUT /admin/updateAppearance` - Update appearance settings
