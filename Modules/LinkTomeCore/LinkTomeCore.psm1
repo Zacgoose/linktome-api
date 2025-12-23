@@ -1,21 +1,13 @@
-# Import all functions from subdirectories
-$Subdirectories = @('Auth', 'Table', 'Validation', 'Error', 'RateLimit', 'Logging', 'Request', 'Analytics')
-$AllFunctions = @()
-
-foreach ($Subdir in $Subdirectories) {
-    $Path = Join-Path $PSScriptRoot $Subdir
-    if (Test-Path $Path) {
-        $Functions = @(Get-ChildItem -Path (Join-Path $Path '*.ps1') -Recurse -ErrorAction SilentlyContinue)
-        foreach ($import in @($Functions)) {
-            try {
-                . $import.FullName
-                $AllFunctions += $import
-            } catch {
-                Write-Error -Message "Failed to import function $($import.FullName): $_"
-            }
+# ModuleBuilder will concatenate all function files into this module
+# This block is only used when running from source (not built)
+if (Test-Path (Join-Path $PSScriptRoot 'Private')) {
+    $Private = @(Get-ChildItem -Path (Join-Path $PSScriptRoot 'Private\*.ps1') -Recurse -ErrorAction SilentlyContinue)
+    foreach ($import in @($Private)) {
+        try {
+            . $import.FullName
+        } catch {
+            Write-Error -Message "Failed to import function $($import.FullName): $_"
         }
     }
+    Export-ModuleMember -Function $Private.BaseName
 }
-
-# Export all functions
-Export-ModuleMember -Function $AllFunctions.BaseName

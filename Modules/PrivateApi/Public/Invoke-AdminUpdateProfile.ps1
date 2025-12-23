@@ -3,7 +3,7 @@ function Invoke-AdminUpdateProfile {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Profile.ReadWrite
+        write:profile
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

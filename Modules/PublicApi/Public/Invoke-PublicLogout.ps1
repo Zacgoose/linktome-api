@@ -3,7 +3,7 @@ function Invoke-PublicLogout {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        Public.Auth
+        auth:public
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

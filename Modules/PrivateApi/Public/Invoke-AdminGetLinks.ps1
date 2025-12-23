@@ -3,7 +3,7 @@ function Invoke-AdminGetLinks {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Links.Read
+        read:links
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

@@ -3,7 +3,7 @@ function Invoke-AdminGetUserRoles {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        Admin.UserManagement
+        read:users
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
@@ -53,39 +53,43 @@ function Invoke-AdminGetUserRoles {
             }
         }
 
-        # Get roles and permissions (deserialize from JSON if needed)
-        $Roles = if ($TargetUser.Roles) {
+        # Get the actual user role from the Users table
+        $ActualUserRole = 'user'
+        if ($TargetUser.Roles) {
             if ($TargetUser.Roles -is [string] -and $TargetUser.Roles.StartsWith('[')) {
-                $TargetUser.Roles | ConvertFrom-Json
+                $RolesArr = $TargetUser.Roles | ConvertFrom-Json
+                if ($RolesArr.Count -ge 1) { $ActualUserRole = $RolesArr[0] }
             } elseif ($TargetUser.Roles -is [array]) {
-                $TargetUser.Roles
-            } else {
-                @($TargetUser.Roles)
+                if ($TargetUser.Roles.Count -ge 1) { $ActualUserRole = $TargetUser.Roles[0] }
+            } elseif ($TargetUser.Roles) {
+                $ActualUserRole = $TargetUser.Roles
             }
-        } else {
-            @('user')
         }
-        
-        $Permissions = if ($TargetUser.Permissions) {
-            if ($TargetUser.Permissions -is [string] -and $TargetUser.Permissions.StartsWith('[')) {
-                $TargetUser.Permissions | ConvertFrom-Json
-            } elseif ($TargetUser.Permissions -is [array]) {
-                $TargetUser.Permissions
-            } else {
-                @($TargetUser.Permissions)
+
+        # Use the actual user role for roles/permissions
+        $Roles = @($ActualUserRole)
+        $Permissions = Get-DefaultRolePermissions -Role $ActualUserRole
+
+        # Lookup company memberships for this user
+        $CompanyMemberships = @()
+        $CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
+        $CompanyUserEntities = Get-LinkToMeAzDataTableEntity @CompanyUsersTable -Filter "RowKey eq '$($TargetUser.RowKey)'"
+        foreach ($cu in $CompanyUserEntities) {
+            $CompanyMemberships += @{
+                companyId = $cu.PartitionKey
+                companyRole = $cu.Role
             }
-        } else {
-            Get-DefaultRolePermissions -Role $Roles[0]
         }
-        
+
         $Results = @{
             success = $true
             userId = $TargetUser.RowKey
             username = $TargetUser.Username
             email = $TargetUser.PartitionKey
+            userRole = $ActualUserRole
             roles = $Roles
             permissions = $Permissions
-            companyId = $TargetUser.CompanyId
+            companyMemberships = $CompanyMemberships
         }
         $StatusCode = [HttpStatusCode]::OK
         

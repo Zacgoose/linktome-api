@@ -3,7 +3,7 @@ function Invoke-AdminGetAppearance {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Appearance.Read
+        read:appearance
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

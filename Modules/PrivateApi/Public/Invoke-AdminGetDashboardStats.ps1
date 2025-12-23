@@ -3,7 +3,7 @@ function Invoke-AdminGetDashboardStats {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Dashboard.Read
+        read:dashboard
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

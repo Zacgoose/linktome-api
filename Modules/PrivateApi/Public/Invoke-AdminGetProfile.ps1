@@ -3,7 +3,7 @@ function Invoke-AdminGetProfile {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Profile.Read
+        read:profile
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

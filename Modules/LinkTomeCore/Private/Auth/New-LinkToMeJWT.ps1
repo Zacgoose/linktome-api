@@ -20,7 +20,10 @@ function New-LinkToMeJWT {
         [string[]]$Permissions = @(),
         
         [Parameter()]
-        [string]$CompanyId = $null
+        [string]$CompanyId = $null,
+
+        [Parameter()]
+        $CompanyMemberships = $null
     )
     
     $Secret = Get-JwtSecret | ConvertTo-SecureString -AsPlainText -Force
@@ -42,13 +45,14 @@ function New-LinkToMeJWT {
         exp = ([DateTimeOffset]::UtcNow.AddMinutes($ExpirationMinutes)).ToUnixTimeSeconds()
         iss = 'LinkTome-app'
     }
-    
     # Add companyId if provided
     if ($CompanyId) {
         $Claims['companyId'] = $CompanyId
     }
-    
+    # Add companyMemberships if provided
+    if ($PSBoundParameters.ContainsKey('CompanyMemberships') -and $CompanyMemberships) {
+        $Claims['companyMemberships'] = $CompanyMemberships
+    }
     $Token = New-JsonWebToken -Claims $Claims -HashAlgorithm SHA256 -SecureKey $Secret -TimeToLive ($ExpirationMinutes * 60)
-    
     return $Token
 }

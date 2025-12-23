@@ -3,7 +3,7 @@ function Invoke-AdminGetAnalytics {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Analytics.Read
+        read:analytics
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

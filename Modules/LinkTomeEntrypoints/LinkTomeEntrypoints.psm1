@@ -155,20 +155,15 @@ function New-LinkTomeCoreRequest {
                 }
             }
             
-            # Check permissions for the endpoint
+            # Check permissions for the endpoint (context-aware)
             $RequiredPermissions = Get-EndpointPermissions -Endpoint $Endpoint
-            
+            $CompanyId = $Request.Query.companyId
             if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
-                $HasPermission = Test-UserPermission -User $User -RequiredPermissions $RequiredPermissions
-                
+                $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -CompanyId $CompanyId
                 if (-not $HasPermission) {
                     # Log permission denied attempt
                     $ClientIP = Get-ClientIPAddress -Request $Request
-                    Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -Metadata @{
-                        RequiredPermissions = ($RequiredPermissions -join ', ')
-                        UserPermissions = ($User.Permissions -join ', ')
-                    }
-                    
+                    Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -RequiredPermissions ($RequiredPermissions -join ', ') -UserPermissions ($User.Permissions -join ', ') -Reason "User attempted to access endpoint without required permissions."
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::Forbidden
                         Body = @{ 

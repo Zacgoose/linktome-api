@@ -3,7 +3,7 @@ function Invoke-AdminUpdateAppearance {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Appearance.Write
+        write:appearance
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

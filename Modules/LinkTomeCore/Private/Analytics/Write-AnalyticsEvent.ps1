@@ -16,8 +16,6 @@ function Write-AnalyticsEvent {
         User agent string from the request
     .PARAMETER Referrer
         Referrer URL if available
-    .PARAMETER Metadata
-        Additional metadata as hashtable
     .EXAMPLE
         Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP
     #>
@@ -37,9 +35,7 @@ function Write-AnalyticsEvent {
         
         [string]$UserAgent,
         
-        [string]$Referrer,
-        
-        [hashtable]$Metadata = @{}
+        [string]$Referrer
     )
     
     try {
@@ -57,7 +53,6 @@ function Write-AnalyticsEvent {
             IpAddress = $IpAddress
             UserAgent = $UserAgent
             Referrer = $Referrer
-            MetadataJson = if ($Metadata.Count -gt 0) { ($Metadata | ConvertTo-Json -Compress) } else { '' }
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
