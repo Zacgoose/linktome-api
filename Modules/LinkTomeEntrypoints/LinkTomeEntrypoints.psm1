@@ -33,7 +33,8 @@ function Receive-LinkTomeHttpTrigger {
         # Array responses can happen via pipeline; pick first element with a non-null StatusCode, otherwise null to trigger fallback
         $FirstValid = $null
         foreach ($item in $Response) {
-            if ($item -and $item.PSObject.Properties['StatusCode'] -and $null -ne $item.StatusCode) {
+            if ($null -eq $item) { continue }
+            if ($item.PSObject.Properties['StatusCode'] -and $null -ne $item.StatusCode) {
                 $FirstValid = $item
                 break
             }
@@ -140,12 +141,10 @@ function New-LinkTomeCoreRequest {
         # Check authentication for admin endpoints
         if ($Endpoint -match '^admin/') {
             $User = Get-UserFromRequest -Request $Request
-            
             if (-not $User) {
                 # Log failed authentication attempt
                 $ClientIP = Get-ClientIPAddress -Request $Request
                 Write-SecurityEvent -EventType 'AuthFailed' -Endpoint $Endpoint -IpAddress $ClientIP
-                
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized
                     Body = @{ 
@@ -154,16 +153,24 @@ function New-LinkTomeCoreRequest {
                     }
                 }
             }
-            
+
             # Check permissions for the endpoint (context-aware)
+
             $RequiredPermissions = Get-EndpointPermissions -Endpoint $Endpoint
             $CompanyId = $Request.Query.companyId
+            $UserId = $Request.Query.userId
+            Write-Information "[Entrypoint] Permission check context:"
+            Write-Information "[Entrypoint] UserId: $UserId | CompanyId: $CompanyId"
+            Write-Information "[Entrypoint] RequiredPermissions: $($RequiredPermissions -join ', ')"
+            Write-Information "[Entrypoint] User object: $($User | ConvertTo-Json -Depth 10)"
             if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
-                $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -CompanyId $CompanyId
+                $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -CompanyId $CompanyId -UserId $UserId
+                Write-Information "[Entrypoint] Test-ContextAwarePermission result: $HasPermission"
                 if (-not $HasPermission) {
                     # Log permission denied attempt
                     $ClientIP = Get-ClientIPAddress -Request $Request
-                    Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -RequiredPermissions ($RequiredPermissions -join ', ') -UserPermissions ($User.Permissions -join ', ') -Reason "User attempted to access endpoint without required permissions."
+                    $userContext = if ($UserId) { "UserId=$UserId" } elseif ($CompanyId) { "CompanyId=$CompanyId" } else { "Global" }
+                    Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -RequiredPermissions ($RequiredPermissions -join ', ') -UserPermissions ($User.Permissions -join ', ') -Context $userContext -Reason "User attempted to access endpoint without required permissions."
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::Forbidden
                         Body = @{ 
@@ -173,9 +180,14 @@ function New-LinkTomeCoreRequest {
                     }
                 }
             }
-            
+
+            # Set context properties for downstream handlers
+            if ($CompanyId) { $Request.CompanyId = $CompanyId }
+            if ($UserId) { $Request.UserId = $UserId }
+
             # Add authenticated user to request
             $Request | Add-Member -MemberType NoteProperty -Name 'AuthenticatedUser' -Value $User -Force
+            write-Information "Authenticated user: $($User.UserId) with roles: $($User.Roles -join ', ')"
         }
 
         # Invoke the function dynamically

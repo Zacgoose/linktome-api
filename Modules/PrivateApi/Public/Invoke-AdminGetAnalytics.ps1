@@ -8,13 +8,17 @@ function Invoke-AdminGetAnalytics {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
-    $User = $Request.AuthenticatedUser
+    # Use context-aware UserId if present, fallback to authenticated user
+    $UserId = $Request.UserId
+    if (-not $UserId) {
+        $UserId = $Request.AuthenticatedUser.UserId
+    }
 
     try {
         $Table = Get-LinkToMeTable -TableName 'Analytics'
-        
-        # Get analytics events for this user
-        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+
+        # Get analytics events for this user context
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
         $Events = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
         # Group events by type and calculate stats

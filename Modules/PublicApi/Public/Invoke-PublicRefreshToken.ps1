@@ -99,8 +99,42 @@ function Invoke-PublicRefreshToken {
             }
         }
 
-        # Generate new access token (JWT) with all fields matching login
-        $NewAccessToken = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyMemberships $CompanyMemberships
+        # Build userManagements array for user-to-user management context
+        $UserManagements = @()
+        if ($User.HasUserManagers -or $User.IsUserManager) {
+            $UserManagersTable = Get-LinkToMeTable -TableName 'UserManagers'
+            # As manager: users I manage
+            if ($User.IsUserManager) {
+                $managedEntities = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "RowKey eq '$($User.RowKey)' and State eq 'accepted'"
+                foreach ($um in $managedEntities) {
+                    # Lookup permissions for the managed role
+                    $permissions = Get-DefaultRolePermissions -Role $um.Role
+                    $UserManagements += @{
+                        userId = $um.PartitionKey
+                        role = $um.Role
+                        state = $um.State
+                        direction = 'manager'
+                        permissions = $permissions
+                    }
+                }
+            }
+            # As managed: users who manage me
+            if ($User.HasUserManagers) {
+                $managerEntities = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$($User.RowKey)' and State eq 'accepted'"
+                foreach ($um in $managerEntities) {
+                    $permissions = Get-DefaultRolePermissions -Role $um.Role
+                    $UserManagements += @{
+                        userId = $um.RowKey
+                        role = $um.Role
+                        state = $um.State
+                        direction = 'managed'
+                        permissions = $permissions
+                    }
+                }
+            }
+        }
+
+        $NewAccessToken = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyMemberships $CompanyMemberships -UserManagements $UserManagements
 
         # Determine actual user role
         $AllowedRoles = @('user', 'company_admin', 'company_owner')
@@ -137,6 +171,7 @@ function Invoke-PublicRefreshToken {
                 roles = $Roles
                 permissions = $Permissions
                 companyMemberships = $CompanyMemberships
+                userManagements = $UserManagements
             }
         }
         $StatusCode = [HttpStatusCode]::OK
