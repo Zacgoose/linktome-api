@@ -1,5 +1,9 @@
 function Get-DefaultRolePermissions {
     <#
+    NOTE: Only 'user' permissions should be used for Users table/global context.
+    'company_admin' and 'company_owner' permissions are only for company context (CompanyUsers table).
+    #>
+    <#
     .SYNOPSIS
         Get default permissions for a role
     .DESCRIPTION
@@ -7,7 +11,7 @@ function Get-DefaultRolePermissions {
     #>
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('user', 'admin', 'company_owner')]
+        [ValidateSet('user', 'company_admin', 'company_owner')]
         [string]$Role
     )
     
@@ -22,7 +26,7 @@ function Get-DefaultRolePermissions {
             'write:appearance',
             'read:analytics'
         )
-        'admin' = @(
+        'company_admin' = @(
             'read:dashboard',
             'read:profile',
             'write:profile',
@@ -32,8 +36,9 @@ function Get-DefaultRolePermissions {
             'write:appearance',
             'read:analytics',
             'read:users',
-            'write:users',
-            'manage:users'
+            'manage:users',
+            'read:company_members',
+            'manage:company_members'
         )
         'company_owner' = @(
             'read:dashboard',
@@ -49,7 +54,13 @@ function Get-DefaultRolePermissions {
             'read:company',
             'write:company',
             'read:company_members',
-            'manage:company_members'
+            'manage:company_members',
+            'manage:billing',
+            'manage:company_settings',
+            'assign:company_admin',
+            'revoke:company_admin',
+            'assign:company_owner',
+            'revoke:company_owner'
         )
     }
     

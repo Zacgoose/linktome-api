@@ -34,6 +34,10 @@ function Test-LinkToMeJWT {
             @()
         }
 
+        $CompanyMemberships = $null
+        if ($Payload.PSObject.Properties.Name -contains 'companyMemberships') {
+            $CompanyMemberships = $Payload.companyMemberships
+        }
         return @{
             Valid = $true
             UserId = $Payload.sub
@@ -42,6 +46,7 @@ function Test-LinkToMeJWT {
             Roles = $Roles
             Permissions = $Permissions
             CompanyId = $Payload.companyId
+            companyMemberships = $CompanyMemberships
         }
     } catch {
         Write-Warning "Token validation failed: $($_.Exception.Message)"

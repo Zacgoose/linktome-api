@@ -3,7 +3,7 @@ function Invoke-PublicGetUserProfile {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        Public.Profile.Read
+        read:profile
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

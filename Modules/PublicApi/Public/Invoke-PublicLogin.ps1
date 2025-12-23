@@ -3,7 +3,7 @@ function Invoke-PublicLogin {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        Public.Auth
+        auth:public
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
@@ -61,44 +61,81 @@ function Invoke-PublicLogin {
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
         # Get roles and permissions (deserialize from JSON if needed)
-        $Roles = if ($User.Roles) {
+
+        # Get the actual user role from the Users table (should be 'user', 'admin', or 'company_owner')
+        $AllowedRoles = @('user', 'company_admin', 'company_owner')
+        $ActualUserRole = $null
+        $RolesArr = @()
+        if ($User.Roles) {
             if ($User.Roles -is [string] -and $User.Roles.StartsWith('[')) {
-                $User.Roles | ConvertFrom-Json
+                $parsed = $User.Roles | ConvertFrom-Json
+                if ($parsed -is [string]) {
+                    $RolesArr = @($parsed)
+                } else {
+                    $RolesArr = $parsed
+                }
             } elseif ($User.Roles -is [array]) {
-                $User.Roles
+                $RolesArr = $User.Roles
+            } elseif ($User.Roles -is [string]) {
+                $RolesArr = @($User.Roles)
+            }
+        }
+        if ($RolesArr.Count -ge 1) {
+            $CandidateRole = $RolesArr[0]
+            if ($AllowedRoles -contains $CandidateRole) {
+                $ActualUserRole = $CandidateRole
             } else {
-                @($User.Roles)
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::InternalServerError
+                    Body = @{ error = "Invalid user role in database: $CandidateRole" }
+                }
             }
         } else {
-            @('user')
-        }
-        
-        $Permissions = if ($User.Permissions) {
-            if ($User.Permissions -is [string] -and $User.Permissions.StartsWith('[')) {
-                $User.Permissions | ConvertFrom-Json
-            } elseif ($User.Permissions -is [array]) {
-                $User.Permissions
-            } else {
-                @($User.Permissions)
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::InternalServerError
+                Body = @{ error = "No valid user role found for user." }
             }
-        } else {
-            Get-DefaultRolePermissions -Role $Roles[0]
         }
-        
-        $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyId $User.CompanyId
-        
+        $Roles = @($ActualUserRole)
+        $Permissions = Get-DefaultRolePermissions -Role $ActualUserRole
+
+        # Lookup company memberships for this user, include role and permissions (permissions are per company)
+        $CompanyMemberships = @()
+        $CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
+        $CompanyUserEntities = Get-LinkToMeAzDataTableEntity @CompanyUsersTable -Filter "RowKey eq '$($User.RowKey)'"
+        foreach ($cu in $CompanyUserEntities) {
+            $companyRole = $cu.Role
+            $companyPermissions = @()
+            if ($companyRole) {
+                $companyPermissions = Get-DefaultRolePermissions -Role $companyRole
+            }
+            # Ensure permissions is always an array
+            if ($companyPermissions -is [string]) {
+                $companyPermissions = @($companyPermissions)
+            }
+            $CompanyMemberships += @{
+                companyId = $cu.PartitionKey
+                role = $companyRole
+                permissions = $companyPermissions
+            }
+        }
+
+        $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyMemberships $CompanyMemberships
+
         # Generate refresh token
         $RefreshToken = New-RefreshToken
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
         Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
-        
+
         $Results = @{
             user = @{
                 userId = $User.RowKey
                 email = $User.PartitionKey
                 username = $User.Username
+                userRole = $ActualUserRole
                 roles = $Roles
                 permissions = $Permissions
+                companyMemberships = $CompanyMemberships
             }
             accessToken = $Token
             refreshToken = $RefreshToken

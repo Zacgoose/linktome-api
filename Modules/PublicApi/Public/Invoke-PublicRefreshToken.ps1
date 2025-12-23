@@ -3,7 +3,7 @@ function Invoke-PublicRefreshToken {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        Public.Auth
+        auth:public
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
@@ -78,23 +78,54 @@ function Invoke-PublicRefreshToken {
             Get-DefaultRolePermissions -Role $Roles[0]
         }
         
-        # Generate new access token
-        $NewAccessToken = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyId $User.CompanyId
-        
+        # Lookup company memberships for this user, include role and permissions (permissions are per company)
+        $CompanyMemberships = @()
+        $CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
+        $CompanyUserEntities = Get-LinkToMeAzDataTableEntity @CompanyUsersTable -Filter "RowKey eq '$($User.RowKey)'"
+        foreach ($cu in $CompanyUserEntities) {
+            $companyRole = $cu.Role
+            $companyPermissions = @()
+            if ($companyRole) {
+                $companyPermissions = Get-DefaultRolePermissions -Role $companyRole
+            }
+            # Ensure permissions is always an array
+            if ($companyPermissions -is [string]) {
+                $companyPermissions = @($companyPermissions)
+            }
+            $CompanyMemberships += @{
+                companyId = $cu.PartitionKey
+                role = $companyRole
+                permissions = $companyPermissions
+            }
+        }
+
+        # Generate new access token (JWT) with all fields matching login
+        $NewAccessToken = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyMemberships $CompanyMemberships
+
+        # Determine actual user role
+        $AllowedRoles = @('user', 'company_admin', 'company_owner')
+        $ActualUserRole = $null
+        if ($Roles.Count -ge 1) {
+            $CandidateRole = $Roles[0]
+            if ($AllowedRoles -contains $CandidateRole) {
+                $ActualUserRole = $CandidateRole
+            }
+        }
+
         # Generate new refresh token (rotation)
         $NewRefreshToken = New-RefreshToken
-        
+
         # Invalidate old refresh token
         Remove-RefreshToken -Token $Body.refreshToken
-        
+
         # Store new refresh token (7 days expiration)
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
         Save-RefreshToken -Token $NewRefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
-        
+
         # Log successful token refresh
         $ClientIP = Get-ClientIPAddress -Request $Request
         Write-SecurityEvent -EventType 'TokenRefreshed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/refreshToken'
-        
+
         $Results = @{
             accessToken = $NewAccessToken
             refreshToken = $NewRefreshToken
@@ -102,8 +133,10 @@ function Invoke-PublicRefreshToken {
                 userId = $User.RowKey
                 email = $User.PartitionKey
                 username = $User.Username
+                userRole = $ActualUserRole
                 roles = $Roles
                 permissions = $Permissions
+                companyMemberships = $CompanyMemberships
             }
         }
         $StatusCode = [HttpStatusCode]::OK

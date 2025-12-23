@@ -3,7 +3,7 @@ function Invoke-AdminUpdateLinks {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        User.Links.ReadWrite
+        write:links
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

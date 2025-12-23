@@ -3,7 +3,7 @@ function Invoke-AdminAssignRole {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        Admin.UserManagement
+        manage:users
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
@@ -23,13 +23,13 @@ function Invoke-AdminAssignRole {
     }
 
     # Validate role is one of the allowed values
-    $AllowedRoles = @('user', 'admin', 'company_owner')
+    $AllowedRoles = @('user', 'company_admin', 'company_owner')
     if ($Body.role -notin $AllowedRoles) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
                 success = $false
-                error = "Invalid role. Allowed roles: user, admin, company_owner" 
+                error = "Invalid role. Allowed roles: user, company_admin, company_owner" 
             }
         }
     }
@@ -64,30 +64,51 @@ function Invoke-AdminAssignRole {
             }
         }
 
-        # Get default permissions for the role
-        $DefaultPermissions = Get-DefaultRolePermissions -Role $Body.role
+        if ($Body.role -eq 'user') {
+            # Only update Users table for 'user' role
+            $DefaultPermissions = Get-DefaultRolePermissions -Role 'user'
+            $TargetUser.Roles = '["user"]'
+            $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
+            Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
+        } else {
+            # For company_admin/company_owner, update or insert into CompanyUsers table
+            $CompanyId = $Body.companyId
+            if (-not $CompanyId) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::BadRequest
+                    Body = @{ success = $false; error = "companyId is required for company roles" }
+                }
+            }
+            $CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
+            $CompanyUserEntity = Get-LinkToMeAzDataTableEntity @CompanyUsersTable -Filter "PartitionKey eq '$CompanyId' and RowKey eq '$($TargetUser.RowKey)'" | Select-Object -First 1
+            if ($CompanyUserEntity) {
+                $CompanyUserEntity.Role = $Body.role
+                Add-LinkToMeAzDataTableEntity @CompanyUsersTable -Entity $CompanyUserEntity -Force
+            } else {
+                $CompanyUserEntity = @{
+                    PartitionKey = $CompanyId
+                    RowKey = $TargetUser.RowKey
+                    Role = $Body.role
+                    CompanyEmail = $TargetUser.PartitionKey
+                    CompanyDisplayName = $TargetUser.DisplayName
+                    Username = $TargetUser.Username
+                }
+                Add-LinkToMeAzDataTableEntity @CompanyUsersTable -Entity $CompanyUserEntity -Force
+            }
+            # Always keep Users table role as 'user'
+            $TargetUser.Roles = '["user"]'
+            $TargetUser.Permissions = [string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress)
+            Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
+        }
 
-        # Update user with new role and permissions
-        # Convert arrays to JSON strings for Azure Table Storage compatibility
-        # Both Roles and Permissions use [string] cast for JSON conversion
-        $TargetUser.Roles = [string](@($Body.role) | ConvertTo-Json -Compress)
-        $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
-        
-        Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
-        
         # Log role assignment
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-SecurityEvent -EventType 'RoleAssigned' -UserId $AuthUser.UserId -Endpoint 'admin/assignRole' -IpAddress $ClientIP -Metadata @{
-            TargetUserId = $Body.userId
-            AssignedRole = $Body.role
-            AssignedBy = $AuthUser.UserId
-        }
-        
+        Write-SecurityEvent -EventType 'RoleAssigned' -UserId $AuthUser.UserId -Endpoint 'admin/assignRole' -IpAddress $ClientIP -Reason "Assigned role '$($Body.role)' to user '$($Body.userId)' by '$($AuthUser.UserId)'"
+
         $Results = @{
             success = $true
             userId = $TargetUser.RowKey
             role = $Body.role
-            permissions = $DefaultPermissions
         }
         $StatusCode = [HttpStatusCode]::OK
         

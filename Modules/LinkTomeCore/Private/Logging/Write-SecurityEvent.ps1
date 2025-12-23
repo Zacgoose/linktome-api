@@ -28,7 +28,9 @@ function Write-SecurityEvent {
             [string]$Username,
             [string]$IpAddress,
             [string]$Endpoint,
-            [string]$Reason
+            [string]$Reason,
+            [string]$RequiredPermissions,
+            [string]$UserPermissions
         )
     
     try {
@@ -61,6 +63,12 @@ function Write-SecurityEvent {
 
             if ($Reason) {
                 $EventRecord['Reason'] = $Reason
+            }
+            if ($RequiredPermissions) {
+                $EventRecord['RequiredPermissions'] = $RequiredPermissions
+            }
+            if ($UserPermissions) {
+                $EventRecord['UserPermissions'] = $UserPermissions
             }
 
             Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null
