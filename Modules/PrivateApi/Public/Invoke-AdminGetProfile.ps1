@@ -8,13 +8,13 @@ function Invoke-AdminGetProfile {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
-    $User = $Request.AuthenticatedUser
+    $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
 
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
-        # Sanitize userId for query
-        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        # Sanitize UserId for query
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
         $filter = "RowKey eq '$SafeUserId'"
         $entities = Get-LinkToMeAzDataTableEntity @Table -Filter $filter
         $UserData = $entities | Select-Object -First 1
@@ -27,7 +27,7 @@ function Invoke-AdminGetProfile {
         }
 
         $Results = @{
-            userId = $UserData.RowKey
+            UserId = $UserData.RowKey
             username = $UserData.Username
             email = $UserData.PartitionKey
             displayName = $UserData.DisplayName

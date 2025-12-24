@@ -9,27 +9,27 @@ function Invoke-AdminAssignRole {
     param($Request, $TriggerMetadata)
 
     $Body = $Request.Body
-    $AuthUser = $Request.AuthenticatedUser
+    $AuthUserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
 
     # Validate required fields
-    if (-not $Body.userId -or -not $Body.role) {
+    if (-not $Body.UserId -or -not $Body.role) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
                 success = $false
-                error = "userId and role are required" 
+                error = "UserId and role are required" 
             }
         }
     }
 
     # Validate role is one of the allowed values
-    $AllowedRoles = @('user', 'company_admin', 'company_owner')
+    $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
     if ($Body.role -notin $AllowedRoles) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
                 success = $false
-                error = "Invalid role. Allowed roles: user, company_admin, company_owner" 
+                error = "Invalid role. Allowed roles: user, company_admin, company_owner, user_manager" 
             }
         }
     }
@@ -38,7 +38,7 @@ function Invoke-AdminAssignRole {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
         # Get the target user
-        $SafeUserId = Protect-TableQueryValue -Value $Body.userId
+        $SafeUserId = Protect-TableQueryValue -Value $Body.UserId
         $TargetUser = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $TargetUser) {
@@ -51,18 +51,7 @@ function Invoke-AdminAssignRole {
             }
         }
 
-        # Check if company_owner is trying to manage user from different company
-        if ($AuthUser.Roles -contains 'company_owner' -and $AuthUser.Roles -notcontains 'admin') {
-            if ($AuthUser.CompanyId -and $TargetUser.CompanyId -ne $AuthUser.CompanyId) {
-                return [HttpResponseContext]@{
-                    StatusCode = [HttpStatusCode]::Forbidden
-                    Body = @{ 
-                        success = $false
-                        error = "Company owners can only manage users in their own company" 
-                    }
-                }
-            }
-        }
+
 
         if ($Body.role -eq 'user') {
             # Only update Users table for 'user' role
@@ -103,11 +92,11 @@ function Invoke-AdminAssignRole {
 
         # Log role assignment
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-SecurityEvent -EventType 'RoleAssigned' -UserId $AuthUser.UserId -Endpoint 'admin/assignRole' -IpAddress $ClientIP -Reason "Assigned role '$($Body.role)' to user '$($Body.userId)' by '$($AuthUser.UserId)'"
+        Write-SecurityEvent -EventType 'RoleAssigned' -UserId $AuthUserId -Endpoint 'admin/assignRole' -IpAddress $ClientIP -Reason "Assigned role '$($Body.role)' to user '$($Body.UserId)' by '$AuthUserId'"
 
         $Results = @{
             success = $true
-            userId = $TargetUser.RowKey
+            UserId = $TargetUser.RowKey
             role = $Body.role
         }
         $StatusCode = [HttpStatusCode]::OK

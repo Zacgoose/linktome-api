@@ -44,15 +44,15 @@ This document summarizes the implementation of the Role-Based Access Control (RB
   - Marks refresh token as invalid in database
 
 - **PUT /api/admin/AssignRole**: Assign role to a user (MVP)
-  - Input: `{ "userId": "string", "role": "user|admin|company_owner" }`
-  - Output: `{ "success": true, "userId": "string", "role": "string", "permissions": [...] }`
+  - Input: `{ "UserId": "string", "role": "user|admin|company_owner" }`
+  - Output: `{ "success": true, "UserId": "string", "role": "string", "permissions": [...] }`
   - Admin can assign any role; company_owner can only manage their company's users
   - Automatically updates user permissions based on role
   - Logs role assignment event
 
 - **GET /api/admin/GetUserRoles**: Get roles and permissions for a user (MVP)
-  - Input: Query param `userId`
-  - Output: `{ "success": true, "userId": "string", "username": "string", "roles": [...], "permissions": [...], "companyId": "string" }`
+  - Input: Query param `UserId`
+  - Output: `{ "success": true, "UserId": "string", "username": "string", "roles": [...], "permissions": [...], "companyId": "string" }`
   - Admin can view any user; company_owner can only view their company's users
   - Returns user's current roles, permissions, and company affiliation
 

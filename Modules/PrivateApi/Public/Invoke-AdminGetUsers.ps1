@@ -12,14 +12,11 @@ function Invoke-AdminGetUsers {
         $Table = Get-LinkToMeTable -TableName 'Users'
         $entities = Get-LinkToMeAzDataTableEntity @Table
 
-        # Get current companyId from request context (customize as needed)
+        # Use context-aware CompanyId set by entrypoint, fallback only if not present
         $CompanyId = $Request.CompanyId
         if (-not $CompanyId) {
             $CompanyId = $Request.AuthenticatedUser.CompanyId
         }
-
-        # Permission check is now handled in the entrypoint (router)
-        $User = $Request.AuthenticatedUser
 
         # Filter users by CompanyIds array
         $Users = $entities | Where-Object {
@@ -30,7 +27,7 @@ function Invoke-AdminGetUsers {
             $userCompanyIds -contains $CompanyId
         } | ForEach-Object {
             [PSCustomObject]@{
-                userId = $_.RowKey
+                UserId = $_.RowKey
                 username = $_.Username
                 email = $_.PartitionKey
                 displayName = $_.DisplayName

@@ -226,7 +226,7 @@ To grant admin access to a user:
 ```json
 {
   "user": {
-    "userId": "...",
+    "UserId": "...",
     "email": "...",
     "username": "...",
     "roles": ["user"],              // NEW
@@ -241,7 +241,7 @@ To grant admin access to a user:
 ```json
 {
   "user": {
-    "userId": "...",
+    "UserId": "...",
     "email": "...",
     "username": "...",
     "roles": ["user"],              // NEW
