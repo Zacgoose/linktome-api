@@ -15,23 +15,23 @@ function Invoke-AdminUserManagerList {
         $TriggerMetadata
     )
     try {
-        $UserId = $Request.AuthenticatedUser.UserId
+        $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
         if (-not $UserId) {
             throw 'Authenticated user not found in request.'
         }
 
         $UserManagersTable = Get-LinkToMeTable -TableName 'UserManagers'
 
-        # Users who manage me (PartitionKey = my userId)
-        $managers = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$UserId'"
+        # Users who manage me (RowKey = my UserId)
+        $managers = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "RowKey eq '$UserId'"
 
-        # Users I manage (RowKey = my userId)
-        $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "RowKey eq '$UserId'"
+        # Users I manage (PartitionKey = my UserId)
+        $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$UserId'"
 
         $Results = @{
             managers = @($managers | ForEach-Object {
                 [PSCustomObject]@{
-                    userId  = $_.RowKey
+                    UserId  = $_.PartitionKey
                     role    = $_.Role
                     state   = $_.State
                     created = $_.Created
@@ -40,7 +40,7 @@ function Invoke-AdminUserManagerList {
             })
             managees = @($managees | ForEach-Object {
                 [PSCustomObject]@{
-                    userId  = $_.PartitionKey
+                    UserId  = $_.RowKey
                     role    = $_.Role
                     state   = $_.State
                     created = $_.Created

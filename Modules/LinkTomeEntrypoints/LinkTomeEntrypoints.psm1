@@ -158,7 +158,7 @@ function New-LinkTomeCoreRequest {
 
             $RequiredPermissions = Get-EndpointPermissions -Endpoint $Endpoint
             $CompanyId = $Request.Query.companyId
-            $UserId = $Request.Query.userId
+            $UserId = $Request.Query.UserId
             Write-Information "[Entrypoint] Permission check context:"
             Write-Information "[Entrypoint] UserId: $UserId | CompanyId: $CompanyId"
             Write-Information "[Entrypoint] RequiredPermissions: $($RequiredPermissions -join ', ')"
@@ -182,8 +182,17 @@ function New-LinkTomeCoreRequest {
             }
 
             # Set context properties for downstream handlers
-            if ($CompanyId) { $Request.CompanyId = $CompanyId }
-            if ($UserId) { $Request.UserId = $UserId }
+            # Set context-aware properties for downstream handlers using Add-Member
+            if ($CompanyId) {
+                $Request | Add-Member -NotePropertyName 'CompanyId' -NotePropertyValue $CompanyId -Force
+                $Request | Add-Member -NotePropertyName 'ContextUserId' -NotePropertyValue $CompanyId -Force
+                $Request | Add-Member -NotePropertyName 'ContextCompanyId' -NotePropertyValue $CompanyId -Force
+            }
+            if ($UserId) {
+                $Request | Add-Member -NotePropertyName 'UserId' -NotePropertyValue $UserId -Force
+                $Request | Add-Member -NotePropertyName 'ContextUserId' -NotePropertyValue $UserId -Force
+                $Request | Add-Member -NotePropertyName 'ContextCompanyId' -NotePropertyValue $UserId -Force
+            }
 
             # Add authenticated user to request
             $Request | Add-Member -MemberType NoteProperty -Name 'AuthenticatedUser' -Value $User -Force

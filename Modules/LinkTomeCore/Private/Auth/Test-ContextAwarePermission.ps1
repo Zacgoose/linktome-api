@@ -1,9 +1,9 @@
 function Test-ContextAwarePermission {
     <#
     .SYNOPSIS
-        Checks if a user has the required permissions, using JWT/global permissions first, then company or user context if companyId or userId is present.
+        Checks if a user has the required permissions, using JWT/global permissions first, then company or user context if companyId or UserId is present.
     .DESCRIPTION
-        Always checks JWT/global permissions. If a companyId is provided, also checks company context permissions. If a userId is provided, checks user management context permissions.
+        Always checks JWT/global permissions. If a companyId is provided, also checks company context permissions. If a UserId is provided, checks user management context permissions.
     .PARAMETER User
         The authenticated user object (from JWT).
     .PARAMETER RequiredPermissions
@@ -11,7 +11,7 @@ function Test-ContextAwarePermission {
     .PARAMETER CompanyId
         (Optional) The companyId context to check. If not provided, only checks global permissions.
     .PARAMETER UserId
-        (Optional) The userId context to check for user-to-user management. If not provided, only checks global/company permissions.
+        (Optional) The UserId context to check for user-to-user management. If not provided, only checks global/company permissions.
     .OUTPUTS
         [bool] True if the user has all required permissions, otherwise false.
     #>
@@ -59,7 +59,7 @@ function Test-ContextAwarePermission {
             Write-Warning "[Auth] No userManagements found for user."
             return $false
         }
-        $management = $userManagements | Where-Object { $_.userId -eq $UserId } | Select-Object -First 1
+        $management = $userManagements | Where-Object { $_.UserId -eq $UserId } | Select-Object -First 1
         if (-not $management) {
             Write-Warning "[Auth] No management found for UserId: $UserId"
             return $false
@@ -80,7 +80,7 @@ function Test-ContextAwarePermission {
         return $true
     }
 
-    # Only check global permissions if no companyId or userId
+    # Only check global permissions if no companyId or UserId
     Write-Verbose "[Auth] Checking global permissions."
     $UserPermissions = $User.Permissions
     if (-not $UserPermissions -or $UserPermissions.Count -eq 0) {

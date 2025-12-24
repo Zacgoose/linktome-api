@@ -16,7 +16,7 @@ function Invoke-AdminUserManagerInvite {
     )
     try {
         # Get current user from request context
-        $FromUserId = $Request.AuthenticatedUser.UserId
+        $FromUserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
         Write-Information "FromUserId: $FromUserId"
         if (-not $FromUserId) {
             throw 'Authenticated user not found in request.'

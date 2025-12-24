@@ -15,17 +15,25 @@ function Invoke-AdminUserManagerRespond {
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [string]$FromUserId,
-        [Parameter(Mandatory)]
-        [ValidateSet('accepted','rejected')]
-        [string]$State,
         $Request,
         $TriggerMetadata
     )
     try {
+        $Body = $Request.Body
+        $FromUserId = $Body.FromUserId
+        $State = $Body.State
+        if (-not $FromUserId) { 
+            throw 'Missing FromUserId in request body.'
+        }
+        if (-not $State) { 
+            throw 'Missing State in request body.'
+        }
+        if ($State -notin @('accepted','rejected')) { 
+            throw 'State must be "accepted" or "rejected".'
+        }
+
         # Get current user (the one responding to the invite)
-        $ToUserId = $Request.AuthenticatedUser.UserId
+        $ToUserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
         if (-not $ToUserId) {
             throw 'Authenticated user not found in request.'
         }
@@ -43,28 +51,28 @@ function Invoke-AdminUserManagerRespond {
             throw "Invite is not pending (current state: $($invite.State))."
         }
 
-        # Update invite state and timestamp
+        # If accepted, update HasUserManagers/IsUserManager flags first
+        if ($State -eq 'accepted') {
+            # Set HasUserManagers on the managed user (FromUserId)
+            $managedUserEntities = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$FromUserId'"
+            if ($managedUserEntities.Count -gt 0) {
+                $managedUser = $managedUserEntities[0]
+                $managedUser | Add-Member -NotePropertyName HasUserManagers -NotePropertyValue $true -Force
+                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $managedUser -OperationType 'UpsertMerge'
+            }
+            # Set IsUserManager on the manager (ToUserId)
+            $managerEntities = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$ToUserId'"
+            if ($managerEntities.Count -gt 0) {
+                $manager = $managerEntities[0]
+                $manager | Add-Member -NotePropertyName IsUserManager -NotePropertyValue $true -Force
+                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $manager -OperationType 'UpsertMerge'
+            }
+        }
+
+        # Now update invite state and timestamp
         $invite.State = $State
         $invite.Updated = [DateTime]::UtcNow.ToString('o')
         Add-LinkToMeAzDataTableEntity @UserManagersTable -Entity $invite -OperationType 'UpsertReplace'
-
-        # If accepted, update HasUserManagers/IsUserManager flags
-        if ($State -eq 'accepted') {
-            # Set HasUserManagers on the managed user (ToUserId)
-            $toUserEntities = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$ToUserId'"
-            if ($toUserEntities.Count -gt 0) {
-                $toUser = $toUserEntities[0]
-                $toUser.HasUserManagers = $true
-                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $toUser -OperationType 'UpsertMerge'
-            }
-            # Set IsUserManager on the manager (FromUserId)
-            $fromUserEntities = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$FromUserId'"
-            if ($fromUserEntities.Count -gt 0) {
-                $fromUser = $fromUserEntities[0]
-                $fromUser.IsUserManager = $true
-                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $fromUser -OperationType 'UpsertMerge'
-            }
-        }
 
         $StatusCode = [HttpStatusCode]::OK
         $Results = @{ success = $true; message = "Invite $State." }

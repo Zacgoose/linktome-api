@@ -22,8 +22,8 @@ function Invoke-UserRespondToInvite {
 # 3. List managers/managees for a user
 function Invoke-UserListManagers {
     param($Request, $TriggerMetadata)
-    # $Request.Query.userId (optional, default to current user)
-    # Query UserManagers table for PartitionKey=userId (managers) and RowKey=userId (managees)
+    # $Request.Query.UserId (optional, default to current user)
+    # Query UserManagers table for PartitionKey=UserId (managers) and RowKey=UserId (managees)
     # Return both lists
 }
 

@@ -9,10 +9,7 @@ function Invoke-AdminGetAnalytics {
     param($Request, $TriggerMetadata)
     
     # Use context-aware UserId if present, fallback to authenticated user
-    $UserId = $Request.UserId
-    if (-not $UserId) {
-        $UserId = $Request.AuthenticatedUser.UserId
-    }
+    $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
 
     try {
         $Table = Get-LinkToMeTable -TableName 'Analytics'

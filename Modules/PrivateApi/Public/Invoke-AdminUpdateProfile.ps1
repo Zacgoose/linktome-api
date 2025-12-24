@@ -8,7 +8,7 @@ function Invoke-AdminUpdateProfile {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
-    $User = $Request.AuthenticatedUser
+    $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
     $Body = $Request.Body
 
     # Validate input lengths
@@ -53,8 +53,8 @@ function Invoke-AdminUpdateProfile {
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
-        # Sanitize userId for query
-        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        # Sanitize UserId for query
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
         $UserData = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $UserData) {
@@ -73,7 +73,7 @@ function Invoke-AdminUpdateProfile {
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
         $Results = @{
-            userId = $UserData.RowKey
+            UserId = $UserData.RowKey
             username = $UserData.Username
             email = $UserData.PartitionKey
             displayName = $UserData.DisplayName

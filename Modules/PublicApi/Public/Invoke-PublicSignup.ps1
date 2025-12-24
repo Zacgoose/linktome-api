@@ -115,7 +115,7 @@ function Invoke-PublicSignup {
         
         $Results = @{
             user = @{
-                userId = $UserId
+                UserId = $UserId
                 email = $Body.email.ToLower()
                 username = $Body.username.ToLower()
                 roles = @($DefaultRole)
