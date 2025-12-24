@@ -29,7 +29,7 @@ function Invoke-AdminGetCompanyUsers {
 
         $Users = $entities | ForEach-Object {
             [PSCustomObject]@{
-                userId = $_.RowKey
+                UserId = $_.RowKey
                 companyRole = $_.Role
                 companyEmail = $_.CompanyEmail
                 companyDisplayName = $_.CompanyDisplayName

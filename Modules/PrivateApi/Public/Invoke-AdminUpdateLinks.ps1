@@ -8,7 +8,7 @@ function Invoke-AdminUpdateLinks {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
-    $User = $Request.AuthenticatedUser
+    $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
     $Body = $Request.Body
 
     try {
@@ -72,8 +72,8 @@ function Invoke-AdminUpdateLinks {
             }
         }
         
-        # Sanitize userId for query
-        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        # Sanitize UserId for query
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
         
         # Get existing links
         $ExistingLinks = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
@@ -93,7 +93,7 @@ function Invoke-AdminUpdateLinks {
             } else {
                 # Create new link
                 $NewLink = @{
-                    PartitionKey = $User.UserId
+                    PartitionKey = $UserId
                     RowKey = 'link-' + (New-Guid).ToString()
                     Title = $Link.title
                     Url = $Link.url

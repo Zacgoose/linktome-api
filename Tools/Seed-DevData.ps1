@@ -1,3 +1,10 @@
+# Run this to create test users and links in Azurite
+$ScriptRoot = Split-Path -Parent $PSScriptRoot
+$ModulesPath = Join-Path $ScriptRoot 'Modules'
+
+Import-Module (Join-Path $ModulesPath 'LinkTomeCore/LinkTomeCore.psd1') -Force
+Import-Module (Join-Path $ModulesPath 'AzBobbyTables') -Force
+
 # Create or update Company table with company metadata
 $CompanyTable = Get-LinkToMeTable -TableName 'Company'
 $CompanyEntity = @{
@@ -11,12 +18,6 @@ $CompanyEntity = @{
 }
 Write-Host "Creating company entity: $($CompanyEntity.CompanyName) ($CompanyId)" -ForegroundColor Yellow
 Add-LinkToMeAzDataTableEntity @CompanyTable -Entity $CompanyEntity -Force
-# Run this to create test users and links in Azurite
-$ScriptRoot = Split-Path -Parent $PSScriptRoot
-$ModulesPath = Join-Path $ScriptRoot 'Modules'
-
-Import-Module (Join-Path $ModulesPath 'LinkTomeCore/LinkTomeCore.psd1') -Force
-Import-Module (Join-Path $ModulesPath 'AzBobbyTables') -Force
 
 $env:AzureWebJobsStorage = 'UseDevelopmentStorage=true'
 $env:JWT_SECRET = 'dev-secret-change-in-production-please-make-this-very-long-and-random-at-least-64-characters'

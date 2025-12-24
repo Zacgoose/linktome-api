@@ -63,7 +63,7 @@ function Invoke-PublicLogin {
         # Get roles and permissions (deserialize from JSON if needed)
 
         # Get the actual user role from the Users table (should be 'user', 'admin', or 'company_owner')
-        $AllowedRoles = @('user', 'company_admin', 'company_owner')
+        $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
         $ActualUserRole = $null
         $RolesArr = @()
         if ($User.Roles) {
@@ -120,7 +120,27 @@ function Invoke-PublicLogin {
             }
         }
 
-        $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyMemberships $CompanyMemberships
+        # Build userManagements array for user-to-user management context
+        $UserManagements = @()
+        if ($User.HasUserManagers -or $User.IsUserManager) {
+            $UserManagersTable = Get-LinkToMeTable -TableName 'UserManagers'
+            # As manager: users I manage
+            if ($User.IsUserManager) {
+                $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$($User.RowKey)' and State eq 'accepted'"
+                foreach ($um in $managees) {
+                    $manageePermissions = Get-DefaultRolePermissions -Role $um.Role
+                    $UserManagements += @{
+                        UserId = $um.RowKey
+                        role = $um.Role
+                        state = $um.State
+                        direction = 'manager'
+                        permissions = $manageePermissions
+                    }
+                }
+            }
+        }
+
+        $Token = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyMemberships $CompanyMemberships -UserManagements $UserManagements
 
         # Generate refresh token
         $RefreshToken = New-RefreshToken
@@ -129,13 +149,14 @@ function Invoke-PublicLogin {
 
         $Results = @{
             user = @{
-                userId = $User.RowKey
+                UserId = $User.RowKey
                 email = $User.PartitionKey
                 username = $User.Username
                 userRole = $ActualUserRole
                 roles = $Roles
                 permissions = $Permissions
                 companyMemberships = $CompanyMemberships
+                userManagements = $UserManagements
             }
             accessToken = $Token
             refreshToken = $RefreshToken
