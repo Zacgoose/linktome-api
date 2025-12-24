@@ -8,12 +8,12 @@ function Invoke-AdminGetDashboardStats {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
-    $User = $Request.AuthenticatedUser
+    $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
 
     try {
         # Get user's links count
         $LinksTable = Get-LinkToMeTable -TableName 'Links'
-        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
         $Links = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
         $ActiveLinks = @($Links | Where-Object { $_.Active -eq $true })
         

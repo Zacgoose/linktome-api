@@ -8,14 +8,14 @@ function Invoke-AdminUpdateAppearance {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
-    $User = $Request.AuthenticatedUser
+    $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
     $Body = $Request.Body
 
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
         # Get user data
-        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
         $UserData = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $UserData) {

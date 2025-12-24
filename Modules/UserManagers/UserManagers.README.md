@@ -1,7 +1,7 @@
 
 # UserManagers Table (Azure Table Storage)
-# PartitionKey: ToUserId (the user being managed)
-# RowKey: FromUserId (the user who is the manager)
+# PartitionKey: ToUserId (the user who will be the manager)
+# RowKey: FromUserId (the user requesting to be managed)
 # Columns:
 #   - Role: string (e.g., 'user_delegate', 'user_admin')
 #   - State: string ('pending', 'accepted', 'rejected')
@@ -36,7 +36,9 @@ function Get-UsersManagedBy {
 # (This allows both parties to see the relationship efficiently.)
 
 # Backend logic:
+# - The user who wants to be managed initiates the invite, specifying the manager's email/UserId.
 # - When checking for user-to-user management, first check HasUserManagers (or ManagedByUserId) on the Users entity.
 # - Only query UserManagers table if flag is set.
-# - When a user invites another, create a UserManagers entity with State='pending'.
+# - When a user requests management, create a UserManagers entity with State='pending' (PartitionKey = manager, RowKey = requesting user).
 # - When accepted, set State='accepted' and update HasUserManagers on the managed user.
+# - This prevents managers from spamming users with invites; only the user seeking management can initiate the relationship.

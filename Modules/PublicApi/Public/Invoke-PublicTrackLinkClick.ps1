@@ -34,7 +34,7 @@ function Invoke-PublicTrackLinkClick {
     }
 
     try {
-        # Get user to verify they exist and get their userId
+        # Get user to verify they exist and get their UserId
         $Table = Get-LinkToMeTable -TableName 'Users'
         $SafeUsername = Protect-TableQueryValue -Value $Body.username.ToLower()
         $User = Get-LinkToMeAzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1

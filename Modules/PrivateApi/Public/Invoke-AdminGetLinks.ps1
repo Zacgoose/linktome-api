@@ -8,13 +8,13 @@ function Invoke-AdminGetLinks {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
-    $User = $Request.AuthenticatedUser
+    $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
 
     try {
         $Table = Get-LinkToMeTable -TableName 'Links'
         
-        # Sanitize userId for query
-        $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+        # Sanitize UserId for query
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
         $Links = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
         $Results = @($Links | ForEach-Object {

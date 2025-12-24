@@ -27,7 +27,7 @@ function Invoke-AdminGetUsers {
             $userCompanyIds -contains $CompanyId
         } | ForEach-Object {
             [PSCustomObject]@{
-                userId = $_.RowKey
+                UserId = $_.RowKey
                 username = $_.Username
                 email = $_.PartitionKey
                 displayName = $_.DisplayName

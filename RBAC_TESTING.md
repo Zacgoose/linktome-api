@@ -30,7 +30,7 @@ curl -X POST http://localhost:7071/api/public/signup \
 ```json
 {
   "user": {
-    "userId": "user-xxxxx",
+    "UserId": "user-xxxxx",
     "email": "testuser@example.com",
     "username": "testuser",
     "roles": ["user"],
@@ -76,7 +76,7 @@ curl -X POST http://localhost:7071/api/public/login \
 ```json
 {
   "user": {
-    "userId": "user-xxxxx",
+    "UserId": "user-xxxxx",
     "email": "testuser@example.com",
     "username": "testuser",
     "roles": ["user"],
@@ -110,7 +110,7 @@ curl http://localhost:7071/api/admin/getProfile \
 **Expected Response**:
 ```json
 {
-  "userId": "user-xxxxx",
+  "UserId": "user-xxxxx",
   "username": "testuser",
   "email": "testuser@example.com",
   "displayName": "testuser",
@@ -321,7 +321,7 @@ echo "$ACCESS_TOKEN" | jwt decode -
 ```
 
 **Verification**:
-- ✅ JWT contains sub (userId)
+- ✅ JWT contains sub (UserId)
 - ✅ JWT contains email
 - ✅ JWT contains username
 - ✅ JWT contains roles array
@@ -542,7 +542,7 @@ curl -X PUT http://localhost:7071/api/admin/assignRole \
   -H "Authorization: ******" \
   -H "Content-Type: application/json" \
   -d '{
-    "userId": "user-xxxxx",
+    "UserId": "user-xxxxx",
     "role": "admin"
   }'
 ```
@@ -551,7 +551,7 @@ curl -X PUT http://localhost:7071/api/admin/assignRole \
 ```json
 {
   "success": true,
-  "userId": "user-xxxxx",
+  "UserId": "user-xxxxx",
   "role": "admin",
   "permissions": [
     "read:dashboard",
@@ -583,7 +583,7 @@ curl -X PUT http://localhost:7071/api/admin/assignRole \
 
 ```bash
 # 1. Get roles for a specific user
-curl "http://localhost:7071/api/admin/getUserRoles?userId=user-xxxxx" \
+curl "http://localhost:7071/api/admin/getUserRoles?UserId=user-xxxxx" \
   -H "Authorization: ******"
 ```
 
@@ -591,7 +591,7 @@ curl "http://localhost:7071/api/admin/getUserRoles?userId=user-xxxxx" \
 ```json
 {
   "success": true,
-  "userId": "user-xxxxx",
+  "UserId": "user-xxxxx",
   "username": "testuser",
   "email": "testuser@example.com",
   "roles": ["admin"],
@@ -637,7 +637,7 @@ curl -X POST http://localhost:7071/api/public/login \
 export OWNER1_TOKEN="eyJ..."
 
 # 2. Try to view user from different company
-curl "http://localhost:7071/api/admin/getUserRoles?userId=user-from-company2" \
+curl "http://localhost:7071/api/admin/getUserRoles?UserId=user-from-company2" \
   -H "Authorization: ******"
 ```
 
@@ -668,7 +668,7 @@ curl -X PUT http://localhost:7071/api/admin/assignRole \
   -H "Authorization: ******" \
   -H "Content-Type: application/json" \
   -d '{
-    "userId": "user-xxxxx",
+    "UserId": "user-xxxxx",
     "role": "superadmin"
   }'
 ```

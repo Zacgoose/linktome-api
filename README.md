@@ -152,7 +152,7 @@ curl -X POST http://localhost:7071/api/public/signup \
   -d '{"email":"user@example.com","username":"johndoe","password":"SecurePass123"}'
 
 # Response includes accessToken
-# {"user":{"userId":"...","email":"...","username":"..."},"accessToken":"eyJ..."}
+# {"user":{"UserId":"...","email":"...","username":"..."},"accessToken":"eyJ..."}
 
 # Login
 curl -X POST http://localhost:7071/api/public/login \
@@ -296,7 +296,7 @@ Authorization: Bearer <jwt-token>
    ```json
    {
      "user": {
-       "userId": "user-abc123",
+       "UserId": "user-abc123",
        "email": "user@example.com",
        "username": "johndoe"
      },

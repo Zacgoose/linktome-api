@@ -13,13 +13,17 @@ function Invoke-AdminUserManagerRemove {
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [string]$OtherUserId,
         $Request,
         $TriggerMetadata
     )
     try {
-        $UserId = $Request.AuthenticatedUser.UserId
+        $Body = $Request.Body
+        $OtherUserId = $Body.OtherUserId
+        if (-not $OtherUserId) { 
+            throw 'Missing OtherUserId in request body.'
+        }
+
+        $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
         if (-not $UserId) {
             throw 'Authenticated user not found in request.'
         }
