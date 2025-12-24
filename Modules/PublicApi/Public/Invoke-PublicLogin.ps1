@@ -61,7 +61,6 @@ function Invoke-PublicLogin {
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
         # Get roles and permissions (deserialize from JSON if needed)
-
         # Get the actual user role from the Users table (should be 'user', 'admin', or 'company_owner')
         $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
         $ActualUserRole = $null
