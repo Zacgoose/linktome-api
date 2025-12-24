@@ -17,10 +17,9 @@ function Invoke-AdminUserManagerRemove {
         $TriggerMetadata
     )
     try {
-        $Body = $Request.Body
-        $OtherUserId = $Body.OtherUserId
+        $OtherUserId = $Request.Body.UserId
         if (-not $OtherUserId) { 
-            throw 'Missing OtherUserId in request body.'
+            throw 'Missing UserId in request.'
         }
 
         $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
@@ -41,7 +40,7 @@ function Invoke-AdminUserManagerRemove {
         }
 
         foreach ($entity in $entities) {
-            Remove-AzDataTableEntity -Context $UserManagersTable.Context -PartitionKey $entity.PartitionKey -RowKey $entity.RowKey
+            Remove-AzDataTableEntity -Entity $entity -Context $UserManagersTable.Context
         }
 
         # Update HasUserManagers/IsUserManager flags if needed
