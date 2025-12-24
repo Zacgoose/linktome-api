@@ -54,29 +54,42 @@ function Invoke-PublicRefreshToken {
         }
         
         # Get roles and permissions (deserialize from JSON if needed)
-        $Roles = if ($User.Roles) {
+        # Get the actual user role from the Users table (should be 'user', 'admin', or 'company_owner')
+        $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
+        $ActualUserRole = $null
+        $RolesArr = @()
+        if ($User.Roles) {
             if ($User.Roles -is [string] -and $User.Roles.StartsWith('[')) {
-                $User.Roles | ConvertFrom-Json
+                $parsed = $User.Roles | ConvertFrom-Json
+                if ($parsed -is [string]) {
+                    $RolesArr = @($parsed)
+                } else {
+                    $RolesArr = $parsed
+                }
             } elseif ($User.Roles -is [array]) {
-                $User.Roles
+                $RolesArr = $User.Roles
+            } elseif ($User.Roles -is [string]) {
+                $RolesArr = @($User.Roles)
+            }
+        }
+        if ($RolesArr.Count -ge 1) {
+            $CandidateRole = $RolesArr[0]
+            if ($AllowedRoles -contains $CandidateRole) {
+                $ActualUserRole = $CandidateRole
             } else {
-                @($User.Roles)
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::InternalServerError
+                    Body = @{ error = "Invalid user role in database: $CandidateRole" }
+                }
             }
         } else {
-            @('user')
-        }
-        
-        $Permissions = if ($User.Permissions) {
-            if ($User.Permissions -is [string] -and $User.Permissions.StartsWith('[')) {
-                $User.Permissions | ConvertFrom-Json
-            } elseif ($User.Permissions -is [array]) {
-                $User.Permissions
-            } else {
-                @($User.Permissions)
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::InternalServerError
+                Body = @{ error = "No valid user role found for user." }
             }
-        } else {
-            Get-DefaultRolePermissions -Role $Roles[0]
         }
+        $Roles = @($ActualUserRole)
+        $Permissions = Get-DefaultRolePermissions -Role $ActualUserRole
         
         # Lookup company memberships for this user, include role and permissions (permissions are per company)
         $CompanyMemberships = @()
