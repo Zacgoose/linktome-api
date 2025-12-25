@@ -94,8 +94,15 @@ function Invoke-AdminUpdateLinks {
                         Order = $Link.order
                         Active = $Link.active
                     }
-                    # Add icon if provided
+                    # Add icon if provided (validate length to prevent abuse)
                     if ($Link.icon) {
+                        $IconCheck = Test-InputLength -Value $Link.icon -MaxLength 100 -FieldName "Link icon"
+                        if (-not $IconCheck.Valid) {
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::BadRequest
+                                Body = @{ error = $IconCheck.Message }
+                            }
+                        }
                         $NewLink.Icon = $Link.icon
                     }
                     Add-LinkToMeAzDataTableEntity @Table -Entity $NewLink -Force
@@ -142,8 +149,20 @@ function Invoke-AdminUpdateLinks {
                     }
                     if ($Link.PSObject.Properties.Match('order')) { $ExistingLink.Order = $Link.order }
                     if ($Link.PSObject.Properties.Match('active')) { $ExistingLink.Active = $Link.active }
-                    if ($Link.PSObject.Properties.Match('icon') -and $Link.icon) {
-                        $ExistingLink | Add-Member -MemberType NoteProperty -Name 'Icon' -Value $Link.icon -Force
+                    if ($Link.PSObject.Properties.Match('icon')) {
+                        if ($null -ne $Link.icon) {
+                            # Validate icon length if not empty
+                            if ($Link.icon -ne '') {
+                                $IconCheck = Test-InputLength -Value $Link.icon -MaxLength 100 -FieldName "Link icon"
+                                if (-not $IconCheck.Valid) {
+                                    return [HttpResponseContext]@{
+                                        StatusCode = [HttpStatusCode]::BadRequest
+                                        Body = @{ error = $IconCheck.Message }
+                                    }
+                                }
+                            }
+                            $ExistingLink | Add-Member -MemberType NoteProperty -Name 'Icon' -Value $Link.icon -Force
+                        }
                     }
                     Add-LinkToMeAzDataTableEntity @Table -Entity $ExistingLink -Force
                 }
