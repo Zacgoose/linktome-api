@@ -47,19 +47,38 @@ function Invoke-PublicGetUserProfile {
                 appearance = @{
                     theme = if ($User.Theme) { $User.Theme } else { 'light' }
                     buttonStyle = if ($User.ButtonStyle) { $User.ButtonStyle } else { 'rounded' }
-                    backgroundColor = if ($User.BackgroundColor) { $User.BackgroundColor } else { '#ffffff' }
-                    textColor = if ($User.TextColor) { $User.TextColor } else { '#000000' }
-                    buttonColor = if ($User.ButtonColor) { $User.ButtonColor } else { '#000000' }
-                    buttonTextColor = if ($User.ButtonTextColor) { $User.ButtonTextColor } else { '#ffffff' }
+                    fontFamily = if ($User.FontFamily) { $User.FontFamily } else { 'default' }
+                    layoutStyle = if ($User.LayoutStyle) { $User.LayoutStyle } else { 'centered' }
+                    colors = @{
+                        primary = if ($User.ColorPrimary) { $User.ColorPrimary } else { '#000000' }
+                        secondary = if ($User.ColorSecondary) { $User.ColorSecondary } else { '#666666' }
+                        background = if ($User.ColorBackground) { $User.ColorBackground } else { '#ffffff' }
+                        buttonBackground = if ($User.ColorButtonBackground) { $User.ColorButtonBackground } else { '#000000' }
+                        buttonText = if ($User.ColorButtonText) { $User.ColorButtonText } else { '#ffffff' }
+                    }
                 }
                 links = @($Links | ForEach-Object {
-                    @{
+                    $linkObj = @{
                         id = $_.RowKey
                         title = $_.Title
                         url = $_.Url
                         order = [int]$_.Order
+                        active = [bool]$_.Active
                     }
+                    # Add icon if it exists
+                    if ($_.Icon) {
+                        $linkObj.icon = $_.Icon
+                    }
+                    $linkObj
                 } | Sort-Object order)
+            }
+            
+            # Add customGradient to appearance if it exists
+            if ($User.CustomGradientStart -and $User.CustomGradientEnd) {
+                $Results.appearance.customGradient = @{
+                    start = $User.CustomGradientStart
+                    end = $User.CustomGradientEnd
+                }
             }
             $StatusCode = [HttpStatusCode]::OK
             

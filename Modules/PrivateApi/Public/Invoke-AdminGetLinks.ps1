@@ -18,13 +18,18 @@ function Invoke-AdminGetLinks {
         $Links = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
         $Results = @($Links | ForEach-Object {
-            @{
+            $linkObj = @{
                 id = $_.RowKey
                 title = $_.Title
                 url = $_.Url
                 order = [int]$_.Order
                 active = [bool]$_.Active
             }
+            # Add icon if it exists
+            if ($_.Icon) {
+                $linkObj.icon = $_.Icon
+            }
+            $linkObj
         } | Sort-Object order)
         
         $StatusCode = [HttpStatusCode]::OK
