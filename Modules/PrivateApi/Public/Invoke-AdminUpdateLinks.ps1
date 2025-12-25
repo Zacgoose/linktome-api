@@ -142,14 +142,8 @@ function Invoke-AdminUpdateLinks {
                     }
                     if ($Link.PSObject.Properties.Match('order')) { $ExistingLink.Order = $Link.order }
                     if ($Link.PSObject.Properties.Match('active')) { $ExistingLink.Active = $Link.active }
-                    if ($Link.PSObject.Properties.Match('icon')) { 
-                        if ($Link.icon) {
-                            if ($null -eq $ExistingLink.Icon) {
-                                $ExistingLink | Add-Member -MemberType NoteProperty -Name 'Icon' -Value $Link.icon -Force
-                            } else {
-                                $ExistingLink.Icon = $Link.icon
-                            }
-                        }
+                    if ($Link.PSObject.Properties.Match('icon') -and $Link.icon) {
+                        $ExistingLink | Add-Member -MemberType NoteProperty -Name 'Icon' -Value $Link.icon -Force
                     }
                     Add-LinkToMeAzDataTableEntity @Table -Entity $ExistingLink -Force
                 }
