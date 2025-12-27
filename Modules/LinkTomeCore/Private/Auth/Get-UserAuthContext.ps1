@@ -15,7 +15,7 @@ function Get-UserAuthContext {
     
     if ($User.Roles) {
         if ($User.Roles -is [string] -and $User.Roles.StartsWith('[')) {
-            $parsed = $User.Roles | ConvertFrom-Json
+            $parsed = $User.Roles | ConvertFrom-Json -Depth 10
             if ($parsed -is [string]) {
                 $RolesArr = @($parsed)
             } else {
