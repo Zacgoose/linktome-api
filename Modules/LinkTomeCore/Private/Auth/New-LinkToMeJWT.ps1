@@ -1,33 +1,47 @@
 function New-LinkToMeJWT {
     <#
     .SYNOPSIS
-        Create a new JWT token
+        Create a new JWT token with user authentication context
+    .DESCRIPTION
+        Can create JWT either from a User object (which fetches all context) or from explicit parameters
     #>
     param(
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ParameterSetName='FromUser')]
+        [object]$User,
+        
+        [Parameter(Mandatory, ParameterSetName='Explicit')]
         [string]$UserId,
     
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ParameterSetName='Explicit')]
         [string]$Email,
     
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ParameterSetName='Explicit')]
         [string]$Username,
     
-        [Parameter()]
+        [Parameter(ParameterSetName='Explicit')]
         [string[]]$Roles = @('user'),
     
-        [Parameter()]
+        [Parameter(ParameterSetName='Explicit')]
         [string[]]$Permissions = @(),
     
-        [Parameter()]
-        [string]$CompanyId = $null,
-
-        [Parameter()]
-        $CompanyMemberships = $null,
-
-        [Parameter()]
-        $UserManagements = $null
+        [Parameter(ParameterSetName='Explicit')]
+        [object[]]$CompanyMemberships = $null,
+        
+        [Parameter(ParameterSetName='Explicit')]
+        [object[]]$UserManagements = $null
     )
+    
+    # If User object provided, get all context from it
+    if ($PSCmdlet.ParameterSetName -eq 'FromUser') {
+        $authContext = Get-UserAuthContext -User $User
+        $UserId = $authContext.UserId
+        $Email = $authContext.Email
+        $Username = $authContext.Username
+        $Roles = $authContext.Roles
+        $Permissions = $authContext.Permissions
+        $CompanyMemberships = $authContext.CompanyMemberships
+        $UserManagements = $authContext.UserManagements
+    }
     
     $Secret = Get-JwtSecret | ConvertTo-SecureString -AsPlainText -Force
     
@@ -48,18 +62,17 @@ function New-LinkToMeJWT {
         exp = ([DateTimeOffset]::UtcNow.AddMinutes($ExpirationMinutes)).ToUnixTimeSeconds()
         iss = 'LinkTome-app'
     }
-    # Add companyId if provided
-    if ($CompanyId) {
-        $Claims['companyId'] = $CompanyId
-    }
+    
     # Add companyMemberships if provided
-    if ($PSBoundParameters.ContainsKey('CompanyMemberships') -and $CompanyMemberships) {
+    if ($CompanyMemberships -and $CompanyMemberships.Count -gt 0) {
         $Claims['companyMemberships'] = $CompanyMemberships
     }
+    
     # Add userManagements if provided
-    if ($PSBoundParameters.ContainsKey('UserManagements') -and $UserManagements) {
+    if ($UserManagements -and $UserManagements.Count -gt 0) {
         $Claims['userManagements'] = $UserManagements
     }
+    
     $Token = New-JsonWebToken -Claims $Claims -HashAlgorithm SHA256 -SecureKey $Secret -TimeToLive ($ExpirationMinutes * 60)
     return $Token
 }
