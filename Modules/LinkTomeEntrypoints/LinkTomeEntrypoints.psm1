@@ -162,7 +162,8 @@ function New-LinkTomeCoreRequest {
             Write-Information "[Entrypoint] Permission check context:"
             Write-Information "[Entrypoint] UserId: $UserId | CompanyId: $CompanyId"
             Write-Information "[Entrypoint] RequiredPermissions: $($RequiredPermissions -join ', ')"
-            Write-Information "[Entrypoint] User object: $($User | ConvertTo-Json -Depth 10)"
+            Write-Information "[Entrypoint] User object:"
+            Write-Information ($User | ConvertTo-Json -Depth 10)
             if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
                 $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -CompanyId $CompanyId -UserId $UserId
                 Write-Information "[Entrypoint] Test-ContextAwarePermission result: $HasPermission"
