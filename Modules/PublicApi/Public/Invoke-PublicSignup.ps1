@@ -103,23 +103,38 @@ function Invoke-PublicSignup {
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force
         
+        $CreatedUser = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$UserId'" | Select-Object -First 1
+
         # Log successful signup
         Write-SecurityEvent -EventType 'SignupSuccess' -UserId $UserId -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup'
-        
-        $Token = New-LinkToMeJWT -UserId $UserId -Email $Body.email.ToLower() -Username $Body.username.ToLower() -Roles @($DefaultRole) -Permissions $DefaultPermissions
-        
+
+        try {
+            $authContext = Get-UserAuthContext -User $CreatedUser
+        } catch {
+            Write-Error "Auth context error: $($_.Exception.Message)"
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::InternalServerError
+                Body = @{ error = $_.Exception.Message }
+            }
+        }
+
+        $Token = New-LinkToMeJWT -User $CreatedUser
+
         # Generate refresh token
         $RefreshToken = New-RefreshToken
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
         Save-RefreshToken -Token $RefreshToken -UserId $UserId -ExpiresAt $ExpiresAt
-        
+
         $Results = @{
             user = @{
-                UserId = $UserId
-                email = $Body.email.ToLower()
-                username = $Body.username.ToLower()
-                roles = @($DefaultRole)
-                permissions = $DefaultPermissions
+                UserId = $authContext.UserId
+                email = $authContext.Email
+                username = $authContext.Username
+                userRole = $authContext.UserRole
+                roles = $authContext.Roles
+                permissions = $authContext.Permissions
+                companyMemberships = $authContext.CompanyMemberships
+                userManagements = $authContext.UserManagements
             }
             accessToken = $Token
             refreshToken = $RefreshToken

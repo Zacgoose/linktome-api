@@ -53,96 +53,17 @@ function Invoke-PublicRefreshToken {
             }
         }
         
-        # Get roles and permissions (deserialize from JSON if needed)
-        # Get the actual user role from the Users table (should be 'user', 'admin', or 'company_owner')
-        $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
-        $ActualUserRole = $null
-        $RolesArr = @()
-        if ($User.Roles) {
-            if ($User.Roles -is [string] -and $User.Roles.StartsWith('[')) {
-                $parsed = $User.Roles | ConvertFrom-Json
-                if ($parsed -is [string]) {
-                    $RolesArr = @($parsed)
-                } else {
-                    $RolesArr = $parsed
-                }
-            } elseif ($User.Roles -is [array]) {
-                $RolesArr = $User.Roles
-            } elseif ($User.Roles -is [string]) {
-                $RolesArr = @($User.Roles)
-            }
-        }
-        if ($RolesArr.Count -ge 1) {
-            $CandidateRole = $RolesArr[0]
-            if ($AllowedRoles -contains $CandidateRole) {
-                $ActualUserRole = $CandidateRole
-            } else {
-                return [HttpResponseContext]@{
-                    StatusCode = [HttpStatusCode]::InternalServerError
-                    Body = @{ error = "Invalid user role in database: $CandidateRole" }
-                }
-            }
-        } else {
+        try {
+            $authContext = Get-UserAuthContext -User $User
+        } catch {
+            Write-Error "Auth context error: $($_.Exception.Message)"
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::InternalServerError
-                Body = @{ error = "No valid user role found for user." }
-            }
-        }
-        $Roles = @($ActualUserRole)
-        $Permissions = Get-DefaultRolePermissions -Role $ActualUserRole
-        
-        # Lookup company memberships for this user, include role and permissions (permissions are per company)
-        $CompanyMemberships = @()
-        $CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
-        $CompanyUserEntities = Get-LinkToMeAzDataTableEntity @CompanyUsersTable -Filter "RowKey eq '$($User.RowKey)'"
-        foreach ($cu in $CompanyUserEntities) {
-            $companyRole = $cu.Role
-            $companyPermissions = @()
-            if ($companyRole) {
-                $companyPermissions = Get-DefaultRolePermissions -Role $companyRole
-            }
-            # Ensure permissions is always an array
-            if ($companyPermissions -is [string]) {
-                $companyPermissions = @($companyPermissions)
-            }
-            $CompanyMemberships += @{
-                companyId = $cu.PartitionKey
-                role = $companyRole
-                permissions = $companyPermissions
+                Body = @{ error = $_.Exception.Message }
             }
         }
 
-        # Build userManagements array for user-to-user management context
-        $UserManagements = @()
-        if ($User.HasUserManagers -or $User.IsUserManager) {
-            $UserManagersTable = Get-LinkToMeTable -TableName 'UserManagers'
-            # As manager: users I manage
-            if ($User.IsUserManager) {
-                $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$($User.RowKey)' and State eq 'accepted'"
-                foreach ($um in $managees) {
-                    $manageePermissions = Get-DefaultRolePermissions -Role $um.Role
-                    $UserManagements += @{
-                        UserId = $um.RowKey
-                        role = $um.Role
-                        state = $um.State
-                        direction = 'manager'
-                        permissions = $manageePermissions
-                    }
-                }
-            }
-        }
-
-        $NewAccessToken = New-LinkToMeJWT -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -Roles $Roles -Permissions $Permissions -CompanyMemberships $CompanyMemberships -UserManagements $UserManagements
-
-        # Determine actual user role
-        $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
-        $ActualUserRole = $null
-        if ($Roles.Count -ge 1) {
-            $CandidateRole = $Roles[0]
-            if ($AllowedRoles -contains $CandidateRole) {
-                $ActualUserRole = $CandidateRole
-            }
-        }
+        $NewAccessToken = New-LinkToMeJWT -User $User
 
         # Generate new refresh token (rotation)
         $NewRefreshToken = New-RefreshToken
@@ -162,14 +83,14 @@ function Invoke-PublicRefreshToken {
             accessToken = $NewAccessToken
             refreshToken = $NewRefreshToken
             user = @{
-                UserId = $User.RowKey
-                email = $User.PartitionKey
-                username = $User.Username
-                userRole = $ActualUserRole
-                roles = $Roles
-                permissions = $Permissions
-                companyMemberships = $CompanyMemberships
-                userManagements = $UserManagements
+                UserId = $authContext.UserId
+                email = $authContext.Email
+                username = $authContext.Username
+                userRole = $authContext.UserRole
+                roles = $authContext.Roles
+                permissions = $authContext.Permissions
+                companyMemberships = $authContext.CompanyMemberships
+                userManagements = $authContext.UserManagements
             }
         }
         $StatusCode = [HttpStatusCode]::OK
