@@ -81,7 +81,7 @@ function Get-LinkToMeAzDataTableEntity {
 
     foreach ($entity in $finalResults) {
         if ($entity.SplitOverProps) {
-            $splitInfoList = $entity.SplitOverProps | ConvertFrom-Json
+            $splitInfoList = $entity.SplitOverProps | ConvertFrom-Json -Depth 10
             foreach ($splitInfo in $splitInfoList) {
                 $mergedData = [string]::Join('', ($splitInfo.SplitHeaders | ForEach-Object { $entity.$_ }))
                 $entity | Add-Member -NotePropertyName $splitInfo.OriginalHeader -NotePropertyValue $mergedData -Force

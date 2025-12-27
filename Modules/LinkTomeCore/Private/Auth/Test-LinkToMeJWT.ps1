@@ -19,7 +19,7 @@ function Test-LinkToMeJWT {
         }
         
         $Decoded = $Token | ConvertFrom-EncodedJsonWebToken
-        $Payload = $Decoded.Payload | ConvertFrom-Json
+        $Payload = $Decoded.Payload | ConvertFrom-Json -Depth 10
 
         # Extract roles and permissions (handle both array and single values)
         $Roles = if ($Payload.roles) {
