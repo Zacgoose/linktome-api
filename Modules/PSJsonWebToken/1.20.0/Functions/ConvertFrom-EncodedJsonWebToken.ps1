@@ -57,8 +57,8 @@ function ConvertFrom-EncodedJsonWebToken {
         $deserializedHeader = $JsonWebToken | Get-JsonWebTokenHeader
         $deserializedPayload = $JsonWebToken | Get-JsonWebTokenPayload
 
-        $serializedHeader = $deserializedHeader | ConvertTo-Json -Compress -Depth 10
-        $serializedPayload = $deserializedPayload | ConvertTo-Json -Compress -Depth 10
+        $serializedHeader = $deserializedHeader | ConvertTo-Json -Compress
+        $serializedPayload = $deserializedPayload | ConvertTo-Json -Compress
         $signatureString = $JsonWebToken.Split(".")[2]
 
         $decodedJsonWebToken = [PSJsonWebToken.DecodedJsonWebToken]::new()

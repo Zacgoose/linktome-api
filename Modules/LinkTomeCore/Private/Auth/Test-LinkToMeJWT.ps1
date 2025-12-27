@@ -18,8 +18,9 @@ function Test-LinkToMeJWT {
             return $null
         }
         
-        $Decoded = $Token | ConvertFrom-EncodedJsonWebToken
-        $Payload = $Decoded.Payload | ConvertFrom-Json -Depth 10
+        # Use -AsJson to get raw JSON string from the module, then parse it with proper depth
+        $PayloadJson = $Token | Get-JsonWebTokenPayload -AsJson
+        $Payload = $PayloadJson | ConvertFrom-Json -Depth 10
 
         # Extract roles and permissions (handle both array and single values)
         $Roles = if ($Payload.roles) {
