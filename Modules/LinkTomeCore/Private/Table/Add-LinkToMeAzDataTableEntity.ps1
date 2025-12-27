@@ -200,7 +200,8 @@ function Add-LinkToMeAzDataTableEntity {
                         }
 
                         foreach ($row in $rows) {
-                            Write-Information "current entity is $($row.RowKey) with $($row.PartitionKey). Our size is $([System.Text.Encoding]::UTF8.GetByteCount($($row | ConvertTo-Json -Compress)))"
+                            $rowSize = [System.Text.Encoding]::UTF8.GetByteCount(($row | ConvertTo-Json -Compress))
+                            Write-Information "current entity is $($row.RowKey) with $($row.PartitionKey). Our size is $rowSize"
                             $NewRow = ([PSCustomObject]$row) | Select-Object * -ExcludeProperty Timestamp
                             Add-AzDataTableEntity @Parameters -Entity $NewRow
                         }
@@ -231,7 +232,8 @@ function Add-LinkToMeAzDataTableEntity {
             } else {
                 try { Write-Information ($_.Exception | ConvertTo-Json) } catch { Write-Information $_.Exception }
                 Write-Information "THE ERROR IS $($_.Exception.message). The size of the entity is $entitySize."
-                Write-Information "Parameters are: $($Parameters | ConvertTo-Json -Compress)"
+                Write-Information "Parameters are:"
+                Write-Information ($Parameters | ConvertTo-Json -Compress)
                 Write-Information $_.InvocationInfo.PositionMessage
                 throw $_
             }

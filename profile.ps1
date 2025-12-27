@@ -38,4 +38,5 @@ $TimingsRounded = [ordered]@{}
 foreach ($Key in ($Timings.Keys | Sort-Object)) {
     $TimingsRounded[$Key] = [math]::Round($Timings[$Key], 2)
 }
-Write-Information "Profile Load Timings: $($TimingsRounded | ConvertTo-Json -Compress)"
+Write-Information "Profile Load Timings:"
+Write-Information ($TimingsRounded | ConvertTo-Json -Compress)
