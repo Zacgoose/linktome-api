@@ -22,7 +22,7 @@ function Invoke-AdminGetUsers {
         $Users = $entities | Where-Object {
             $userCompanyIds = $_.CompanyIds
             if ($userCompanyIds -is [string]) {
-                $userCompanyIds = ConvertFrom-Json $userCompanyIds
+                $userCompanyIds = ConvertFrom-Json $userCompanyIds -Depth 10
             }
             $userCompanyIds -contains $CompanyId
         } | ForEach-Object {
