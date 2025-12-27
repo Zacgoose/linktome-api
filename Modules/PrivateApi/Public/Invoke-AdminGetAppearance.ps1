@@ -29,10 +29,23 @@ function Invoke-AdminGetAppearance {
         $Results = @{
             theme = if ($UserData.Theme) { $UserData.Theme } else { 'light' }
             buttonStyle = if ($UserData.ButtonStyle) { $UserData.ButtonStyle } else { 'rounded' }
-            backgroundColor = if ($UserData.BackgroundColor) { $UserData.BackgroundColor } else { '#ffffff' }
-            textColor = if ($UserData.TextColor) { $UserData.TextColor } else { '#000000' }
-            buttonColor = if ($UserData.ButtonColor) { $UserData.ButtonColor } else { '#000000' }
-            buttonTextColor = if ($UserData.ButtonTextColor) { $UserData.ButtonTextColor } else { '#ffffff' }
+            fontFamily = if ($UserData.FontFamily) { $UserData.FontFamily } else { 'default' }
+            layoutStyle = if ($UserData.LayoutStyle) { $UserData.LayoutStyle } else { 'centered' }
+            colors = @{
+                primary = if ($UserData.ColorPrimary) { $UserData.ColorPrimary } else { '#000000' }
+                secondary = if ($UserData.ColorSecondary) { $UserData.ColorSecondary } else { '#666666' }
+                background = if ($UserData.ColorBackground) { $UserData.ColorBackground } else { '#ffffff' }
+                buttonBackground = if ($UserData.ColorButtonBackground) { $UserData.ColorButtonBackground } else { '#000000' }
+                buttonText = if ($UserData.ColorButtonText) { $UserData.ColorButtonText } else { '#ffffff' }
+            }
+        }
+        
+        # Add customGradient if it exists
+        if ($UserData.CustomGradientStart -and $UserData.CustomGradientEnd) {
+            $Results.customGradient = @{
+                start = $UserData.CustomGradientStart
+                end = $UserData.CustomGradientEnd
+            }
         }
         
         $StatusCode = [HttpStatusCode]::OK
