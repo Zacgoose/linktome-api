@@ -52,15 +52,15 @@ function Get-UserAuthContext {
             $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$($User.RowKey)' and State eq 'accepted'"
             foreach ($um in $managees) {
                 $manageePermissions = Get-DefaultRolePermissions -Role $um.Role
-                $user = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($um.RowKey)'" | Select-Object -First 1
+                $UserManager = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($um.RowKey)'" | Select-Object -First 1
                 $UserManagements += @{
                     UserId = $um.RowKey
                     role = $um.Role
                     state = $um.State
                     direction = 'manager'
                     permissions = $manageePermissions
-                    DisplayName = $user.DisplayName
-                    Email = $user.PartitionKey
+                    DisplayName = $UserManager.DisplayName
+                    Email = $UserManager.PartitionKey
                 }
             }
         }
