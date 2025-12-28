@@ -54,7 +54,7 @@ function Invoke-AdminAssignRole {
 
         # Update Users table role
         $DefaultPermissions = Get-DefaultRolePermissions -Role $Body.role
-        $TargetUser.Roles = "[`"$($Body.role)`"]"
+        $TargetUser.Roles = @($Body.role) | ConvertTo-Json -Compress
         $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
         Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
 
