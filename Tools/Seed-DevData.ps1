@@ -118,4 +118,3 @@ Write-Host "`n🚀 You can now:" -ForegroundColor White
 Write-Host "1. Start the API: func start" -ForegroundColor Gray
 Write-Host "2. Test login: POST /api/public/login" -ForegroundColor Gray
 Write-Host "3. View public profile: GET /api/public/getUserProfile?username=demo" -ForegroundColor Gray
-Write-Host "4. Test role management: PUT /api/admin/assignRole" -ForegroundColor Gray
