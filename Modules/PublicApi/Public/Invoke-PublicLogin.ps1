@@ -82,7 +82,6 @@ function Invoke-PublicLogin {
                 userRole = $authContext.UserRole
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
-                companyMemberships = $authContext.CompanyMemberships
                 userManagements = $authContext.UserManagements
             }
             accessToken = $Token

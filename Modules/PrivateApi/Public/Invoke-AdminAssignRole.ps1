@@ -23,13 +23,13 @@ function Invoke-AdminAssignRole {
     }
 
     # Validate role is one of the allowed values
-    $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
+    $AllowedRoles = @('user', 'user_manager')
     if ($Body.role -notin $AllowedRoles) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
                 success = $false
-                error = "Invalid role. Allowed roles: user, company_admin, company_owner, user_manager" 
+                error = "Invalid role. Allowed roles: user, user_manager" 
             }
         }
     }
@@ -52,43 +52,11 @@ function Invoke-AdminAssignRole {
         }
 
 
-
-        if ($Body.role -eq 'user') {
-            # Only update Users table for 'user' role
-            $DefaultPermissions = Get-DefaultRolePermissions -Role 'user'
-            $TargetUser.Roles = '["user"]'
-            $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
-            Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
-        } else {
-            # For company_admin/company_owner, update or insert into CompanyUsers table
-            $CompanyId = $Body.companyId
-            if (-not $CompanyId) {
-                return [HttpResponseContext]@{
-                    StatusCode = [HttpStatusCode]::BadRequest
-                    Body = @{ success = $false; error = "companyId is required for company roles" }
-                }
-            }
-            $CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
-            $CompanyUserEntity = Get-LinkToMeAzDataTableEntity @CompanyUsersTable -Filter "PartitionKey eq '$CompanyId' and RowKey eq '$($TargetUser.RowKey)'" | Select-Object -First 1
-            if ($CompanyUserEntity) {
-                $CompanyUserEntity.Role = $Body.role
-                Add-LinkToMeAzDataTableEntity @CompanyUsersTable -Entity $CompanyUserEntity -Force
-            } else {
-                $CompanyUserEntity = @{
-                    PartitionKey = $CompanyId
-                    RowKey = $TargetUser.RowKey
-                    Role = $Body.role
-                    CompanyEmail = $TargetUser.PartitionKey
-                    CompanyDisplayName = $TargetUser.DisplayName
-                    Username = $TargetUser.Username
-                }
-                Add-LinkToMeAzDataTableEntity @CompanyUsersTable -Entity $CompanyUserEntity -Force
-            }
-            # Always keep Users table role as 'user'
-            $TargetUser.Roles = '["user"]'
-            $TargetUser.Permissions = [string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress)
-            Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
-        }
+        # Update Users table role
+        $DefaultPermissions = Get-DefaultRolePermissions -Role $Body.role
+        $TargetUser.Roles = "[`"$($Body.role)`"]"
+        $TargetUser.Permissions = [string]($DefaultPermissions | ConvertTo-Json -Compress)
+        Add-LinkToMeAzDataTableEntity @Table -Entity $TargetUser -Force
 
         # Log role assignment
         $ClientIP = Get-ClientIPAddress -Request $Request
