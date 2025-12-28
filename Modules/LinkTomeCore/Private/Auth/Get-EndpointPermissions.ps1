@@ -35,13 +35,6 @@ function Get-EndpointPermissions {
         'admin/deleteUser' = @('manage:users')
         'admin/assignRole' = @('manage:users')
         'admin/getUserRoles' = @('read:users')
-        
-        # Company endpoints (company_owner)
-        'admin/getCompany' = @('read:company')
-        'admin/updateCompany' = @('write:company')
-        'admin/getCompanyMembers' = @('read:company_members')
-        'admin/addCompanyMember' = @('manage:company_members')
-        'admin/removeCompanyMember' = @('manage:company_members')
     }
     
     return $EndpointPermissions[$Endpoint]

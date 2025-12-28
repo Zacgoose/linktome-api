@@ -35,10 +35,6 @@ function Test-LinkToMeJWT {
             @()
         }
 
-        $CompanyMemberships = $null
-        if ($Payload.PSObject.Properties.Name -contains 'companyMemberships') {
-            $CompanyMemberships = $Payload.companyMemberships
-        }
         $UserManagements = $null
         if ($Payload.PSObject.Properties.Name -contains 'userManagements') {
             $UserManagements = $Payload.userManagements
@@ -50,8 +46,6 @@ function Test-LinkToMeJWT {
             Username = $Payload.username
             Roles = $Roles
             Permissions = $Permissions
-            CompanyId = $Payload.companyId
-            companyMemberships = $CompanyMemberships
             userManagements = $UserManagements
         }
     } catch {
