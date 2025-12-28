@@ -9,7 +9,7 @@ function Get-UserAuthContext {
     )
     
     # Parse and validate user role
-    $AllowedRoles = @('user', 'company_admin', 'company_owner', 'user_manager')
+    $AllowedRoles = @('user', 'user_manager')
     $ActualUserRole = $null
     $RolesArr = @()
     
@@ -42,28 +42,6 @@ function Get-UserAuthContext {
     $Roles = @($ActualUserRole)
     $Permissions = Get-DefaultRolePermissions -Role $ActualUserRole
     
-    # Lookup company memberships
-    $CompanyMemberships = @()
-    $CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
-    $CompanyUserEntities = Get-LinkToMeAzDataTableEntity @CompanyUsersTable -Filter "RowKey eq '$($User.RowKey)'"
-    
-    foreach ($cu in $CompanyUserEntities) {
-        $companyRole = $cu.Role
-        $companyPermissions = @()
-        if ($companyRole) {
-            $companyPermissions = Get-DefaultRolePermissions -Role $companyRole
-        }
-        # Ensure permissions is always an array
-        if ($companyPermissions -is [string]) {
-            $companyPermissions = @($companyPermissions)
-        }
-        $CompanyMemberships += @{
-            companyId = $cu.PartitionKey
-            role = $companyRole
-            permissions = $companyPermissions
-        }
-    }
-    
     # Build userManagements array
     $UserManagements = @()
     if ($User.HasUserManagers -or $User.IsUserManager) {
@@ -74,15 +52,15 @@ function Get-UserAuthContext {
             $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$($User.RowKey)' and State eq 'accepted'"
             foreach ($um in $managees) {
                 $manageePermissions = Get-DefaultRolePermissions -Role $um.Role
-                $user = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($um.RowKey)'" | Select-Object -First 1
+                $UserManager = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($um.RowKey)'" | Select-Object -First 1
                 $UserManagements += @{
                     UserId = $um.RowKey
                     role = $um.Role
                     state = $um.State
                     direction = 'manager'
                     permissions = $manageePermissions
-                    DisplayName = $user.DisplayName
-                    Email = $user.PartitionKey
+                    DisplayName = $UserManager.DisplayName
+                    Email = $UserManager.PartitionKey
                 }
             }
         }
@@ -95,7 +73,6 @@ function Get-UserAuthContext {
         UserRole = $ActualUserRole
         Roles = $Roles
         Permissions = $Permissions
-        CompanyMemberships = $CompanyMemberships
         UserManagements = $UserManagements
     }
 }

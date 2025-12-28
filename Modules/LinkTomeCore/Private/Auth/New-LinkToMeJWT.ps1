@@ -23,9 +23,6 @@ function New-LinkToMeJWT {
     
         [Parameter(ParameterSetName='Explicit')]
         [string[]]$Permissions = @(),
-    
-        [Parameter(ParameterSetName='Explicit')]
-        [object[]]$CompanyMemberships = $null,
         
         [Parameter(ParameterSetName='Explicit')]
         [object[]]$UserManagements = $null
@@ -39,7 +36,6 @@ function New-LinkToMeJWT {
         $Username = $authContext.Username
         $Roles = $authContext.Roles
         $Permissions = $authContext.Permissions
-        $CompanyMemberships = $authContext.CompanyMemberships
         $UserManagements = $authContext.UserManagements
     }
     
@@ -61,11 +57,6 @@ function New-LinkToMeJWT {
         iat = ([DateTimeOffset]::UtcNow).ToUnixTimeSeconds()
         exp = ([DateTimeOffset]::UtcNow.AddMinutes($ExpirationMinutes)).ToUnixTimeSeconds()
         iss = 'LinkTome-app'
-    }
-    
-    # Add companyMemberships if provided
-    if ($CompanyMemberships -and $CompanyMemberships.Count -gt 0) {
-        $Claims['companyMemberships'] = $CompanyMemberships
     }
     
     # Add userManagements if provided

@@ -5,62 +5,35 @@ $ModulesPath = Join-Path $ScriptRoot 'Modules'
 Import-Module (Join-Path $ModulesPath 'LinkTomeCore/LinkTomeCore.psd1') -Force
 Import-Module (Join-Path $ModulesPath 'AzBobbyTables') -Force
 
-# Create or update Company table with company metadata
-$CompanyTable = Get-LinkToMeTable -TableName 'Company'
-$CompanyEntity = @{
-    PartitionKey = $CompanyId
-    RowKey = $CompanyId
-    CompanyName = 'Acme Corp'
-    Created = (Get-Date).ToString('o')
-    Description = 'Demo company for LinkToMe'
-    Logo = 'https://example.com/logo.png'
-    Integrations = 'Slack, Zapier'
-}
-Write-Host "Creating company entity: $($CompanyEntity.CompanyName) ($CompanyId)" -ForegroundColor Yellow
-Add-LinkToMeAzDataTableEntity @CompanyTable -Entity $CompanyEntity -Force
-
 $env:AzureWebJobsStorage = 'UseDevelopmentStorage=true'
 $env:JWT_SECRET = 'dev-secret-change-in-production-please-make-this-very-long-and-random-at-least-64-characters'
 
 Write-Host "`nCreating test users and links in Azurite..." -ForegroundColor Cyan
-Write-Host "This will create 3 users (all with role 'user'), and company membership/roles are managed in CompanyUsers table." -ForegroundColor Cyan
+Write-Host "This will create 2 test users with role 'user'." -ForegroundColor Cyan
 
 $UsersTable = Get-LinkToMeTable -TableName 'Users'
 
-# Define test users with different roles
+# Define test users
 $TestUsers = @(
     @{
         Email = 'demo@example.com'
         Username = 'demo'
         DisplayName = 'Demo User'
-        Bio = 'This is a demo account for LinkToMe (regular user)'
+        Bio = 'This is a demo account for LinkToMe'
         Role = 'user'
         Password = 'password123'
     }
     @{
-        Email = 'admin@example.com'
-        Username = 'admin'
-        DisplayName = 'Admin User'
-        Bio = 'This is a company admin account for LinkToMe'
-        Role = 'company_admin'
-        Password = 'admin123'
-    }
-    @{
-        Email = 'owner@example.com'
-        Username = 'companyowner'
-        DisplayName = 'Company Owner'
-        Bio = 'This is a company owner account for LinkToMe'
-        Role = 'company_owner'
-        Password = 'owner123'
+        Email = 'test@example.com'
+        Username = 'test'
+        DisplayName = 'Test User'
+        Bio = 'This is a test account for LinkToMe'
+        Role = 'user'
+        Password = 'test123'
     }
 )
 
 $CreatedUsers = @()
-
-
-# Create test users and company-user associations
-$CompanyUsersTable = Get-LinkToMeTable -TableName 'CompanyUsers'
-$CompanyId = 'company-1'
 
 foreach ($TestUser in $TestUsers) {
     $PasswordData = New-PasswordHash -Password $TestUser.Password
@@ -71,7 +44,6 @@ foreach ($TestUser in $TestUsers) {
     $RolesJson = [string](@($TestUser.Role) | ConvertTo-Json -Compress)
     $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
 
-    $IsCompanyMember = $TestUser.Role -ne 'user'
     $User = @{
         PartitionKey = [string]$TestUser.Email
         RowKey = [string]$UserId
@@ -84,26 +56,10 @@ foreach ($TestUser in $TestUsers) {
         IsActive = [bool]$true
         Roles = '["user"]'
         Permissions = ([string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress))
-        CompanyMember = [bool]$IsCompanyMember
     }
 
     Write-Host "Creating user: $($User.PartitionKey) (Role: $($TestUser.Role))" -ForegroundColor Yellow
     Add-LinkToMeAzDataTableEntity @UsersTable -Entity $User -Force
-
-
-    if ($IsCompanyMember) {
-        # Add company-user association only for company members
-        $CompanyUser = @{
-            PartitionKey = $CompanyId
-            RowKey = $UserId
-            Role = $TestUser.Role
-            CompanyEmail = $TestUser.Email
-            CompanyDisplayName = $TestUser.DisplayName
-            Username = $TestUser.Username
-        }
-        Write-Host "Creating company-user: $($CompanyUser.Username) in $CompanyId as $($CompanyUser.Role)" -ForegroundColor Yellow
-        Add-LinkToMeAzDataTableEntity @CompanyUsersTable -Entity $CompanyUser -Force
-    }
 
     $CreatedUsers += @{
         UserId = $UserId
@@ -113,7 +69,7 @@ foreach ($TestUser in $TestUsers) {
 }
 
 
-# Create test links for the demo user (regular user)
+# Create test links for the demo user
 $LinksTable = Get-LinkToMeTable -TableName 'Links'
 $DemoUser = $CreatedUsers | Where-Object { $_.Username -eq 'demo' }
 
@@ -143,27 +99,17 @@ Write-Host "`n📋 User Accounts:" -ForegroundColor White
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Gray
 
 
-Write-Host "`n1️⃣  Regular User Account:" -ForegroundColor Cyan
+Write-Host "`n1️⃣  Demo User Account:" -ForegroundColor Cyan
 Write-Host "   Email:    demo@example.com" -ForegroundColor White
 Write-Host "   Password: password123" -ForegroundColor White
 Write-Host "   Username: demo" -ForegroundColor White
-Write-Host "   Role:     user (not a company member)" -ForegroundColor Yellow
+Write-Host "   Role:     user" -ForegroundColor Yellow
 
-Write-Host "`n2️⃣  Company Admin Account:" -ForegroundColor Cyan
-Write-Host "   Email:    admin@example.com" -ForegroundColor White
-Write-Host "   Password: admin123" -ForegroundColor White
-Write-Host "   Username: admin" -ForegroundColor White
-Write-Host "   Role:     user (company_admin in CompanyUsers)" -ForegroundColor Yellow
-
-Write-Host "`n3️⃣  Company Owner Account:" -ForegroundColor Cyan
-Write-Host "   Email:    owner@example.com" -ForegroundColor White
-Write-Host "   Password: owner123" -ForegroundColor White
-Write-Host "   Username: companyowner" -ForegroundColor White
-Write-Host "   Role:     user (company_owner in CompanyUsers)" -ForegroundColor Yellow
-Write-Host "`n🏢 Company Table Created:" -ForegroundColor Cyan
-Write-Host "   CompanyId: $CompanyId" -ForegroundColor White
-Write-Host "   Name:      Acme Corp" -ForegroundColor White
-Write-Host "   Description: Demo company for LinkToMe" -ForegroundColor White
+Write-Host "`n2️⃣  Test User Account:" -ForegroundColor Cyan
+Write-Host "   Email:    test@example.com" -ForegroundColor White
+Write-Host "   Password: test123" -ForegroundColor White
+Write-Host "   Username: test" -ForegroundColor White
+Write-Host "   Role:     user" -ForegroundColor Yellow
 
 Write-Host "`n✅ Test links created: $($Links.Count) (for demo user)" -ForegroundColor Green
 
@@ -172,5 +118,3 @@ Write-Host "`n🚀 You can now:" -ForegroundColor White
 Write-Host "1. Start the API: func start" -ForegroundColor Gray
 Write-Host "2. Test login: POST /api/public/login" -ForegroundColor Gray
 Write-Host "3. View public profile: GET /api/public/getUserProfile?username=demo" -ForegroundColor Gray
-Write-Host "4. Test role management: PUT /api/admin/assignRole (admin/owner only)" -ForegroundColor Gray
-Write-Host "5. Test permissions: GET /api/admin/getUserRoles (admin/owner only)" -ForegroundColor Gray

@@ -157,19 +157,18 @@ function New-LinkTomeCoreRequest {
             # Check permissions for the endpoint (context-aware)
 
             $RequiredPermissions = Get-EndpointPermissions -Endpoint $Endpoint
-            $CompanyId = $Request.Query.companyId
             $UserId = $Request.Query.UserId
             Write-Information "[Entrypoint] Permission check context:"
-            Write-Information "[Entrypoint] UserId: $UserId | CompanyId: $CompanyId"
+            Write-Information "[Entrypoint] UserId: $UserId"
             Write-Information "[Entrypoint] RequiredPermissions: $($RequiredPermissions -join ', ')"
             Write-Information "[Entrypoint] User object: $($User | ConvertTo-Json -Depth 10)"
             if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
-                $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -CompanyId $CompanyId -UserId $UserId
+                $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -UserId $UserId
                 Write-Information "[Entrypoint] Test-ContextAwarePermission result: $HasPermission"
                 if (-not $HasPermission) {
                     # Log permission denied attempt
                     $ClientIP = Get-ClientIPAddress -Request $Request
-                    $userContext = if ($UserId) { "UserId=$UserId" } elseif ($CompanyId) { "CompanyId=$CompanyId" } else { "Global" }
+                    $userContext = if ($UserId) { "UserId=$UserId" } else { "Global" }
                     Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -RequiredPermissions ($RequiredPermissions -join ', ') -UserPermissions ($User.Permissions -join ', ') -Context $userContext -Reason "User attempted to access endpoint without required permissions."
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::Forbidden
@@ -183,15 +182,9 @@ function New-LinkTomeCoreRequest {
 
             # Set context properties for downstream handlers
             # Set context-aware properties for downstream handlers using Add-Member
-            if ($CompanyId) {
-                $Request | Add-Member -NotePropertyName 'CompanyId' -NotePropertyValue $CompanyId -Force
-                $Request | Add-Member -NotePropertyName 'ContextUserId' -NotePropertyValue $CompanyId -Force
-                $Request | Add-Member -NotePropertyName 'ContextCompanyId' -NotePropertyValue $CompanyId -Force
-            }
             if ($UserId) {
                 $Request | Add-Member -NotePropertyName 'UserId' -NotePropertyValue $UserId -Force
                 $Request | Add-Member -NotePropertyName 'ContextUserId' -NotePropertyValue $UserId -Force
-                $Request | Add-Member -NotePropertyName 'ContextCompanyId' -NotePropertyValue $UserId -Force
             }
 
             # Add authenticated user to request
