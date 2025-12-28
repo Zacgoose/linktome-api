@@ -18,7 +18,6 @@ function Test-ContextAwarePermission {
         [object]$User,
         [Parameter(Mandatory)]
         [string[]]$RequiredPermissions,
-        [string]$CompanyId,
         [string]$UserId
     )
 
