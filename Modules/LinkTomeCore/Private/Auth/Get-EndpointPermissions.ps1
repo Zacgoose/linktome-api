@@ -29,11 +29,9 @@ function Get-EndpointPermissions {
         'admin/getDashboardStats' = @('read:dashboard')
         
         # User management endpoints (admin only)
-        'admin/getUsers' = @('read:users')
         'admin/createUser' = @('write:users')
         'admin/updateUser' = @('write:users')
         'admin/deleteUser' = @('manage:users')
-        'admin/assignRole' = @('manage:users')
         'admin/getUserRoles' = @('read:users')
     }
     
