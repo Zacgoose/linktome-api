@@ -68,17 +68,21 @@ function Get-UserAuthContext {
     $UserManagements = @()
     if ($User.HasUserManagers -or $User.IsUserManager) {
         $UserManagersTable = Get-LinkToMeTable -TableName 'UserManagers'
+        $UsersTable = Get-LinkToMeTable -TableName 'Users'
         
         if ($User.IsUserManager) {
             $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$($User.RowKey)' and State eq 'accepted'"
             foreach ($um in $managees) {
                 $manageePermissions = Get-DefaultRolePermissions -Role $um.Role
+                $user = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($um.RowKey)'" | Select-Object -First 1
                 $UserManagements += @{
                     UserId = $um.RowKey
                     role = $um.Role
                     state = $um.State
                     direction = 'manager'
                     permissions = $manageePermissions
+                    DisplayName = $user.DisplayName
+                    Email = $user.PartitionKey
                 }
             }
         }
