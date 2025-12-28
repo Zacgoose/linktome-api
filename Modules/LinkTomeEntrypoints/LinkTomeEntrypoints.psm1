@@ -105,7 +105,7 @@ function New-LinkTomeCoreRequest {
             # Define rate limits based on endpoint
             $RateLimitConfig = @{
                 'public/login' = @{ MaxRequests = 5; WindowSeconds = 60 }  # 5 attempts per minute
-                'public/signup' = @{ MaxRequests = 3; WindowSeconds = 3600 }  # 3 signups per hour
+                'public/signup' = @{ MaxRequests = 3; WindowSeconds = 300 }  # 3 signups per 5 minutes
             }
             
             $Config = $RateLimitConfig[$Endpoint]
@@ -116,10 +116,10 @@ function New-LinkTomeCoreRequest {
                     Write-Warning "Rate limit exceeded for $Endpoint from $ClientIP"
                     
                     # Log rate limit event
-                    Write-SecurityEvent -EventType 'RateLimitExceeded' -IpAddress $ClientIP -Endpoint $Endpoint -Metadata @{
+                    Write-SecurityEvent -EventType 'RateLimitExceeded' -IpAddress $ClientIP -Endpoint $Endpoint -Reason (ConvertTo-Json @{
                         RequestCount = $RateCheck.RequestCount
                         MaxRequests = $RateCheck.MaxRequests
-                    }
+                    })
                     
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::TooManyRequests
