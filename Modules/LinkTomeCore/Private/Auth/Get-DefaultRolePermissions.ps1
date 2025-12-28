@@ -1,6 +1,6 @@
 function Get-DefaultRolePermissions {
     <#
-    NOTE: Only 'user' and 'user_manager' permissions should be used for Users table/global context.
+    NOTE: This function now only supports user and user_manager roles for the simplified user management system.
     #>
     <#
     .SYNOPSIS
