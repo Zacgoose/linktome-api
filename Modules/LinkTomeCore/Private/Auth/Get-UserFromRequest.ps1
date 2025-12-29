@@ -14,7 +14,13 @@ function Get-UserFromRequest {
     $AuthCookieValue = $Request.Cookies.auth
     
     if (-not $AuthCookieValue) {
+        Write-Verbose "No auth cookie found in request"
         return $null
+    }
+    
+    # URL decode if needed (Azure Functions may pass encoded values)
+    if ($AuthCookieValue -match '%') {
+        $AuthCookieValue = [System.Web.HttpUtility]::UrlDecode($AuthCookieValue)
     }
     
     # Parse JSON from cookie to get accessToken
@@ -23,10 +29,12 @@ function Get-UserFromRequest {
         $Token = $AuthData.accessToken
     } catch {
         Write-Warning "Failed to parse auth cookie: $($_.Exception.Message)"
+        Write-Verbose "Auth cookie value: $AuthCookieValue"
         return $null
     }
     
     if (-not $Token) {
+        Write-Verbose "No accessToken found in auth cookie"
         return $null
     }
     
