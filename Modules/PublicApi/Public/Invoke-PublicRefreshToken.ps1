@@ -8,9 +8,15 @@ function Invoke-PublicRefreshToken {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
 
-    $Body = $Request.Body
+    # Try to get refresh token from cookie first
+    $RefreshTokenValue = $Request.Cookies.refreshToken
+    
+    # Fallback to request body for backward compatibility
+    if (-not $RefreshTokenValue -and $Request.Body.refreshToken) {
+        $RefreshTokenValue = $Request.Body.refreshToken
+    }
 
-    if (-not $Body.refreshToken) {
+    if (-not $RefreshTokenValue) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
@@ -22,7 +28,7 @@ function Invoke-PublicRefreshToken {
 
     try {
         # Validate refresh token from database
-        $TokenRecord = Get-RefreshToken -Token $Body.refreshToken
+        $TokenRecord = Get-RefreshToken -Token $RefreshTokenValue
         
         if (-not $TokenRecord) {
             # Log invalid refresh token attempt
@@ -69,7 +75,7 @@ function Invoke-PublicRefreshToken {
         $NewRefreshToken = New-RefreshToken
 
         # Invalidate old refresh token
-        Remove-RefreshToken -Token $Body.refreshToken
+        Remove-RefreshToken -Token $RefreshTokenValue
 
         # Store new refresh token (7 days expiration)
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
@@ -80,8 +86,6 @@ function Invoke-PublicRefreshToken {
         Write-SecurityEvent -EventType 'TokenRefreshed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/refreshToken'
 
         $Results = @{
-            accessToken = $NewAccessToken
-            refreshToken = $NewRefreshToken
             user = @{
                 UserId = $authContext.UserId
                 email = $authContext.Email
@@ -94,14 +98,38 @@ function Invoke-PublicRefreshToken {
         }
         $StatusCode = [HttpStatusCode]::OK
         
+        # Set HTTP-only cookies for new tokens
+        $Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = $NewAccessToken
+                MaxAge = 900  # 15 minutes (900 seconds)
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+            }
+            @{
+                Name = 'refreshToken'
+                Value = $NewRefreshToken
+                MaxAge = 604800  # 7 days (604800 seconds)
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+            }
+        )
+        
     } catch {
         Write-Error "Token refresh error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
+        $Cookies = @()
     }
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
         Body = $Results
+        Cookies = $Cookies
     }
 }

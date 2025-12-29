@@ -135,19 +135,41 @@ function Invoke-PublicSignup {
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
             }
-            accessToken = $Token
-            refreshToken = $RefreshToken
         }
         $StatusCode = [HttpStatusCode]::Created
+        
+        # Set HTTP-only cookies for tokens
+        $Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = $Token
+                MaxAge = 900  # 15 minutes (900 seconds)
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+            }
+            @{
+                Name = 'refreshToken'
+                Value = $RefreshToken
+                MaxAge = 604800  # 7 days (604800 seconds)
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+            }
+        )
         
     } catch {
         Write-Error "Signup error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Signup failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
+        $Cookies = @()
     }
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
         Body = $Results
+        Cookies = $Cookies
     }
 }
