@@ -58,7 +58,7 @@ function Invoke-PublicLogout {
         
         # Log logout event
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-SecurityEvent -EventType 'Logout' -IpAddress $ClientIP -Endpoint 'public/logout' -Success $Removed
+        Write-SecurityEvent -EventType 'Logout' -IpAddress $ClientIP -Endpoint 'public/logout'
         
         $Results = @{
             success = $true
