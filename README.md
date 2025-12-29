@@ -209,6 +209,7 @@ Documentation:
 ├── SECURITY_REVIEW.md                     # Comprehensive security analysis
 ├── SECURITY_IMPLEMENTATION_ROADMAP.md     # Security implementation guide
 ├── DEPLOYMENT_SECURITY_CHECKLIST.md       # Deployment checklist
+├── TIER_EXECUTIVE_SUMMARY.md             # Tier system overview (start here!)
 ├── TIER_BASED_API_ACCESS.md              # Tier/pricing model implementation guide
 ├── TIER_IMPLEMENTATION_QUICKSTART.md      # Quick start for tier implementation
 └── TIER_ARCHITECTURE_DIAGRAMS.md          # Visual diagrams for tier system
@@ -240,6 +241,7 @@ LinkTome API supports tier-based access restrictions to enable different pricing
 - **Enterprise Tier**: Advanced features with team management ($49/month, 10,000 requests/hour)
 
 For implementation details, see:
+- [TIER_EXECUTIVE_SUMMARY.md](./TIER_EXECUTIVE_SUMMARY.md) - **Start here!** Overview and navigation guide
 - [TIER_BASED_API_ACCESS.md](./TIER_BASED_API_ACCESS.md) - Complete implementation guide
 - [TIER_IMPLEMENTATION_QUICKSTART.md](./TIER_IMPLEMENTATION_QUICKSTART.md) - Quick start guide
 - [TIER_ARCHITECTURE_DIAGRAMS.md](./TIER_ARCHITECTURE_DIAGRAMS.md) - Visual architecture diagrams
