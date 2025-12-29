@@ -164,7 +164,22 @@ function New-LinkTomeCoreRequest {
             Write-Information "[Entrypoint] UserId: $UserId"
             Write-Information "[Entrypoint] RequiredPermissions: $($RequiredPermissions -join ', ')"
             Write-Information "[Entrypoint] User object: $($User | ConvertTo-Json -Depth 10)"
-            if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
+            
+            # If endpoint has no defined permissions, deny access by default (secure by default)
+            if (-not $RequiredPermissions) {
+                Write-Warning "[Entrypoint] No permissions defined for endpoint: $Endpoint - denying access"
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -Reason "Endpoint has no defined permissions (secure by default)."
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ 
+                        success = $false
+                        error = "Forbidden: Endpoint permissions not configured"
+                    }
+                }
+            }
+            
+            if ($RequiredPermissions.Count -gt 0) {
                 $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -UserId $UserId
                 Write-Information "[Entrypoint] Test-ContextAwarePermission result: $HasPermission"
                 if (-not $HasPermission) {
