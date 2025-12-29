@@ -4,13 +4,21 @@
 
 ## Overview
 
-This quick-start guide helps you understand how to restrict API access based on user account tiers (Free, Pro, Enterprise).
+This quick-start guide helps you understand how to restrict **direct API access** (via API keys) based on user account tiers (Free, Pro, Enterprise).
+
+## ⚠️ Important: UI vs API Access
+
+**Tier limits apply ONLY to API key requests, NOT to UI requests:**
+
+- ✅ **UI Requests** (from your web app via JWT cookies): **Unlimited** - Users can use the UI freely
+- 🔑 **API Key Requests** (for integrations): **Tier-limited** - Rate limited based on subscription
 
 ## 🎯 What You'll Achieve
 
-- Restrict API endpoints by subscription tier
-- Enforce rate limits based on tier
-- Limit features (e.g., max links) by tier
+- Issue API keys for programmatic access
+- Restrict API access by subscription tier
+- Enforce rate limits based on tier (API keys only)
+- Prevent login endpoint abuse
 - Track API usage per user
 - Handle tier upgrades/downgrades
 
@@ -19,13 +27,16 @@ This quick-start guide helps you understand how to restrict API access based on 
 ```
 User Request
     ↓
-Authentication (JWT) ✅
+Authentication (JWT cookie OR API key) ✅
     ↓
-Tier Access Check (NEW) ✅
+Is API Key? → YES → Tier Access Check (NEW) ✅
+    │            ↓
+    │         Rate Limit Check (NEW) ✅
+    │            ↓
+    NO → UI Request → NO tier limits ✅
+    │
     ↓
 Permission Check (Existing) ✅
-    ↓
-Rate Limit Check (NEW) ✅
     ↓
 Endpoint Handler ✅
     ↓
@@ -38,7 +49,9 @@ Response
 
 | Feature | Free | Pro | Enterprise |
 |---------|------|-----|------------|
-| **API Rate Limit** | 100/hour | 1,000/hour | 10,000/hour |
+| **UI Access** | Unlimited | Unlimited | Unlimited |
+| **API Keys** | ❌ None | ✅ 3 keys | ✅ Unlimited |
+| **API Rate Limit** | N/A | 1,000/hour | 10,000/hour |
 | **Max Links** | 5 | Unlimited | Unlimited |
 | **Analytics** | 7 days | Unlimited | Unlimited |
 | **Appearance Customization** | ❌ | ✅ | ✅ |
@@ -46,6 +59,53 @@ Response
 | **Cost** | $0 | $9/mo | $49/mo |
 
 ## 🔧 Implementation Steps
+
+### Step 0: Protect Login Endpoint (Critical!)
+
+**Problem**: Users could call `/login` programmatically to get JWT cookies and bypass API key limits.
+
+**Solution**: Add CAPTCHA and detect automation at login:
+
+```powershell
+# In Invoke-PublicLogin
+function Invoke-PublicLogin {
+    param($Request, $TriggerMetadata)
+    
+    # 1. Detect programmatic access
+    $IsUIRequest = Test-IsUIRequest -Request $Request
+    if (-not $IsUIRequest) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{
+                error = "Programmatic login not allowed"
+                message = "Create an API key for API access"
+            }
+        }
+    }
+    
+    # 2. Verify CAPTCHA
+    if (-not (Verify-CaptchaToken -Token $Body.captchaToken)) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "CAPTCHA verification failed" }
+        }
+    }
+    
+    # 3. Continue with normal login...
+}
+
+function Test-IsUIRequest {
+    param($Request)
+    
+    # Check for browser-specific headers
+    $Score = 0
+    if ($Request.Headers.'sec-fetch-site') { $Score += 2 }
+    if ($Request.Headers.'User-Agent' -match 'Chrome|Firefox|Safari') { $Score += 3 }
+    if ($Request.Headers.'User-Agent' -match 'curl|python|postman') { $Score -= 5 }
+    
+    return $Score -ge 5
+}
+```
 
 ### Step 1: Update User Schema
 

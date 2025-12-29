@@ -4,6 +4,20 @@
 
 This documentation package provides a **complete blueprint** for implementing tier-based API access restrictions in the LinkTome API to support different pricing models (Free, Pro, Enterprise).
 
+## ⚠️ Critical Distinction
+
+**Tier limits apply ONLY to direct API access (via API keys), NOT to UI usage:**
+
+- ✅ **UI Requests** (from your web app): **Unlimited for all users** regardless of tier
+- 🔑 **API Key Requests** (programmatic access): **Tier-limited** based on subscription
+
+This prevents users from:
+1. Calling `/login` programmatically to get JWT cookies
+2. Using those cookies to bypass API key tier limits
+3. Making unlimited API calls via curl/scripts
+
+**Solution**: Login endpoint protected with CAPTCHA + automation detection. API access requires API keys.
+
 ## 📚 Documentation Files
 
 ### 1. **TIER_BASED_API_ACCESS.md** (Comprehensive Guide)
@@ -11,6 +25,8 @@ This documentation package provides a **complete blueprint** for implementing ti
 **Audience**: Backend developers, DevOps engineers  
 **Content**:
 - Detailed explanation of current system architecture
+- **🆕 API Key Authentication System** - How to issue and validate API keys
+- **🆕 Login Endpoint Protection** - Prevent JWT cookie abuse with CAPTCHA
 - Complete database schema changes required
 - PowerShell code examples for all tier functions
 - Integration with payment processors (Stripe example)
@@ -24,6 +40,7 @@ This documentation package provides a **complete blueprint** for implementing ti
 **Purpose**: Fast implementation reference  
 **Audience**: Developers who want to get started quickly  
 **Content**:
+- **🆕 Step 0: Protect Login Endpoint** - Critical first step
 - Step-by-step implementation checklist
 - Code snippets ready to copy/paste
 - Quick tier comparison table
@@ -52,28 +69,40 @@ This documentation package provides a **complete blueprint** for implementing ti
 ### Tier System Overview
 The system supports three tiers with increasing capabilities:
 
-| Tier | Cost | Rate Limit | Max Links | Analytics | Team Management |
-|------|------|------------|-----------|-----------|-----------------|
-| **Free** | $0 | 100/hour | 5 | 7 days | ❌ |
-| **Pro** | $9/month | 1,000/hour | Unlimited | Unlimited | ❌ |
-| **Enterprise** | $49/month | 10,000/hour | Unlimited | Unlimited | ✅ |
+| Tier | Cost | UI Access | API Keys | API Rate Limit | Max Links | Team Mgmt |
+|------|------|-----------|----------|----------------|-----------|-----------|
+| **Free** | $0 | ✅ Unlimited | ❌ None | N/A | 5 | ❌ |
+| **Pro** | $9/month | ✅ Unlimited | ✅ 3 keys | 1,000/hour | Unlimited | ❌ |
+| **Enterprise** | $49/month | ✅ Unlimited | ✅ Unlimited | 10,000/hour | Unlimited | ✅ |
 
 ### How It Works
 
-1. **Authentication Layer** (Existing)
-   - JWT token validation
+1. **Authentication Layer** (Existing + Enhanced)
+   - JWT token validation (for UI requests)
+   - **🆕 API key validation** (for programmatic requests)
    - User identity verification
 
-2. **Tier Access Layer** (New)
+2. **🆕 Request Type Detection**
+   - Detect if request is from UI (JWT cookie) or API (API key)
+   - UI requests: No tier limits applied
+   - API requests: Apply tier limits
+
+3. **🆕 Login Protection Layer**
+   - CAPTCHA verification required
+   - Detect and block automation (curl, python, postman)
+   - Allow only browser-based login
+   - Prevent JWT cookie exploitation
+
+4. **Tier Access Layer** (New - API Keys Only)
    - Check if endpoint is allowed for user's tier
    - Enforce per-user rate limits based on tier
    - Return 402 Payment Required if tier insufficient
 
-3. **Permission Layer** (Existing)
+5. **Permission Layer** (Existing)
    - Check role-based permissions (user, user_manager)
    - Verify user has required permissions for endpoint
 
-4. **Feature Limits** (New)
+6. **Feature Limits** (New)
    - Enforce limits like max links, analytics retention
    - Check during endpoint execution
    - Return 402 if limit exceeded
