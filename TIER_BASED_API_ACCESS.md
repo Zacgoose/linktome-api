@@ -2,19 +2,32 @@
 
 ## Overview
 
-This document provides a comprehensive guide for implementing tier-based API access restrictions in the LinkTome API. The system will allow you to restrict direct API access based on user account tiers/pricing models (e.g., Free, Pro, Enterprise).
+This document provides a comprehensive guide for implementing tier-based API access restrictions in the LinkTome API. The system will allow you to restrict **direct API access** (via API keys) based on user account tiers/pricing models (e.g., Free, Pro, Enterprise).
+
+## ⚠️ Important Distinction
+
+**This tier system applies ONLY to direct API access, NOT to UI-based requests:**
+
+- ✅ **UI Requests** (from your frontend app via JWT cookies): **NO tier limits** - Users can use the UI freely regardless of tier
+- 🔑 **API Key Requests** (for integrations, external apps): **Tier limits apply** - Rate limited based on subscription tier
+
+This is the standard approach used by services like Stripe, GitHub, and Twilio where:
+- The web UI is free/unlimited for all users
+- API access for third-party integrations requires a paid plan
 
 ## Table of Contents
 
 1. [Current System Architecture](#current-system-architecture)
 2. [Proposed Tier System](#proposed-tier-system)
-3. [Database Schema Changes](#database-schema-changes)
-4. [Tier Enforcement Layer](#tier-enforcement-layer)
-5. [API Endpoint Tier Restrictions](#api-endpoint-tier-restrictions)
-6. [Rate Limiting by Tier](#rate-limiting-by-tier)
-7. [Backend Integration Requirements](#backend-integration-requirements)
-8. [Implementation Roadmap](#implementation-roadmap)
-9. [Monitoring and Analytics](#monitoring-and-analytics)
+3. [API Key Authentication System](#api-key-authentication-system)
+4. [Preventing JWT Cookie Abuse](#preventing-jwt-cookie-abuse)
+5. [Database Schema Changes](#database-schema-changes)
+6. [Tier Enforcement Layer](#tier-enforcement-layer)
+7. [API Endpoint Tier Restrictions](#api-endpoint-tier-restrictions)
+8. [Rate Limiting by Tier](#rate-limiting-by-tier)
+9. [Backend Integration Requirements](#backend-integration-requirements)
+10. [Implementation Roadmap](#implementation-roadmap)
+11. [Monitoring and Analytics](#monitoring-and-analytics)
 
 ---
 
@@ -53,37 +66,1021 @@ Users table stores:
 
 ---
 
+## API Key Authentication System
+
+### Why API Keys?
+
+To distinguish between UI requests and direct API access, you need an API key system:
+
+- **UI Requests**: Authenticated via JWT cookies (existing system) - **No tier limits**
+- **API Requests**: Authenticated via API keys in `Authorization: Bearer <key>` header - **Tier limits apply**
+
+### API Key Structure
+
+```powershell
+# API Key Format: ltm_<environment>_<random_string>
+# Examples:
+#   ltm_live_4x8Kf9mN2pQrSt3vWxYz1aBcDeFgHiJk
+#   ltm_test_7Lm9Np2Qr4St6Vw8Xy1Za3Bc5De7Fg9H
+
+# Prefix indicates:
+#   ltm_ = LinkToMe
+#   live_ = Production key
+#   test_ = Development/testing key
+```
+
+### Database Schema for API Keys
+
+Create new table: `ApiKeys`
+
+```powershell
+# Table: ApiKeys
+# Purpose: Store API keys for direct API access
+$ApiKey = @{
+    PartitionKey = [string]$UserId  # User who owns the key
+    RowKey = [string]$ApiKeyId  # Unique key ID (GUID)
+    
+    # Key Information
+    KeyHash = [string]$HashedKey  # SHA256 hash of the full API key
+    KeyPrefix = [string]'ltm_live_4x8K'  # First 16 chars for identification
+    
+    # Metadata
+    Name = [string]'Production Integration'  # User-defined name
+    CreatedAt = [datetime]$Now
+    LastUsedAt = [datetime]$null  # Track usage
+    ExpiresAt = [datetime]$null  # Optional expiration
+    
+    # Status
+    IsActive = [bool]$true  # Can be revoked
+    
+    # Permissions (optional - can restrict key to specific scopes)
+    Scopes = [string]'read:profile,write:links'  # JSON or comma-separated
+}
+```
+
+### API Key Authentication Flow
+
+```
+API Request with Authorization: Bearer ltm_live_xxx
+    ↓
+Parse API key from Authorization header
+    ↓
+Hash the key and look up in ApiKeys table
+    ↓
+If found and active:
+    ↓
+    Get User from ApiKey.PartitionKey
+    ↓
+    Check User.Tier
+    ↓
+    Apply tier limits (rate limiting, endpoint access)
+    ↓
+    Process request
+    
+If Authorization header is Cookie (JWT):
+    ↓
+    Existing JWT authentication
+    ↓
+    NO tier limits applied (UI request)
+    ↓
+    Process request normally
+```
+
+### Implementation Functions
+
+#### Get-UserFromApiKey
+
+Create `Modules/LinkTomeCore/Private/Auth/Get-UserFromApiKey.ps1`:
+
+```powershell
+function Get-UserFromApiKey {
+    <#
+    .SYNOPSIS
+        Authenticate user via API key
+    .DESCRIPTION
+        Validates API key and returns user object
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$ApiKey
+    )
+    
+    # Hash the provided key
+    $KeyHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash(
+        [System.Text.Encoding]::UTF8.GetBytes($ApiKey)
+    )
+    $KeyHashString = [System.BitConverter]::ToString($KeyHash) -replace '-', ''
+    
+    # Look up API key
+    $ApiKeysTable = Get-LinkToMeTable -TableName 'ApiKeys'
+    $ApiKeyRecord = Get-LinkToMeAzDataTableEntity @ApiKeysTable -Filter "KeyHash eq '$KeyHashString' and IsActive eq true" | Select-Object -First 1
+    
+    if (-not $ApiKeyRecord) {
+        return $null
+    }
+    
+    # Check expiration
+    if ($ApiKeyRecord.ExpiresAt -and $ApiKeyRecord.ExpiresAt -lt (Get-Date).ToUniversalTime()) {
+        return $null
+    }
+    
+    # Update last used timestamp
+    $ApiKeyRecord.LastUsedAt = (Get-Date).ToUniversalTime()
+    Add-LinkToMeAzDataTableEntity @ApiKeysTable -Entity $ApiKeyRecord -Force | Out-Null
+    
+    # Get user
+    $UsersTable = Get-LinkToMeTable -TableName 'Users'
+    $User = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($ApiKeyRecord.PartitionKey)'" | Select-Object -First 1
+    
+    # Add API key context
+    $User | Add-Member -NotePropertyName 'AuthMethod' -NotePropertyValue 'ApiKey' -Force
+    $User | Add-Member -NotePropertyName 'ApiKeyId' -NotePropertyValue $ApiKeyRecord.RowKey -Force
+    
+    return $User
+}
+```
+
+#### Update Get-UserFromRequest
+
+Modify existing function to check for API keys:
+
+```powershell
+function Get-UserFromRequest {
+    param(
+        [Parameter(Mandatory)]
+        $Request
+    )
+    
+    # Check for API key in Authorization header
+    if ($Request.Headers -and $Request.Headers.Authorization) {
+        $AuthHeader = $Request.Headers.Authorization
+        
+        # Check for Bearer token (API key)
+        if ($AuthHeader -match '^Bearer\s+(ltm_[a-z]+_[A-Za-z0-9]+)$') {
+            $ApiKey = $Matches[1]
+            $User = Get-UserFromApiKey -ApiKey $ApiKey
+            if ($User) {
+                return $User
+            }
+        }
+    }
+    
+    # Fall back to JWT cookie authentication (existing code)
+    $AuthCookieValue = $null
+    
+    if ($Request.Headers -and $Request.Headers.Cookie) {
+        # ... existing JWT cookie code ...
+    }
+    
+    return $null
+}
+```
+
+### API Key Management Endpoints
+
+Users need endpoints to manage their API keys:
+
+#### POST /admin/createApiKey
+Create a new API key
+
+```powershell
+function Invoke-AdminCreateApiKey {
+    param($Request, $TriggerMetadata)
+    
+    $User = $Request.AuthenticatedUser
+    $Body = $Request.Body
+    
+    # Generate API key
+    $RandomBytes = [byte[]]::new(32)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($RandomBytes)
+    $RandomString = [System.Convert]::ToBase64String($RandomBytes) -replace '[^A-Za-z0-9]', ''
+    $ApiKey = "ltm_live_$($RandomString.Substring(0, 32))"
+    
+    # Hash for storage
+    $KeyHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash(
+        [System.Text.Encoding]::UTF8.GetBytes($ApiKey)
+    )
+    $KeyHashString = [System.BitConverter]::ToString($KeyHash) -replace '-', ''
+    
+    # Store in database
+    $ApiKeysTable = Get-LinkToMeTable -TableName 'ApiKeys'
+    $ApiKeyId = "key-$(New-Guid)"
+    
+    $NewApiKey = @{
+        PartitionKey = $User.UserId
+        RowKey = $ApiKeyId
+        KeyHash = $KeyHashString
+        KeyPrefix = $ApiKey.Substring(0, 16)
+        Name = $Body.name ?? 'API Key'
+        CreatedAt = (Get-Date).ToUniversalTime()
+        IsActive = $true
+    }
+    
+    Add-LinkToMeAzDataTableEntity @ApiKeysTable -Entity $NewApiKey -Force
+    
+    # Return key ONCE (never shown again)
+    return [HttpResponseContext]@{
+        StatusCode = [HttpStatusCode]::Created
+        Body = @{
+            apiKey = $ApiKey  # ONLY TIME this is returned
+            keyId = $ApiKeyId
+            keyPrefix = $NewApiKey.KeyPrefix
+            name = $NewApiKey.Name
+            createdAt = $NewApiKey.CreatedAt
+        }
+    }
+}
+```
+
+#### GET /admin/listApiKeys
+List user's API keys (without revealing full keys)
+
+#### DELETE /admin/revokeApiKey
+Revoke an API key
+
+---
+
+## Preventing JWT Cookie Abuse
+
+### The Security Challenge
+
+**Problem 1**: Users could extract their JWT cookie from the browser and use it in curl/Postman to make unlimited API calls, bypassing API key tier limits.
+
+```bash
+# Example of potential abuse:
+curl -H "Cookie: auth={...}" https://api.linktome.com/admin/getProfile
+```
+
+**Problem 2 (More Critical)**: Users could programmatically call the `/login` endpoint to authenticate and get JWT cookies, then use those cookies for unlimited API access:
+
+```bash
+# Login programmatically
+curl -X POST https://api.linktome.com/public/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123"}' \
+  -c cookies.txt
+
+# Use the cookies for API calls
+curl -b cookies.txt https://api.linktome.com/admin/getProfile
+curl -b cookies.txt https://api.linktome.com/admin/getLinks
+# ... unlimited calls, bypassing API key tier limits
+```
+
+This is the **primary attack vector** since login is intentionally public and returns authentication cookies.
+
+### Solution: Protect the Login Endpoint
+
+#### Option 1: CAPTCHA on Login (Recommended for Public Apps)
+
+Add CAPTCHA verification to `/login` to prevent automated authentication:
+
+```powershell
+function Invoke-PublicLogin {
+    param($Request, $TriggerMetadata)
+    
+    $Body = $Request.Body
+    
+    # NEW: Require CAPTCHA for login
+    if (-not $Body.captchaToken) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{
+                error = "CAPTCHA verification required"
+                requiresCaptcha = $true
+            }
+        }
+    }
+    
+    # Verify CAPTCHA (Google reCAPTCHA v3 or hCaptcha)
+    $CaptchaValid = Verify-CaptchaToken -Token $Body.captchaToken -ExpectedAction 'login'
+    if (-not $CaptchaValid) {
+        Write-SecurityEvent -EventType 'LoginFailedCaptcha' -Email $Body.email -IpAddress (Get-ClientIPAddress -Request $Request)
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "CAPTCHA verification failed" }
+        }
+    }
+    
+    # Continue with normal login flow...
+}
+```
+
+**CAPTCHA Implementation**:
+
+```powershell
+function Verify-CaptchaToken {
+    param(
+        [string]$Token,
+        [string]$ExpectedAction = 'login'
+    )
+    
+    # Google reCAPTCHA v3 verification
+    $SecretKey = Get-EnvironmentVariable -Name 'RECAPTCHA_SECRET_KEY'
+    $VerifyUrl = 'https://www.google.com/recaptcha/api/siteverify'
+    
+    $Response = Invoke-RestMethod -Uri $VerifyUrl -Method Post -Body @{
+        secret = $SecretKey
+        response = $Token
+    }
+    
+    # Check if verification succeeded and score is high enough
+    if ($Response.success -and $Response.score -ge 0.5) {
+        if ($Response.action -eq $ExpectedAction) {
+            return $true
+        }
+    }
+    
+    return $false
+}
+```
+
+**Frontend Integration**:
+
+```javascript
+// In your login component
+async function handleLogin(email, password) {
+  // Get reCAPTCHA token
+  const captchaToken = await grecaptcha.execute('YOUR_SITE_KEY', {
+    action: 'login'
+  });
+  
+  // Send with login request
+  const response = await fetch('/api/public/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      password,
+      captchaToken  // Include CAPTCHA token
+    })
+  });
+}
+```
+
+#### Option 2: Device/Browser Fingerprinting
+
+Track device fingerprints and require verification for new devices:
+
+```powershell
+function Invoke-PublicLogin {
+    param($Request, $TriggerMetadata)
+    
+    # Generate device fingerprint from request
+    $DeviceFingerprint = Get-DeviceFingerprint -Request $Request
+    
+    # Check if this device has logged in before
+    $KnownDevice = Test-KnownDevice -UserId $UserId -Fingerprint $DeviceFingerprint
+    
+    if (-not $KnownDevice) {
+        # New device - require additional verification
+        # Option A: Send email verification
+        # Option B: Require 2FA
+        # Option C: CAPTCHA
+        
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{
+                error = "New device detected. Please verify your email to continue."
+                requiresVerification = $true
+            }
+        }
+    }
+    
+    # Known device - proceed normally
+}
+
+function Get-DeviceFingerprint {
+    param($Request)
+    
+    # Combine multiple signals
+    $Signals = @(
+        $Request.Headers.'User-Agent'
+        $Request.Headers.'Accept-Language'
+        $Request.Headers.'sec-ch-ua'
+        $Request.Headers.'sec-ch-ua-platform'
+        (Get-ClientIPAddress -Request $Request)
+    )
+    
+    $Combined = $Signals -join '|'
+    $Hash = [System.Security.Cryptography.SHA256]::Create().ComputeHash(
+        [System.Text.Encoding]::UTF8.GetBytes($Combined)
+    )
+    
+    return [System.BitConverter]::ToString($Hash) -replace '-', ''
+}
+```
+
+#### Option 3: Separate Auth Flow for API Access
+
+**Recommended Hybrid Approach**: Use different authentication for UI vs API:
+
+```
+UI Authentication (Current):
+  POST /public/login → Returns JWT cookies → Use in browser only
+
+API Authentication (New):
+  POST /public/api-token → Returns API key → Use in programmatic access
+```
+
+Modify login endpoint:
+
+```powershell
+function Invoke-PublicLogin {
+    param($Request, $TriggerMetadata)
+    
+    # Detect if this is a programmatic request
+    $IsUIRequest = Test-IsUIRequest -Request $Request -User $null
+    
+    if (-not $IsUIRequest) {
+        # This is a programmatic login attempt
+        Write-SecurityEvent -EventType 'ProgrammaticLoginAttempt' -Email $Body.email -IpAddress (Get-ClientIPAddress -Request $Request) -UserAgent $Request.Headers.'User-Agent'
+        
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{
+                error = "Programmatic login detected. For API access, please create an API key in your account settings."
+                message = "The /login endpoint is only for browser-based authentication. Use API keys for programmatic access."
+                documentation = "https://docs.linktome.com/api-keys"
+            }
+        }
+    }
+    
+    # Normal UI login continues...
+}
+```
+
+**Modified Test-IsUIRequest for Login** (no User parameter needed):
+
+```powershell
+function Test-IsUIRequest {
+    param([Parameter(Mandatory)]$Request)
+    
+    $UiScore = 0
+    
+    # Browser-specific headers (modern browsers send these)
+    $BrowserHeaders = @('sec-fetch-site', 'sec-fetch-mode', 'sec-fetch-dest', 'sec-ch-ua')
+    foreach ($Header in $BrowserHeaders) {
+        if ($Request.Headers.$Header) {
+            $UiScore += 2
+        }
+    }
+    
+    # Check User-Agent
+    $UserAgent = $Request.Headers.'User-Agent'
+    if ($UserAgent) {
+        if ($UserAgent -match '(Chrome|Firefox|Safari|Edge)\/[\d\.]+') {
+            $UiScore += 3
+        }
+        elseif ($UserAgent -match '(curl|python|postman|insomnia|httpie|wget|go-http-client)') {
+            $UiScore -= 5  # Strong negative for automation tools
+        }
+    }
+    
+    # Check Origin header
+    $AllowedOrigins = @('https://linktome.com', 'https://www.linktome.com')
+    if ($Request.Headers.Origin -and $AllowedOrigins -contains $Request.Headers.Origin) {
+        $UiScore += 3
+    }
+    
+    # Check Referer
+    if ($Request.Headers.Referer) {
+        $RefererHost = ([System.Uri]$Request.Headers.Referer).Host
+        if ($RefererHost -in @('linktome.com', 'www.linktome.com')) {
+            $UiScore += 2
+        }
+    }
+    
+    return $UiScore -ge 5
+}
+```
+
+#### Option 4: Two-Factor Authentication (2FA)
+
+Require 2FA for login, making automated login impossible:
+
+```powershell
+function Invoke-PublicLogin {
+    param($Request, $TriggerMetadata)
+    
+    # After password verification
+    if ($PasswordValid) {
+        # Check if user has 2FA enabled
+        if ($User.TwoFactorEnabled) {
+            # Don't return auth cookies yet
+            # Create temporary session token
+            $TempToken = New-TemporaryLoginToken -UserId $User.UserId
+            
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::OK
+                Body = @{
+                    requires2FA = $true
+                    tempToken = $TempToken
+                    message = "Please enter your 2FA code"
+                }
+            }
+        }
+        
+        # No 2FA - return cookies normally
+    }
+}
+
+# New endpoint: POST /public/verify2FA
+function Invoke-PublicVerify2FA {
+    param($Request, $TriggerMetadata)
+    
+    $TempToken = $Request.Body.tempToken
+    $TwoFactorCode = $Request.Body.code
+    
+    # Verify temp token and 2FA code
+    if (Verify-TwoFactorCode -Token $TempToken -Code $TwoFactorCode) {
+        # Now return auth cookies
+        # ... standard login response
+    }
+}
+```
+
+### Recommended Combined Strategy
+
+**For Maximum Security**:
+
+1. ✅ **CAPTCHA on login** - Blocks automated login attempts
+2. ✅ **Detect programmatic requests** - Block curl/scripts at login endpoint
+3. ✅ **Rate limiting on login** - Already implemented (5 attempts/min)
+4. ✅ **Require API keys for API access** - Clear separation of UI vs API
+5. ⚠️ **Optional: 2FA** - Additional security layer
+
+**Implementation Priority**:
+
+```powershell
+# High Priority (Implement First)
+# 1. Add CAPTCHA to login endpoint
+# 2. Detect and block obvious automation (curl, python, etc.)
+# 3. Clear error messages directing to API keys
+
+# Medium Priority
+# 4. Device fingerprinting for new device detection
+# 5. Enhanced rate limiting based on User-Agent
+
+# Low Priority (Nice to Have)
+# 6. 2FA for high-security accounts
+# 7. Behavioral analysis for suspicious login patterns
+```
+
+### Example: Complete Secure Login Implementation
+
+```powershell
+function Invoke-PublicLogin {
+    param($Request, $TriggerMetadata)
+    
+    $Body = $Request.Body
+    $ClientIP = Get-ClientIPAddress -Request $Request
+    
+    # 1. Check rate limiting (existing)
+    $RateCheck = Test-RateLimit -Identifier $ClientIP -Endpoint 'public/login' -MaxRequests 5 -WindowSeconds 60
+    if (-not $RateCheck.Allowed) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::TooManyRequests
+            Body = @{ error = "Too many login attempts" }
+        }
+    }
+    
+    # 2. Detect programmatic access
+    $IsUIRequest = Test-IsUIRequest -Request $Request
+    if (-not $IsUIRequest) {
+        Write-SecurityEvent -EventType 'ProgrammaticLoginBlocked' -Email $Body.email -IpAddress $ClientIP -UserAgent $Request.Headers.'User-Agent'
+        
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{
+                error = "Programmatic login is not allowed"
+                message = "For API access, create an API key at: https://linktome.com/settings/api-keys"
+            }
+        }
+    }
+    
+    # 3. Verify CAPTCHA
+    if (-not $Body.captchaToken) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "CAPTCHA required", requiresCaptcha = $true }
+        }
+    }
+    
+    $CaptchaValid = Verify-CaptchaToken -Token $Body.captchaToken -ExpectedAction 'login'
+    if (-not $CaptchaValid) {
+        Write-SecurityEvent -EventType 'LoginCaptchaFailed' -Email $Body.email -IpAddress $ClientIP
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "CAPTCHA verification failed" }
+        }
+    }
+    
+    # 4. Verify credentials (existing logic)
+    # ... password check ...
+    
+    # 5. Return JWT cookies (only for verified UI requests)
+    return [HttpResponseContext]@{
+        StatusCode = [HttpStatusCode]::OK
+        Body = @{ user = $UserInfo }
+        Headers = @{
+            'Set-Cookie' = $CookieHeader
+        }
+    }
+}
+```
+
+### Testing Your Protection
+
+Try these attacks to verify protection:
+
+```bash
+# Test 1: Direct curl login (should be blocked)
+curl -X POST https://api.linktome.com/public/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"pass123"}'
+# Expected: 403 Forbidden - "Programmatic login is not allowed"
+
+# Test 2: Login without CAPTCHA (should be blocked)
+# Even from browser, if CAPTCHA token missing
+# Expected: 400 Bad Request - "CAPTCHA required"
+
+# Test 3: Normal browser login (should work)
+# From your actual web app with CAPTCHA
+# Expected: 200 OK with cookies
+```
+
+### Multi-Layer Defense Strategy
+
+Implement multiple detection mechanisms to identify and block programmatic access using JWT cookies:
+
+#### 1. Request Origin Validation
+
+**Check Origin and Referer Headers**
+
+```powershell
+function Test-IsUIRequest {
+    <#
+    .SYNOPSIS
+        Detect if request comes from legitimate UI
+    .DESCRIPTION
+        Uses multiple signals to determine if request is from browser UI or programmatic access
+    #>
+    param(
+        [Parameter(Mandatory)]
+        $Request,
+        
+        [Parameter(Mandatory)]
+        $User
+    )
+    
+    # If using API key, it's NOT a UI request
+    if ($User.AuthMethod -eq 'ApiKey') {
+        return $false
+    }
+    
+    # Score-based system (higher score = more likely UI)
+    $UiScore = 0
+    $AllowedOrigins = @('https://linktome.com', 'https://www.linktome.com')
+    
+    # Check Origin header (present in CORS requests from browser)
+    if ($Request.Headers.Origin) {
+        if ($AllowedOrigins -contains $Request.Headers.Origin) {
+            $UiScore += 3  # Strong signal
+        } else {
+            $UiScore -= 2  # Wrong origin
+        }
+    }
+    
+    # Check Referer header
+    if ($Request.Headers.Referer) {
+        $RefererDomain = ([System.Uri]$Request.Headers.Referer).Host
+        if ($RefererDomain -in @('linktome.com', 'www.linktome.com')) {
+            $UiScore += 2
+        } else {
+            $UiScore -= 1
+        }
+    } else {
+        # No referer is suspicious for UI requests
+        $UiScore -= 1
+    }
+    
+    # Check User-Agent
+    $UserAgent = $Request.Headers.'User-Agent'
+    if ($UserAgent) {
+        # Known browsers
+        if ($UserAgent -match '(Chrome|Firefox|Safari|Edge)\/[\d\.]+') {
+            $UiScore += 2
+        }
+        # Mobile browsers
+        elseif ($UserAgent -match '(Mobile|Android|iPhone|iPad)') {
+            $UiScore += 2
+        }
+        # Known automation tools (curl, python, postman, etc.)
+        elseif ($UserAgent -match '(curl|python|postman|insomnia|httpie|wget|go-http-client)/i') {
+            $UiScore -= 3  # Strong negative signal
+        }
+        # Generic/minimal user agents
+        elseif ($UserAgent.Length -lt 20) {
+            $UiScore -= 1
+        }
+    } else {
+        # No user agent is very suspicious
+        $UiScore -= 2
+    }
+    
+    # Check for CORS preflight (OPTIONS requests from browsers)
+    if ($Request.Method -eq 'OPTIONS' -and $Request.Headers.'Access-Control-Request-Method') {
+        $UiScore += 2
+    }
+    
+    # Check for browser-specific headers
+    $BrowserHeaders = @('sec-fetch-site', 'sec-fetch-mode', 'sec-fetch-dest', 'sec-ch-ua')
+    foreach ($Header in $BrowserHeaders) {
+        if ($Request.Headers.$Header) {
+            $UiScore += 1  # Each browser header is a signal
+        }
+    }
+    
+    # Decision threshold
+    return $UiScore -ge 3
+}
+```
+
+#### 2. Integration into Request Router
+
+Update `LinkTomeEntrypoints.psm1`:
+
+```powershell
+# After authentication check for admin endpoints
+if ($Endpoint -match '^admin/') {
+    $User = Get-UserFromRequest -Request $Request
+    if (-not $User) {
+        # Handle auth failure...
+    }
+    
+    # NEW: Detect request type and apply tier limits accordingly
+    $IsUIRequest = Test-IsUIRequest -Request $Request -User $User
+    
+    if (-not $IsUIRequest) {
+        # This is a programmatic request (likely curl/API client)
+        
+        # If using JWT cookie (not API key), this is suspicious
+        if ($User.AuthMethod -ne 'ApiKey') {
+            # Log suspicious activity
+            $ClientIP = Get-ClientIPAddress -Request $Request
+            Write-SecurityEvent -EventType 'SuspiciousJWTUsage' -UserId $User.UserId -IpAddress $ClientIP -UserAgent $Request.Headers.'User-Agent'
+            
+            # Option 1: Block completely
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::Forbidden
+                Body = @{
+                    error = "Direct API access requires an API key. Please use an API key or access via the web interface."
+                    documentation = "https://docs.linktome.com/api-keys"
+                }
+            }
+            
+            # Option 2: Apply tier limits (treat like API key request)
+            # $TierCheck = Test-TierAccess -User $User -Endpoint $Endpoint
+            # if (-not $TierCheck.Allowed) { ... }
+        }
+        
+        # If using API key, apply tier limits normally
+        if ($User.AuthMethod -eq 'ApiKey') {
+            $TierCheck = Test-TierAccess -User $User -Endpoint $Endpoint
+            if (-not $TierCheck.Allowed) {
+                # Return 402 Payment Required...
+            }
+        }
+    }
+    
+    # Continue with permission check...
+}
+```
+
+#### 3. Enhanced Cookie Security
+
+Strengthen cookie attributes (already in place, but verify):
+
+```powershell
+# In login/signup responses
+$CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+
+# HttpOnly: Prevents JavaScript access (XSS protection)
+# Secure: Only sent over HTTPS
+# SameSite=Strict: Not sent on cross-site requests (CSRF protection)
+```
+
+**SameSite=Strict** is crucial - it prevents the cookie from being sent if:
+- Request originates from a different domain
+- User clicks a link from external site
+- curl/Postman makes a direct request (no browser context)
+
+However, **curl can still send cookies manually**, so we need additional checks.
+
+#### 4. Rate Limiting for Suspicious Requests
+
+Even if you can't perfectly detect all abuse, rate limiting helps:
+
+```powershell
+# Apply aggressive rate limits to suspicious requests
+if (-not $IsUIRequest -and $User.AuthMethod -ne 'ApiKey') {
+    # Use more restrictive rate limit for suspicious JWT usage
+    $RateCheck = Test-RateLimit -Identifier $User.UserId -Endpoint $Endpoint -MaxRequests 10 -WindowSeconds 60
+    
+    if (-not $RateCheck.Allowed) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::TooManyRequests
+            Body = @{
+                error = "Rate limit exceeded for direct API access. Please use an API key for programmatic access."
+            }
+        }
+    }
+}
+```
+
+#### 5. Request Fingerprinting
+
+Track request patterns to detect automation:
+
+```powershell
+# Detect automation patterns
+function Test-AutomationPattern {
+    param($UserId, $Endpoint)
+    
+    # Get recent requests from this user
+    $RecentRequests = Get-RecentUserRequests -UserId $UserId -Minutes 5
+    
+    # Suspicious patterns:
+    # - Exact same intervals between requests (e.g., every 5 seconds)
+    # - No human-like variations
+    # - Unusual request sequences
+    # - High request rate without typical UI navigation patterns
+    
+    $Intervals = @()
+    $PreviousTime = $null
+    foreach ($Req in $RecentRequests) {
+        if ($PreviousTime) {
+            $Intervals += ($Req.Timestamp - $PreviousTime).TotalSeconds
+        }
+        $PreviousTime = $Req.Timestamp
+    }
+    
+    # Check if intervals are suspiciously regular (variance < 0.5 seconds)
+    if ($Intervals.Count -gt 5) {
+        $AvgInterval = ($Intervals | Measure-Object -Average).Average
+        $Variance = ($Intervals | ForEach-Object { [Math]::Pow($_ - $AvgInterval, 2) } | Measure-Object -Average).Average
+        $StdDev = [Math]::Sqrt($Variance)
+        
+        if ($StdDev -lt 0.5) {
+            return $true  # Too regular, likely automation
+        }
+    }
+    
+    return $false
+}
+```
+
+#### 6. CAPTCHA Challenge (Nuclear Option)
+
+For highly suspicious requests:
+
+```powershell
+if (-not $IsUIRequest -and $User.AuthMethod -ne 'ApiKey') {
+    # Require CAPTCHA verification
+    if (-not $Request.Headers.'X-Captcha-Token') {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{
+                error = "CAPTCHA verification required"
+                requiresCaptcha = $true
+            }
+        }
+    }
+    
+    # Verify CAPTCHA token (Google reCAPTCHA, hCaptcha, etc.)
+    $CaptchaValid = Verify-CaptchaToken -Token $Request.Headers.'X-Captcha-Token'
+    if (-not $CaptchaValid) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{ error = "Invalid CAPTCHA" }
+        }
+    }
+}
+```
+
+### Detection Strategy Summary
+
+| Signal | Weight | Notes |
+|--------|--------|-------|
+| **API Key Auth** | ✅ Allowed | Legitimate programmatic access |
+| **JWT + Browser Headers** | ✅ Allowed | Legitimate UI access |
+| **JWT + curl User-Agent** | 🚫 Block | Obvious abuse |
+| **JWT + No Origin/Referer** | ⚠️ Suspicious | Apply strict rate limits |
+| **JWT + Wrong Origin** | 🚫 Block | Potential attack |
+| **JWT + Automation Pattern** | 🚫 Block | Detected bot behavior |
+
+### Recommended Policy
+
+**Option A: Strict (Recommended)**
+- JWT cookies ONLY work from your domain with proper browser headers
+- All other access MUST use API keys
+- Clear error message directing users to API key documentation
+
+**Option B: Lenient with Rate Limits**
+- Allow JWT cookie usage from anywhere
+- Apply strict rate limits (10 req/min) to suspicious requests
+- Monitor and alert on abuse patterns
+
+**Option C: Hybrid**
+- Allow JWT cookies from your domain (normal UI usage)
+- Apply strict rate limits to JWT cookies from other origins
+- Block obvious automation (curl, python, etc.)
+- Require API keys for sustained programmatic access
+
+### Implementation Code
+
+Create `Modules/LinkTomeCore/Private/Auth/Test-IsUIRequest.ps1` with the function above, then integrate into request router:
+
+```powershell
+# In LinkTomeEntrypoints.psm1, after JWT authentication
+if ($User) {
+    $IsUIRequest = Test-IsUIRequest -Request $Request -User $User
+    $Request | Add-Member -NotePropertyName 'IsUIRequest' -NotePropertyValue $IsUIRequest -Force
+    
+    # If NOT UI and NOT API key, apply restrictions
+    if (-not $IsUIRequest -and $User.AuthMethod -ne 'ApiKey') {
+        # Your policy here (block, rate limit, or challenge)
+    }
+}
+```
+
+### Monitoring and Alerts
+
+Track these metrics:
+
+```powershell
+# Security Events to log
+Write-SecurityEvent -EventType 'SuspiciousJWTUsage' -UserId $UserId -IpAddress $IP -UserAgent $UserAgent -Endpoint $Endpoint
+Write-SecurityEvent -EventType 'JWTAbuseBlocked' -UserId $UserId
+Write-SecurityEvent -EventType 'AutomationPatternDetected' -UserId $UserId
+
+# Alert thresholds:
+# - User has >10 blocked suspicious requests in 1 hour
+# - Automation pattern detected 3+ times
+# - Same IP attempting access for multiple users
+```
+
+### User Communication
+
+When blocking suspicious requests, provide helpful error messages:
+
+```json
+{
+  "error": "Direct API access requires an API key",
+  "message": "We detected this request was made programmatically. For API access, please create an API key in your account settings.",
+  "documentation": "https://docs.linktome.com/api-keys",
+  "accountSettings": "https://linktome.com/settings/api-keys"
+}
+```
+
+---
+
 ## Proposed Tier System
 
 ### Tier Definitions
 
+**Note**: Tier limits apply ONLY to API key requests, NOT to UI requests.
+
 #### Free Tier
 - **Cost**: $0/month
 - **Target**: Individual users testing the platform
-- **API Access**: Limited to basic profile and link management
-- **Rate Limits**: Strict (e.g., 100 requests/hour)
+- **Direct API Access**: Limited to basic profile and link management
+- **API Rate Limits**: 100 requests/hour (via API key only)
+- **UI Access**: Unlimited (no tier restrictions)
 - **Features**:
   - Basic profile management (read/write)
   - Up to 5 links
   - Basic analytics (last 7 days)
   - Public profile page
+  - No API keys (must upgrade for API access)
 
 #### Pro Tier
 - **Cost**: $9/month (example)
 - **Target**: Content creators and professionals
-- **API Access**: Full API access for personal use
-- **Rate Limits**: Moderate (e.g., 1,000 requests/hour)
+- **Direct API Access**: Full API access for personal use
+- **API Rate Limits**: 1,000 requests/hour (via API key)
+- **UI Access**: Unlimited (no tier restrictions)
 - **Features**:
   - Full profile management
   - Unlimited links
   - Full analytics (unlimited history)
   - Custom appearance themes
-  - API access for integrations
+  - API keys for integrations (up to 3 keys)
 
 #### Enterprise Tier
 - **Cost**: $49/month (example)
 - **Target**: Businesses and agencies
-- **API Access**: Full API access with higher limits
+- **Direct API Access**: Full API access with higher limits
 - **Rate Limits**: High (e.g., 10,000 requests/hour)
 - **Features**:
   - All Pro features
