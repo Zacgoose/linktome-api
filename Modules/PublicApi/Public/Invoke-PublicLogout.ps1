@@ -34,18 +34,17 @@ function Invoke-PublicLogout {
         }
         $StatusCode = [HttpStatusCode]::OK
         
-        # Clear cookies by setting Max-Age to 0
-        $CookieHeader1 = "accessToken=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
-        $CookieHeader2 = "refreshToken=; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
+        # Clear the auth cookie by setting Max-Age to 0
+        $CookieHeader = "auth=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
         
-        Write-Information "Clearing cookies for logout: $CookieHeader1 | $CookieHeader2"
+        Write-Information "Clearing auth cookie for logout"
         
-        # Return response as plain hashtable (NOT cast to [HttpResponseContext])
-        return @{
+        # Return response using HttpResponseContext
+        return [HttpResponseContext]@{
             StatusCode = $StatusCode
             Body = $Results
             Headers = @{
-                'Set-Cookie' = @($CookieHeader1, $CookieHeader2)
+                'Set-Cookie' = $CookieHeader
             }
         }
         

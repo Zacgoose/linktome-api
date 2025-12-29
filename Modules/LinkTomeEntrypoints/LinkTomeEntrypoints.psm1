@@ -48,15 +48,8 @@ function Receive-LinkTomeHttpTrigger {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
         
-        # Check if response has Headers with Set-Cookie array
-        # Don't cast to [HttpResponseContext] if Set-Cookie is an array
-        # to allow Azure Functions runtime to properly handle multiple cookies
-        if ($Response.Headers -and $Response.Headers['Set-Cookie'] -is [Array]) {
-            Write-Information "Passing response with Set-Cookie array without type cast"
-            Push-OutputBinding -Name Response -Value $Response
-        } else {
-            Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
-        }
+        # Always use HttpResponseContext for consistent handling
+        Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
     } else {
         # Fallback error response
         Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
