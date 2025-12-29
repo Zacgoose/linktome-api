@@ -165,8 +165,9 @@ function New-LinkTomeCoreRequest {
             Write-Information "[Entrypoint] RequiredPermissions: $($RequiredPermissions -join ', ')"
             Write-Information "[Entrypoint] User object: $($User | ConvertTo-Json -Depth 10)"
             
-            # If endpoint has no defined permissions, deny access by default (secure by default)
-            if (-not $RequiredPermissions) {
+            # If endpoint has no defined permissions (null), deny access by default (secure by default)
+            # Empty array means no permissions required (intentional), null means not configured (deny)
+            if ($null -eq $RequiredPermissions) {
                 Write-Warning "[Entrypoint] No permissions defined for endpoint: $Endpoint - denying access"
                 $ClientIP = Get-ClientIPAddress -Request $Request
                 Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -Reason "Endpoint has no defined permissions (secure by default)."
@@ -174,7 +175,7 @@ function New-LinkTomeCoreRequest {
                     StatusCode = [HttpStatusCode]::Forbidden
                     Body = @{ 
                         success = $false
-                        error = "Forbidden: Endpoint permissions not configured"
+                        error = "Access denied"
                     }
                 }
             }
