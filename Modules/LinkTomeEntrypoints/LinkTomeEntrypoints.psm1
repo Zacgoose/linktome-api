@@ -47,6 +47,8 @@ function Receive-LinkTomeHttpTrigger {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
+        
+        # Always use HttpResponseContext for consistent handling
         Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
     } else {
         # Fallback error response
@@ -147,10 +149,7 @@ function New-LinkTomeCoreRequest {
                 Write-SecurityEvent -EventType 'AuthFailed' -Endpoint $Endpoint -IpAddress $ClientIP
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized
-                    Body = @{ 
-                        success = $false
-                        error = "Unauthorized: Invalid or expired token" 
-                    }
+                    Body = @{ error = "Unauthorized: Invalid or expired token" }
                 }
             }
 
@@ -162,7 +161,20 @@ function New-LinkTomeCoreRequest {
             Write-Information "[Entrypoint] UserId: $UserId"
             Write-Information "[Entrypoint] RequiredPermissions: $($RequiredPermissions -join ', ')"
             Write-Information "[Entrypoint] User object: $($User | ConvertTo-Json -Depth 10)"
-            if ($RequiredPermissions -and $RequiredPermissions.Count -gt 0) {
+            
+            # If endpoint has no defined permissions (null), deny access by default (secure by default)
+            # Empty array means no permissions required (intentional), null means not configured (deny)
+            if ($null -eq $RequiredPermissions) {
+                Write-Warning "[Entrypoint] No permissions defined for endpoint: $Endpoint - denying access"
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -Reason "Endpoint has no defined permissions (secure by default)."
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "Access denied" }
+                }
+            }
+            
+            if ($RequiredPermissions.Count -gt 0) {
                 $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -UserId $UserId
                 Write-Information "[Entrypoint] Test-ContextAwarePermission result: $HasPermission"
                 if (-not $HasPermission) {
@@ -172,10 +184,7 @@ function New-LinkTomeCoreRequest {
                     Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -RequiredPermissions ($RequiredPermissions -join ', ') -UserPermissions ($User.Permissions -join ', ') -Context $userContext -Reason "User attempted to access endpoint without required permissions."
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::Forbidden
-                        Body = @{ 
-                            success = $false
-                            error = "Forbidden: Insufficient permissions. Required: $($RequiredPermissions -join ', ')"
-                        }
+                        Body = @{ error = "Forbidden: Insufficient permissions" }
                     }
                 }
             }

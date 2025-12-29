@@ -27,12 +27,12 @@ function Get-EndpointPermissions {
         # Analytics endpoints
         'admin/getAnalytics' = @('read:analytics')
         'admin/getDashboardStats' = @('read:dashboard')
-        
-        # User management endpoints (admin only)
-        'admin/createUser' = @('write:users')
-        'admin/updateUser' = @('write:users')
-        'admin/deleteUser' = @('manage:users')
-        'admin/getUserRoles' = @('read:users')
+
+        # User manager endpoints
+        'admin/UserManagerList' = @('list:user_manager')
+        'admin/UserManagerInvite' = @('invite:user_manager')
+        'admin/UserManagerRemove' = @('remove:user_manager')
+        'admin/UserManagerRespond' = @('respond:user_manager')
     }
     
     return $EndpointPermissions[$Endpoint]

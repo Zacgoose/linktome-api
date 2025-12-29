@@ -8,21 +8,50 @@ function Invoke-PublicRefreshToken {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
 
-    $Body = $Request.Body
-
-    if (-not $Body.refreshToken) {
+    # Get refresh token from auth cookie (Cookie header)
+    $AuthCookieValue = $null
+    
+    if ($Request.Headers -and $Request.Headers.Cookie) {
+        $CookieHeader = $Request.Headers.Cookie
+        
+        # Parse Cookie header to extract auth cookie
+        $Cookies = $CookieHeader -split ';' | ForEach-Object { $_.Trim() }
+        foreach ($Cookie in $Cookies) {
+            if ($Cookie -match '^auth=(.+)$') {
+                $AuthCookieValue = $Matches[1]
+                break
+            }
+        }
+    }
+    
+    if (-not $AuthCookieValue) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ 
-                success = $false
-                error = "Missing refresh token" 
-            }
+            Body = @{ error = "Missing auth cookie" }
+        }
+    }
+    
+    # Parse JSON from cookie to get refreshToken
+    try {
+        $AuthData = $AuthCookieValue | ConvertFrom-Json
+        $RefreshTokenValue = $AuthData.refreshToken
+    } catch {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Invalid auth cookie format" }
+        }
+    }
+
+    if (-not $RefreshTokenValue) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Missing refresh token in auth cookie" }
         }
     }
 
     try {
         # Validate refresh token from database
-        $TokenRecord = Get-RefreshToken -Token $Body.refreshToken
+        $TokenRecord = Get-RefreshToken -Token $RefreshTokenValue
         
         if (-not $TokenRecord) {
             # Log invalid refresh token attempt
@@ -31,10 +60,7 @@ function Invoke-PublicRefreshToken {
             
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
-                Body = @{ 
-                    success = $false
-                    error = "Invalid or expired refresh token" 
-                }
+                Body = @{ error = "Invalid or expired refresh token" }
             }
         }
         
@@ -46,10 +72,7 @@ function Invoke-PublicRefreshToken {
         if (-not $User) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
-                Body = @{ 
-                    success = $false
-                    error = "User not found" 
-                }
+                Body = @{ error = "User not found" }
             }
         }
         
@@ -69,7 +92,7 @@ function Invoke-PublicRefreshToken {
         $NewRefreshToken = New-RefreshToken
 
         # Invalidate old refresh token
-        Remove-RefreshToken -Token $Body.refreshToken
+        Remove-RefreshToken -Token $RefreshTokenValue
 
         # Store new refresh token (7 days expiration)
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
@@ -80,8 +103,6 @@ function Invoke-PublicRefreshToken {
         Write-SecurityEvent -EventType 'TokenRefreshed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/refreshToken'
 
         $Results = @{
-            accessToken = $NewAccessToken
-            refreshToken = $NewRefreshToken
             user = @{
                 UserId = $authContext.UserId
                 email = $authContext.Email
@@ -94,14 +115,33 @@ function Invoke-PublicRefreshToken {
         }
         $StatusCode = [HttpStatusCode]::OK
         
+        # Use single HTTP-only cookie with both new tokens as JSON
+        # This avoids Azure Functions PowerShell limitations with multiple Set-Cookie headers
+        $AuthData = @{
+            accessToken = $NewAccessToken
+            refreshToken = $NewRefreshToken
+        } | ConvertTo-Json -Compress
+        
+        $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+        
+        # Return response with HTTP-only cookie containing refreshed tokens
+        return [HttpResponseContext]@{
+            StatusCode = $StatusCode
+            Body = $Results
+            Headers = @{
+                'Set-Cookie' = $CookieHeader
+            }
+        }
+        
     } catch {
         Write-Error "Token refresh error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-    }
-
-    return [HttpResponseContext]@{
-        StatusCode = $StatusCode
-        Body = $Results
+        
+        # Return error response without cookies
+        return [HttpResponseContext]@{
+            StatusCode = $StatusCode
+            Body = $Results
+        }
     }
 }
