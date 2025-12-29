@@ -34,36 +34,42 @@ function Invoke-PublicLogout {
         }
         $StatusCode = [HttpStatusCode]::OK
         
+        # Return response without [HttpResponseContext] cast to allow proper cookie handling
+        # Use plain hashtable with cookies array to clear cookies
+        return @{
+            StatusCode = $StatusCode
+            Body = $Results
+            Cookies = @(
+                @{
+                    Name = 'accessToken'
+                    Value = ''
+                    Path = '/'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 0
+                }
+                @{
+                    Name = 'refreshToken'
+                    Value = ''
+                    Path = '/api/public/RefreshToken'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 0
+                }
+            )
+        }
+        
     } catch {
         Write-Error "Logout error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Logout failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-    }
-
-    # Return response without [HttpResponseContext] cast to allow proper cookie handling
-    # Use plain hashtable with cookies array to clear cookies
-    return @{
-        StatusCode = $StatusCode
-        Body = $Results
-        Cookies = @(
-            @{
-                Name = 'accessToken'
-                Value = ''
-                Path = '/'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 0
-            }
-            @{
-                Name = 'refreshToken'
-                Value = ''
-                Path = '/api/public/RefreshToken'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 0
-            }
-        )
+        
+        # Return error response without cookies
+        return [HttpResponseContext]@{
+            StatusCode = $StatusCode
+            Body = $Results
+        }
     }
 }

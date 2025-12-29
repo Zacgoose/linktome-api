@@ -91,36 +91,42 @@ function Invoke-PublicLogin {
         # Log successful login
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
+        # Return response without [HttpResponseContext] cast to allow proper cookie handling
+        # Use plain hashtable with cookies array
+        return @{
+            StatusCode = $StatusCode
+            Body = $Results
+            Cookies = @(
+                @{
+                    Name = 'accessToken'
+                    Value = $Token
+                    Path = '/'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 900
+                }
+                @{
+                    Name = 'refreshToken'
+                    Value = $RefreshToken
+                    Path = '/api/public/RefreshToken'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 604800
+                }
+            )
+        }
+        
     } catch {
         Write-Error "Login error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Login failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-    }
-
-    # Return response without [HttpResponseContext] cast to allow proper cookie handling
-    # Use plain hashtable with cookies array
-    return @{
-        StatusCode = $StatusCode
-        Body = $Results
-        Cookies = @(
-            @{
-                Name = 'accessToken'
-                Value = $Token
-                Path = '/'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 900
-            }
-            @{
-                Name = 'refreshToken'
-                Value = $RefreshToken
-                Path = '/api/public/RefreshToken'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 604800
-            }
-        )
+        
+        # Return error response without cookies
+        return [HttpResponseContext]@{
+            StatusCode = $StatusCode
+            Body = $Results
+        }
     }
 }
