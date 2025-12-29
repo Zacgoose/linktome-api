@@ -34,25 +34,36 @@ function Invoke-PublicLogout {
         }
         $StatusCode = [HttpStatusCode]::OK
         
-        # Clear cookies by setting Max-Age to 0 using Set-Cookie headers
-        # Azure Functions requires each Set-Cookie as a separate array element
-        $Headers = @{
-            'Set-Cookie' = @(
-                "accessToken=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0",
-                "refreshToken=; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
-            )
-        }
-        
     } catch {
         Write-Error "Logout error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Logout failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-        $Headers = @{}
     }
 
-    return [HttpResponseContext]@{
+    # Return response without [HttpResponseContext] cast to allow proper cookie handling
+    # Use plain hashtable with cookies array to clear cookies
+    return @{
         StatusCode = $StatusCode
-        Headers = $Headers
         Body = $Results
+        Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = ''
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 0
+            }
+            @{
+                Name = 'refreshToken'
+                Value = ''
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 0
+            }
+        )
     }
 }

@@ -47,7 +47,14 @@ function Receive-LinkTomeHttpTrigger {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
-        Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+        
+        # Don't cast to [HttpResponseContext] if response has Cookies property
+        # Azure Functions runtime needs plain hashtable to properly handle cookies
+        if ($Response.Cookies) {
+            Push-OutputBinding -Name Response -Value $Response
+        } else {
+            Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+        }
     } else {
         # Fallback error response
         Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
