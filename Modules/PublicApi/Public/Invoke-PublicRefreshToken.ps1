@@ -8,15 +8,39 @@ function Invoke-PublicRefreshToken {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
 
-    # Get refresh token from cookie
-    $RefreshTokenValue = $Request.Cookies.refreshToken
+    # Get refresh token from auth cookie (JSON format)
+    $AuthCookieValue = $Request.Cookies.auth
+    
+    if (-not $AuthCookieValue) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ 
+                success = $false
+                error = "Missing auth cookie" 
+            }
+        }
+    }
+    
+    # Parse JSON from cookie to get refreshToken
+    try {
+        $AuthData = $AuthCookieValue | ConvertFrom-Json
+        $RefreshTokenValue = $AuthData.refreshToken
+    } catch {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ 
+                success = $false
+                error = "Invalid auth cookie format" 
+            }
+        }
+    }
 
     if (-not $RefreshTokenValue) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
                 success = $false
-                error = "Missing refresh token" 
+                error = "Missing refresh token in auth cookie" 
             }
         }
     }
@@ -93,18 +117,23 @@ function Invoke-PublicRefreshToken {
         }
         $StatusCode = [HttpStatusCode]::OK
         
-        # Set HTTP-only cookies for new tokens using Set-Cookie headers
-        $CookieHeader1 = "accessToken=$NewAccessToken; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900"
-        $CookieHeader2 = "refreshToken=$NewRefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+        # Use single HTTP-only cookie with both new tokens as JSON
+        # This avoids Azure Functions PowerShell limitations with multiple Set-Cookie headers
+        $AuthData = @{
+            accessToken = $NewAccessToken
+            refreshToken = $NewRefreshToken
+        } | ConvertTo-Json -Compress
         
-        Write-Information "Setting new cookies for refresh: $CookieHeader1 | $CookieHeader2"
+        $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
         
-        # Return response as plain hashtable (NOT cast to [HttpResponseContext])
-        return @{
+        Write-Information "Setting auth cookie with refreshed tokens"
+        
+        # Return response using HttpResponseContext with single cookie
+        return [HttpResponseContext]@{
             StatusCode = $StatusCode
             Body = $Results
             Headers = @{
-                'Set-Cookie' = @($CookieHeader1, $CookieHeader2)
+                'Set-Cookie' = $CookieHeader
             }
         }
         

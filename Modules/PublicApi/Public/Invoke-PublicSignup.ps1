@@ -138,18 +138,23 @@ function Invoke-PublicSignup {
         }
         $StatusCode = [HttpStatusCode]::Created
         
-        # Set HTTP-only cookies for tokens using Set-Cookie headers
-        $CookieHeader1 = "accessToken=$Token; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900"
-        $CookieHeader2 = "refreshToken=$RefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+        # Use single HTTP-only cookie with both tokens as JSON
+        # This avoids Azure Functions PowerShell limitations with multiple Set-Cookie headers
+        $AuthData = @{
+            accessToken = $Token
+            refreshToken = $RefreshToken
+        } | ConvertTo-Json -Compress
         
-        Write-Information "Setting cookies for signup: $CookieHeader1 | $CookieHeader2"
+        $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
         
-        # Return response as plain hashtable (NOT cast to [HttpResponseContext])
-        return @{
+        Write-Information "Setting auth cookie for new user with both tokens"
+        
+        # Return response using HttpResponseContext with single cookie
+        return [HttpResponseContext]@{
             StatusCode = $StatusCode
             Body = $Results
             Headers = @{
-                'Set-Cookie' = @($CookieHeader1, $CookieHeader2)
+                'Set-Cookie' = $CookieHeader
             }
         }
         

@@ -91,20 +91,23 @@ function Invoke-PublicLogin {
         # Log successful login
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
-        # Set HTTP-only cookies for tokens using Set-Cookie headers
-        # Each cookie must be a properly formatted string
-        $CookieHeader1 = "accessToken=$Token; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900"
-        $CookieHeader2 = "refreshToken=$RefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+        # Use single HTTP-only cookie with both tokens as JSON
+        # This avoids Azure Functions PowerShell limitations with multiple Set-Cookie headers
+        $AuthData = @{
+            accessToken = $Token
+            refreshToken = $RefreshToken
+        } | ConvertTo-Json -Compress
         
-        Write-Information "Setting cookies: $CookieHeader1 | $CookieHeader2"
+        $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
         
-        # Return response as plain hashtable (NOT cast to [HttpResponseContext])
-        # This allows Azure Functions to properly handle the Set-Cookie array
-        return @{
+        Write-Information "Setting auth cookie with both tokens"
+        
+        # Return response using HttpResponseContext with single cookie
+        return [HttpResponseContext]@{
             StatusCode = $StatusCode
             Body = $Results
             Headers = @{
-                'Set-Cookie' = @($CookieHeader1, $CookieHeader2)
+                'Set-Cookie' = $CookieHeader
             }
         }
         
