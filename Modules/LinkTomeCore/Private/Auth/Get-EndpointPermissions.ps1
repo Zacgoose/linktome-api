@@ -30,6 +30,9 @@ function Get-EndpointPermissions {
 
         # User manager endpoints
         'admin/UserManagerList' = @('list:user_manager')
+        'admin/UserManagerInvite' = @('invite:user_manager')
+        'admin/UserManagerRemove' = @('remove:user_manager')
+        'admin/UserManagerRespond' = @('respond:user_manager')
     }
     
     return $EndpointPermissions[$Endpoint]
