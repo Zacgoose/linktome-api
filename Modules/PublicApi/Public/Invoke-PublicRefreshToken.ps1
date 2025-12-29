@@ -9,9 +9,32 @@ function Invoke-PublicRefreshToken {
     param($Request, $TriggerMetadata)
 
     # Get refresh token from auth cookie (JSON format)
-    $AuthCookieValue = $Request.Cookies.auth
+    # Try multiple ways to access the cookie value
+    $AuthCookieValue = $null
+    
+    # Method 1: Try Cookies collection
+    if ($Request.Cookies -and $Request.Cookies.auth) {
+        $AuthCookieValue = $Request.Cookies.auth
+        Write-Information "Got auth cookie from Cookies collection"
+    }
+    # Method 2: Parse from Cookie header
+    elseif ($Request.Headers -and $Request.Headers.Cookie) {
+        $CookieHeader = $Request.Headers.Cookie
+        Write-Information "Parsing auth cookie from Cookie header"
+        
+        # Parse Cookie header manually
+        $Cookies = $CookieHeader -split ';' | ForEach-Object { $_.Trim() }
+        foreach ($Cookie in $Cookies) {
+            if ($Cookie -match '^auth=(.+)$') {
+                $AuthCookieValue = $Matches[1]
+                Write-Information "Extracted auth cookie value from header"
+                break
+            }
+        }
+    }
     
     if (-not $AuthCookieValue) {
+        Write-Information "No auth cookie found in request (checked both Cookies and Cookie header)"
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
@@ -23,9 +46,12 @@ function Invoke-PublicRefreshToken {
     
     # Parse JSON from cookie to get refreshToken
     try {
+        Write-Information "Parsing auth cookie JSON for refresh token"
         $AuthData = $AuthCookieValue | ConvertFrom-Json
         $RefreshTokenValue = $AuthData.refreshToken
+        Write-Information "Successfully extracted refreshToken from auth cookie"
     } catch {
+        Write-Information "Failed to parse auth cookie: $($_.Exception.Message)"
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
             Body = @{ 
