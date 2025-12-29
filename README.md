@@ -204,10 +204,14 @@ linktome-api/
 └── version_latest.txt        # API version
 
 Documentation:
-├── SECURITY_REVIEW.md                    # Comprehensive security analysis
-├── SECURITY_IMPLEMENTATION_ROADMAP.md    # Implementation guide
-├── DEPLOYMENT_SECURITY_CHECKLIST.md      # Deployment checklist
-└── README.md                             # This file
+├── README.md                              # This file
+├── API_RESPONSE_FORMAT.md                 # API response format guide
+├── SECURITY_REVIEW.md                     # Comprehensive security analysis
+├── SECURITY_IMPLEMENTATION_ROADMAP.md     # Security implementation guide
+├── DEPLOYMENT_SECURITY_CHECKLIST.md       # Deployment checklist
+├── TIER_BASED_API_ACCESS.md              # Tier/pricing model implementation guide
+├── TIER_IMPLEMENTATION_QUICKSTART.md      # Quick start for tier implementation
+└── TIER_ARCHITECTURE_DIAGRAMS.md          # Visual diagrams for tier system
 ```
 
 ## Security
@@ -226,6 +230,19 @@ This API implements comprehensive security measures:
 For detailed security information, see:
 - [SECURITY_REVIEW.md](./SECURITY_REVIEW.md) - Complete security analysis
 - [DEPLOYMENT_SECURITY_CHECKLIST.md](./DEPLOYMENT_SECURITY_CHECKLIST.md) - Production deployment checklist
+
+## Tier-Based API Access & Monetization
+
+LinkTome API supports tier-based access restrictions to enable different pricing models:
+
+- **Free Tier**: Basic features with rate limits (100 requests/hour, 5 links max)
+- **Pro Tier**: Full API access for individuals ($9/month, 1,000 requests/hour)
+- **Enterprise Tier**: Advanced features with team management ($49/month, 10,000 requests/hour)
+
+For implementation details, see:
+- [TIER_BASED_API_ACCESS.md](./TIER_BASED_API_ACCESS.md) - Complete implementation guide
+- [TIER_IMPLEMENTATION_QUICKSTART.md](./TIER_IMPLEMENTATION_QUICKSTART.md) - Quick start guide
+- [TIER_ARCHITECTURE_DIAGRAMS.md](./TIER_ARCHITECTURE_DIAGRAMS.md) - Visual architecture diagrams
 
 ## Deployment
 
