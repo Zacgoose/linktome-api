@@ -27,10 +27,7 @@ function Invoke-PublicRefreshToken {
     if (-not $AuthCookieValue) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ 
-                success = $false
-                error = "Missing auth cookie" 
-            }
+            Body = @{ error = "Missing auth cookie" }
         }
     }
     
@@ -41,20 +38,14 @@ function Invoke-PublicRefreshToken {
     } catch {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ 
-                success = $false
-                error = "Invalid auth cookie format" 
-            }
+            Body = @{ error = "Invalid auth cookie format" }
         }
     }
 
     if (-not $RefreshTokenValue) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ 
-                success = $false
-                error = "Missing refresh token in auth cookie" 
-            }
+            Body = @{ error = "Missing refresh token in auth cookie" }
         }
     }
 
@@ -69,10 +60,7 @@ function Invoke-PublicRefreshToken {
             
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
-                Body = @{ 
-                    success = $false
-                    error = "Invalid or expired refresh token" 
-                }
+                Body = @{ error = "Invalid or expired refresh token" }
             }
         }
         
@@ -84,10 +72,7 @@ function Invoke-PublicRefreshToken {
         if (-not $User) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
-                Body = @{ 
-                    success = $false
-                    error = "User not found" 
-                }
+                Body = @{ error = "User not found" }
             }
         }
         

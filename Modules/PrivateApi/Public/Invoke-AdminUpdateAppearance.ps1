@@ -199,7 +199,6 @@ function Invoke-AdminUpdateAppearance {
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
         $Results = @{
-            success = $true
             theme = $UserData.Theme
             buttonStyle = $UserData.ButtonStyle
             fontFamily = $UserData.FontFamily

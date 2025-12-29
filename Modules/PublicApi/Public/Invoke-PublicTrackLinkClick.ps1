@@ -75,7 +75,6 @@ function Invoke-PublicTrackLinkClick {
             -LinkUrl $Link.Url
         
         $StatusCode = [HttpStatusCode]::OK
-        $Results = @{ success = $true }
         
     } catch {
         Write-Error "Track link click error: $($_.Exception.Message)"
@@ -85,6 +84,6 @@ function Invoke-PublicTrackLinkClick {
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Body = $Results
+        Body = @{}
     }
 }

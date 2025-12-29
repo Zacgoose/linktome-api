@@ -27,10 +27,7 @@ function Invoke-PublicLogout {
     if (-not $AuthCookieValue) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ 
-                success = $false
-                error = "Missing auth cookie" 
-            }
+            Body = @{ error = "Missing auth cookie" }
         }
     }
     
@@ -60,18 +57,15 @@ function Invoke-PublicLogout {
         $ClientIP = Get-ClientIPAddress -Request $Request
         Write-SecurityEvent -EventType 'Logout' -IpAddress $ClientIP -Endpoint 'public/logout'
         
-        $Results = @{
-            success = $true
-        }
         $StatusCode = [HttpStatusCode]::OK
         
         # Clear the auth cookie by setting Max-Age to 0
         $CookieHeader = "auth=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
         
-        # Return response with cleared cookie
+        # Return response with cleared cookie (empty body for success)
         return [HttpResponseContext]@{
             StatusCode = $StatusCode
-            Body = $Results
+            Body = @{}
             Headers = @{
                 'Set-Cookie' = $CookieHeader
             }

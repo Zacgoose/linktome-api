@@ -187,7 +187,6 @@ function Invoke-AdminUpdateLinks {
             }
         }
 
-        $Results = @{ success = $true }
         $StatusCode = [HttpStatusCode]::OK
 
     } catch {
@@ -198,6 +197,6 @@ function Invoke-AdminUpdateLinks {
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Body = $Results
+        Body = @{}
     }
 }

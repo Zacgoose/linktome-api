@@ -58,7 +58,6 @@ function Invoke-AdminUserManagerRemove {
         }
 
         $StatusCode = [HttpStatusCode]::OK
-        $Results = @{ success = $true; message = 'User management relationship removed.' }
     } catch {
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to remove user management relationship"
         $StatusCode = [HttpStatusCode]::BadRequest
@@ -66,6 +65,6 @@ function Invoke-AdminUserManagerRemove {
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Body = $Results
+        Body = @{}
     }
 }

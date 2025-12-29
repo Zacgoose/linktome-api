@@ -75,7 +75,6 @@ function Invoke-AdminUserManagerInvite {
         Add-LinkToMeAzDataTableEntity @UserManagersTable -Entity $entity -OperationType 'UpsertReplace'
 
         $StatusCode = [HttpStatusCode]::OK
-        $Results = @{ success = $true; message = 'Invite sent.' }
     }
     catch {
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to send invite"
@@ -84,6 +83,6 @@ function Invoke-AdminUserManagerInvite {
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Body       = $Results
+        Body       = @{}
     }
 }
