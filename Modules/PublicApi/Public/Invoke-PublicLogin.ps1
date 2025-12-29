@@ -98,8 +98,9 @@ function Invoke-PublicLogin {
         
         Write-Information "Setting cookies: $CookieHeader1 | $CookieHeader2"
         
-        # Return response with [HttpResponseContext] cast
-        return [HttpResponseContext]@{
+        # Return response as plain hashtable (NOT cast to [HttpResponseContext])
+        # This allows Azure Functions to properly handle the Set-Cookie array
+        return @{
             StatusCode = $StatusCode
             Body = $Results
             Headers = @{
