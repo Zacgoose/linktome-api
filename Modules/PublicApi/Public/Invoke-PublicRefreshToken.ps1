@@ -93,35 +93,23 @@ function Invoke-PublicRefreshToken {
         }
         $StatusCode = [HttpStatusCode]::OK
         
-        # Return response without [HttpResponseContext] cast to allow proper cookie handling
-        # Use plain hashtable with cookies array
-        return @{
+        # Set HTTP-only cookies for new tokens using Set-Cookie headers
+        $CookieHeader1 = "accessToken=$NewAccessToken; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900"
+        $CookieHeader2 = "refreshToken=$NewRefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+        
+        Write-Information "Setting new cookies for refresh: $CookieHeader1 | $CookieHeader2"
+        
+        return [HttpResponseContext]@{
             StatusCode = $StatusCode
             Body = $Results
-            Cookies = @(
-                @{
-                    Name = 'accessToken'
-                    Value = $NewAccessToken
-                    Path = '/'
-                    HttpOnly = $true
-                    Secure = $true
-                    SameSite = 'Strict'
-                    MaxAge = 900
-                }
-                @{
-                    Name = 'refreshToken'
-                    Value = $NewRefreshToken
-                    Path = '/api/public/RefreshToken'
-                    HttpOnly = $true
-                    Secure = $true
-                    SameSite = 'Strict'
-                    MaxAge = 604800
-                }
-            )
+            Headers = @{
+                'Set-Cookie' = @($CookieHeader1, $CookieHeader2)
+            }
         }
         
     } catch {
         Write-Error "Token refresh error: $($_.Exception.Message)"
+        Write-Information "Token refresh error details: $($_.Exception | ConvertTo-Json -Depth 5)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
         
