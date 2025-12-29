@@ -8,13 +8,8 @@ function Invoke-PublicRefreshToken {
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
 
-    # Try to get refresh token from cookie first
+    # Get refresh token from cookie
     $RefreshTokenValue = $Request.Cookies.refreshToken
-    
-    # Fallback to request body for backward compatibility
-    if (-not $RefreshTokenValue -and $Request.Body.refreshToken) {
-        $RefreshTokenValue = $Request.Body.refreshToken
-    }
 
     if (-not $RefreshTokenValue) {
         return [HttpResponseContext]@{
