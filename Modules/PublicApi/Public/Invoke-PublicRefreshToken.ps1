@@ -93,38 +93,25 @@ function Invoke-PublicRefreshToken {
         }
         $StatusCode = [HttpStatusCode]::OK
         
-        # Set HTTP-only cookies for new tokens
-        $Cookies = @(
-            @{
-                Name = 'accessToken'
-                Value = $NewAccessToken
-                Path = '/'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 900
-            }
-            @{
-                Name = 'refreshToken'
-                Value = $NewRefreshToken
-                Path = '/api/public/RefreshToken'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 604800
-            }
-        )
+        # Set HTTP-only cookies for new tokens using Set-Cookie headers
+        # Azure Functions requires each Set-Cookie as a separate array element
+        $Headers = @{
+            'Set-Cookie' = @(
+                "accessToken=$NewAccessToken; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900",
+                "refreshToken=$NewRefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+            )
+        }
         
     } catch {
         Write-Error "Token refresh error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-        $Cookies = @()
+        $Headers = @{}
     }
 
-    return @{
+    return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Cookies = $Cookies
+        Headers = $Headers
         Body = $Results
     }
 }
