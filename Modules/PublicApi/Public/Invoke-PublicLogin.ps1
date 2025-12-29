@@ -91,24 +91,38 @@ function Invoke-PublicLogin {
         # Log successful login
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
-        # Set HTTP-only cookies for tokens using Set-Cookie headers
-        $Headers = @{
-            'Set-Cookie' = @(
-                "accessToken=$Token; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900"
-                "refreshToken=$RefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
-            )
-        }
+        # Set HTTP-only cookies for tokens
+        $Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = $Token
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 900
+            }
+            @{
+                Name = 'refreshToken'
+                Value = $RefreshToken
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 604800
+            }
+        )
         
     } catch {
         Write-Error "Login error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Login failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-        $Headers = @{}
+        $Cookies = @()
     }
 
-    return [HttpResponseContext]@{
+    return @{
         StatusCode = $StatusCode
-        Headers = $Headers
+        Cookies = $Cookies
         Body = $Results
     }
 }

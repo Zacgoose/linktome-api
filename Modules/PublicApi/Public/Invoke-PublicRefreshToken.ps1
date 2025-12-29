@@ -93,24 +93,38 @@ function Invoke-PublicRefreshToken {
         }
         $StatusCode = [HttpStatusCode]::OK
         
-        # Set HTTP-only cookies for new tokens using Set-Cookie headers
-        $Headers = @{
-            'Set-Cookie' = @(
-                "accessToken=$NewAccessToken; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900"
-                "refreshToken=$NewRefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
-            )
-        }
+        # Set HTTP-only cookies for new tokens
+        $Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = $NewAccessToken
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 900
+            }
+            @{
+                Name = 'refreshToken'
+                Value = $NewRefreshToken
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 604800
+            }
+        )
         
     } catch {
         Write-Error "Token refresh error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-        $Headers = @{}
+        $Cookies = @()
     }
 
-    return [HttpResponseContext]@{
+    return @{
         StatusCode = $StatusCode
-        Headers = $Headers
+        Cookies = $Cookies
         Body = $Results
     }
 }
