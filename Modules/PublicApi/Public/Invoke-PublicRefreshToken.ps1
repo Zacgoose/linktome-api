@@ -93,36 +93,42 @@ function Invoke-PublicRefreshToken {
         }
         $StatusCode = [HttpStatusCode]::OK
         
+        # Return response without [HttpResponseContext] cast to allow proper cookie handling
+        # Use plain hashtable with cookies array
+        return @{
+            StatusCode = $StatusCode
+            Body = $Results
+            Cookies = @(
+                @{
+                    Name = 'accessToken'
+                    Value = $NewAccessToken
+                    Path = '/'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 900
+                }
+                @{
+                    Name = 'refreshToken'
+                    Value = $NewRefreshToken
+                    Path = '/api/public/RefreshToken'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 604800
+                }
+            )
+        }
+        
     } catch {
         Write-Error "Token refresh error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Token refresh failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-    }
-
-    # Return response without [HttpResponseContext] cast to allow proper cookie handling
-    # Use plain hashtable with cookies array
-    return @{
-        StatusCode = $StatusCode
-        Body = $Results
-        Cookies = @(
-            @{
-                Name = 'accessToken'
-                Value = $NewAccessToken
-                Path = '/'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 900
-            }
-            @{
-                Name = 'refreshToken'
-                Value = $NewRefreshToken
-                Path = '/api/public/RefreshToken'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 604800
-            }
-        )
+        
+        # Return error response without cookies
+        return [HttpResponseContext]@{
+            StatusCode = $StatusCode
+            Body = $Results
+        }
     }
 }

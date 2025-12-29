@@ -138,36 +138,42 @@ function Invoke-PublicSignup {
         }
         $StatusCode = [HttpStatusCode]::Created
         
+        # Return response without [HttpResponseContext] cast to allow proper cookie handling
+        # Use plain hashtable with cookies array
+        return @{
+            StatusCode = $StatusCode
+            Body = $Results
+            Cookies = @(
+                @{
+                    Name = 'accessToken'
+                    Value = $Token
+                    Path = '/'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 900
+                }
+                @{
+                    Name = 'refreshToken'
+                    Value = $RefreshToken
+                    Path = '/api/public/RefreshToken'
+                    HttpOnly = $true
+                    Secure = $true
+                    SameSite = 'Strict'
+                    MaxAge = 604800
+                }
+            )
+        }
+        
     } catch {
         Write-Error "Signup error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Signup failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-    }
-
-    # Return response without [HttpResponseContext] cast to allow proper cookie handling
-    # Use plain hashtable with cookies array
-    return @{
-        StatusCode = $StatusCode
-        Body = $Results
-        Cookies = @(
-            @{
-                Name = 'accessToken'
-                Value = $Token
-                Path = '/'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 900
-            }
-            @{
-                Name = 'refreshToken'
-                Value = $RefreshToken
-                Path = '/api/public/RefreshToken'
-                HttpOnly = $true
-                Secure = $true
-                SameSite = 'Strict'
-                MaxAge = 604800
-            }
-        )
+        
+        # Return error response without cookies
+        return [HttpResponseContext]@{
+            StatusCode = $StatusCode
+            Body = $Results
+        }
     }
 }
