@@ -149,10 +149,7 @@ function New-LinkTomeCoreRequest {
                 Write-SecurityEvent -EventType 'AuthFailed' -Endpoint $Endpoint -IpAddress $ClientIP
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized
-                    Body = @{ 
-                        success = $false
-                        error = "Unauthorized: Invalid or expired token" 
-                    }
+                    Body = @{ error = "Unauthorized: Invalid or expired token" }
                 }
             }
 
@@ -173,10 +170,7 @@ function New-LinkTomeCoreRequest {
                 Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -Reason "Endpoint has no defined permissions (secure by default)."
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Forbidden
-                    Body = @{ 
-                        success = $false
-                        error = "Access denied"
-                    }
+                    Body = @{ error = "Access denied" }
                 }
             }
             
@@ -190,10 +184,7 @@ function New-LinkTomeCoreRequest {
                     Write-SecurityEvent -EventType 'PermissionDenied' -UserId $User.UserId -Endpoint $Endpoint -IpAddress $ClientIP -RequiredPermissions ($RequiredPermissions -join ', ') -UserPermissions ($User.Permissions -join ', ') -Context $userContext -Reason "User attempted to access endpoint without required permissions."
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::Forbidden
-                        Body = @{ 
-                            success = $false
-                            error = "Forbidden: Insufficient permissions. Required: $($RequiredPermissions -join ', ')"
-                        }
+                        Body = @{ error = "Forbidden: Insufficient permissions" }
                     }
                 }
             }
