@@ -147,9 +147,7 @@ function Invoke-PublicSignup {
         
         $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
         
-        Write-Information "Setting auth cookie for new user with both tokens"
-        
-        # Return response using HttpResponseContext with single cookie
+        # Return response with HTTP-only cookie containing both tokens
         return [HttpResponseContext]@{
             StatusCode = $StatusCode
             Body = $Results
@@ -160,7 +158,6 @@ function Invoke-PublicSignup {
         
     } catch {
         Write-Error "Signup error: $($_.Exception.Message)"
-        Write-Information "Signup error details: $($_.Exception | ConvertTo-Json -Depth 5)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Signup failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
         

@@ -100,9 +100,7 @@ function Invoke-PublicLogin {
         
         $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
         
-        Write-Information "Setting auth cookie with both tokens"
-        
-        # Return response using HttpResponseContext with single cookie
+        # Return response with HTTP-only cookie containing both tokens
         return [HttpResponseContext]@{
             StatusCode = $StatusCode
             Body = $Results
@@ -113,7 +111,6 @@ function Invoke-PublicLogin {
         
     } catch {
         Write-Error "Login error: $($_.Exception.Message)"
-        Write-Information "Login error details: $($_.Exception | ConvertTo-Json -Depth 5)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Login failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
         
