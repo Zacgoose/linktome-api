@@ -34,24 +34,38 @@ function Invoke-PublicLogout {
         }
         $StatusCode = [HttpStatusCode]::OK
         
-        # Clear cookies by setting Max-Age to 0 using Set-Cookie headers
-        $Headers = @{
-            'Set-Cookie' = @(
-                "accessToken=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
-                "refreshToken=; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
-            )
-        }
+        # Clear cookies by setting MaxAge to 0
+        $Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = ''
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 0
+            }
+            @{
+                Name = 'refreshToken'
+                Value = ''
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 0
+            }
+        )
         
     } catch {
         Write-Error "Logout error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Logout failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-        $Headers = @{}
+        $Cookies = @()
     }
 
-    return [HttpResponseContext]@{
+    return @{
         StatusCode = $StatusCode
-        Headers = $Headers
+        Cookies = $Cookies
         Body = $Results
     }
 }

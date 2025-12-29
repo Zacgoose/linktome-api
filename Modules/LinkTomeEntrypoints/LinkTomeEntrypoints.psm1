@@ -47,7 +47,13 @@ function Receive-LinkTomeHttpTrigger {
         if ($Response.Body -is [PSCustomObject]) {
             $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
         }
-        Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+        
+        # If response contains Cookies, don't cast to [HttpResponseContext] to allow proper cookie handling
+        if ($Response.Cookies) {
+            Push-OutputBinding -Name Response -Value $Response
+        } else {
+            Push-OutputBinding -Name Response -Value ([HttpResponseContext]$Response)
+        }
     } else {
         # Fallback error response
         Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{

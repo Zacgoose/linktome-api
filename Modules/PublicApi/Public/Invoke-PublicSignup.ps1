@@ -138,24 +138,38 @@ function Invoke-PublicSignup {
         }
         $StatusCode = [HttpStatusCode]::Created
         
-        # Set HTTP-only cookies for tokens using Set-Cookie headers
-        $Headers = @{
-            'Set-Cookie' = @(
-                "accessToken=$Token; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900"
-                "refreshToken=$RefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
-            )
-        }
+        # Set HTTP-only cookies for tokens
+        $Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = $Token
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 900
+            }
+            @{
+                Name = 'refreshToken'
+                Value = $RefreshToken
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 604800
+            }
+        )
         
     } catch {
         Write-Error "Signup error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Signup failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-        $Headers = @{}
+        $Cookies = @()
     }
 
-    return [HttpResponseContext]@{
+    return @{
         StatusCode = $StatusCode
-        Headers = $Headers
+        Cookies = $Cookies
         Body = $Results
     }
 }
