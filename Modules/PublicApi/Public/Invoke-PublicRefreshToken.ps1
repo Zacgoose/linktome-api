@@ -99,7 +99,8 @@ function Invoke-PublicRefreshToken {
         
         Write-Information "Setting new cookies for refresh: $CookieHeader1 | $CookieHeader2"
         
-        return [HttpResponseContext]@{
+        # Return response as plain hashtable (NOT cast to [HttpResponseContext])
+        return @{
             StatusCode = $StatusCode
             Body = $Results
             Headers = @{

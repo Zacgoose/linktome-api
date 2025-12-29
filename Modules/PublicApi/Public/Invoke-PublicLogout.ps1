@@ -40,7 +40,8 @@ function Invoke-PublicLogout {
         
         Write-Information "Clearing cookies for logout: $CookieHeader1 | $CookieHeader2"
         
-        return [HttpResponseContext]@{
+        # Return response as plain hashtable (NOT cast to [HttpResponseContext])
+        return @{
             StatusCode = $StatusCode
             Body = $Results
             Headers = @{
