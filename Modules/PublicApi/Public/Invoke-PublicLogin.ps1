@@ -91,25 +91,36 @@ function Invoke-PublicLogin {
         # Log successful login
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
-        # Set HTTP-only cookies for tokens using Set-Cookie headers
-        # Azure Functions requires each Set-Cookie as a separate array element
-        $Headers = @{
-            'Set-Cookie' = @(
-                "accessToken=$Token; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900",
-                "refreshToken=$RefreshToken; Path=/api/public/RefreshToken; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
-            )
-        }
-        
     } catch {
         Write-Error "Login error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Login failed"
         $StatusCode = [HttpStatusCode]::InternalServerError
-        $Headers = @{}
     }
 
-    return [HttpResponseContext]@{
+    # Return response without [HttpResponseContext] cast to allow proper cookie handling
+    # Use plain hashtable with cookies array
+    return @{
         StatusCode = $StatusCode
-        Headers = $Headers
         Body = $Results
+        Cookies = @(
+            @{
+                Name = 'accessToken'
+                Value = $Token
+                Path = '/'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 900
+            }
+            @{
+                Name = 'refreshToken'
+                Value = $RefreshToken
+                Path = '/api/public/RefreshToken'
+                HttpOnly = $true
+                Secure = $true
+                SameSite = 'Strict'
+                MaxAge = 604800
+            }
+        )
     }
 }
