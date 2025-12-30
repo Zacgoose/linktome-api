@@ -4,6 +4,8 @@ function Invoke-AdminUpdateAppearance {
         Entrypoint
     .ROLE
         write:appearance
+    .DESCRIPTION
+        Updates the user's appearance settings including theme, header, wallpaper, buttons, text, and social icons.
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
@@ -25,201 +27,510 @@ function Invoke-AdminUpdateAppearance {
             }
         }
         
-        # Validate and update appearance settings
-        # Note: Need to use Add-Member to add new properties to table entity objects
-        
-        # Validate theme
-        if ($Body.theme) {
-            if ($Body.theme -notin @('light', 'dark', 'sunset', 'ocean', 'forest', 'custom')) {
-                return [HttpResponseContext]@{
-                    StatusCode = [HttpStatusCode]::BadRequest
-                    Body = @{ error = "Theme must be 'light', 'dark', 'sunset', 'ocean', 'forest', or 'custom'" }
-                }
-            }
-            if ($null -eq $UserData.Theme) {
-                $UserData | Add-Member -MemberType NoteProperty -Name 'Theme' -Value $Body.theme -Force
+        # Helper function to safely set property
+        function Set-EntityProperty {
+            param($Entity, $PropertyName, $Value)
+            if ($null -eq $Entity.$PropertyName) {
+                $Entity | Add-Member -MemberType NoteProperty -Name $PropertyName -Value $Value -Force
             } else {
-                $UserData.Theme = $Body.theme
+                $Entity.$PropertyName = $Value
             }
         }
         
-        # Validate buttonStyle
+        # Validation patterns
+        $hexColorRegex = '^#[0-9A-Fa-f]{6}$'
+        $urlRegex = '^https?://'
+        
+        # Valid enum values
+        $validThemes = @('custom', 'air', 'blocks', 'lake', 'mineral', 'agate', 'astrid', 'aura', 'bloom', 'breeze', 'light', 'dark', 'sunset', 'ocean', 'forest')
+        $validProfileImageLayouts = @('classic', 'hero')
+        $validTitleStyles = @('text', 'logo')
+        $validWallpaperTypes = @('fill', 'gradient', 'blur', 'pattern', 'image', 'video')
+        $validPatternTypes = @('grid', 'dots', 'lines', 'waves', 'geometric')
+        $validButtonTypes = @('solid', 'glass', 'outline')
+        $validCornerRadii = @('square', 'rounded', 'pill')
+        $validShadows = @('none', 'subtle', 'strong', 'hard')
+        $validHoverEffects = @('none', 'lift', 'glow', 'fill')
+        $validTitleSizes = @('small', 'large')
+        $validFonts = @('inter', 'space-mono', 'poppins', 'roboto', 'playfair', 'oswald', 'lato', 'montserrat', 'raleway', 'dm-sans', 'default', 'serif', 'mono')
+        $validButtonStyles = @('rounded', 'square', 'pill')
+        $validLayoutStyles = @('centered', 'card')
+        
+        # === Theme ===
+        if ($Body.PSObject.Properties.Match('theme').Count -gt 0) {
+            if ($Body.theme -and $Body.theme -notin $validThemes) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::BadRequest
+                    Body = @{ error = "Invalid theme value" }
+                }
+            }
+            Set-EntityProperty -Entity $UserData -PropertyName 'Theme' -Value $Body.theme
+        }
+        
+        if ($Body.PSObject.Properties.Match('customTheme').Count -gt 0) {
+            Set-EntityProperty -Entity $UserData -PropertyName 'CustomTheme' -Value ([bool]$Body.customTheme)
+        }
+        
+        # === Header ===
+        if ($Body.header) {
+            if ($Body.header.profileImageLayout) {
+                if ($Body.header.profileImageLayout -notin $validProfileImageLayouts) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Profile image layout must be 'classic' or 'hero'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ProfileImageLayout' -Value $Body.header.profileImageLayout
+            }
+            
+            if ($Body.header.titleStyle) {
+                if ($Body.header.titleStyle -notin $validTitleStyles) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Title style must be 'text' or 'logo'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'TitleStyle' -Value $Body.header.titleStyle
+            }
+            
+            if ($Body.header.PSObject.Properties.Match('logoUrl').Count -gt 0) {
+                if ($Body.header.logoUrl -and $Body.header.logoUrl -notmatch $urlRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Logo URL must be a valid http or https URL" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'LogoUrl' -Value $Body.header.logoUrl
+            }
+            
+            if ($Body.header.displayName) {
+                $NameCheck = Test-InputLength -Value $Body.header.displayName -MaxLength 100 -FieldName "Display name"
+                if (-not $NameCheck.Valid) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = $NameCheck.Message }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'DisplayName' -Value $Body.header.displayName
+            }
+            
+            if ($Body.header.PSObject.Properties.Match('bio').Count -gt 0) {
+                if ($Body.header.bio) {
+                    $BioCheck = Test-InputLength -Value $Body.header.bio -MaxLength 500 -FieldName "Bio"
+                    if (-not $BioCheck.Valid) {
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::BadRequest
+                            Body = @{ error = $BioCheck.Message }
+                        }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'Bio' -Value $Body.header.bio
+            }
+        }
+        
+        # === Profile Image URL ===
+        if ($Body.PSObject.Properties.Match('profileImageUrl').Count -gt 0) {
+            if ($Body.profileImageUrl -and $Body.profileImageUrl -notmatch $urlRegex) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::BadRequest
+                    Body = @{ error = "Profile image URL must be a valid http or https URL" }
+                }
+            }
+            Set-EntityProperty -Entity $UserData -PropertyName 'Avatar' -Value $Body.profileImageUrl
+        }
+        
+        # === Wallpaper ===
+        if ($Body.wallpaper) {
+            if ($Body.wallpaper.type) {
+                if ($Body.wallpaper.type -notin $validWallpaperTypes) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Wallpaper type must be 'fill', 'gradient', 'blur', 'pattern', 'image', or 'video'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperType' -Value $Body.wallpaper.type
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('color').Count -gt 0) {
+                if ($Body.wallpaper.color -and $Body.wallpaper.color -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Wallpaper color must be a valid hex color (e.g., #ffffff)" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperColor' -Value $Body.wallpaper.color
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('gradientStart').Count -gt 0) {
+                if ($Body.wallpaper.gradientStart -and $Body.wallpaper.gradientStart -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Gradient start color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperGradientStart' -Value $Body.wallpaper.gradientStart
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('gradientEnd').Count -gt 0) {
+                if ($Body.wallpaper.gradientEnd -and $Body.wallpaper.gradientEnd -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Gradient end color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperGradientEnd' -Value $Body.wallpaper.gradientEnd
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('gradientDirection').Count -gt 0) {
+                $direction = [int]$Body.wallpaper.gradientDirection
+                if ($direction -lt 0 -or $direction -gt 360) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Gradient direction must be between 0 and 360" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperGradientDirection' -Value $direction
+            }
+            
+            if ($Body.wallpaper.patternType) {
+                if ($Body.wallpaper.patternType -notin $validPatternTypes) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Pattern type must be 'grid', 'dots', 'lines', 'waves', or 'geometric'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperPatternType' -Value $Body.wallpaper.patternType
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('patternColor').Count -gt 0) {
+                if ($Body.wallpaper.patternColor -and $Body.wallpaper.patternColor -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Pattern color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperPatternColor' -Value $Body.wallpaper.patternColor
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('imageUrl').Count -gt 0) {
+                if ($Body.wallpaper.imageUrl -and $Body.wallpaper.imageUrl -notmatch $urlRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Wallpaper image URL must be a valid http or https URL" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperImageUrl' -Value $Body.wallpaper.imageUrl
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('videoUrl').Count -gt 0) {
+                if ($Body.wallpaper.videoUrl -and $Body.wallpaper.videoUrl -notmatch $urlRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Wallpaper video URL must be a valid http or https URL" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperVideoUrl' -Value $Body.wallpaper.videoUrl
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('blur').Count -gt 0) {
+                $blur = [int]$Body.wallpaper.blur
+                if ($blur -lt 0 -or $blur -gt 100) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Blur must be between 0 and 100" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperBlur' -Value $blur
+            }
+            
+            if ($Body.wallpaper.PSObject.Properties.Match('opacity').Count -gt 0) {
+                $opacity = [double]$Body.wallpaper.opacity
+                if ($opacity -lt 0 -or $opacity -gt 1) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Opacity must be between 0 and 1" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperOpacity' -Value $opacity
+            }
+        }
+        
+        # === Buttons ===
+        if ($Body.buttons) {
+            if ($Body.buttons.type) {
+                if ($Body.buttons.type -notin $validButtonTypes) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Button type must be 'solid', 'glass', or 'outline'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonType' -Value $Body.buttons.type
+            }
+            
+            if ($Body.buttons.cornerRadius) {
+                if ($Body.buttons.cornerRadius -notin $validCornerRadii) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Corner radius must be 'square', 'rounded', or 'pill'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonCornerRadius' -Value $Body.buttons.cornerRadius
+            }
+            
+            if ($Body.buttons.shadow) {
+                if ($Body.buttons.shadow -notin $validShadows) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Shadow must be 'none', 'subtle', 'strong', or 'hard'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonShadow' -Value $Body.buttons.shadow
+            }
+            
+            if ($Body.buttons.PSObject.Properties.Match('backgroundColor').Count -gt 0) {
+                if ($Body.buttons.backgroundColor -and $Body.buttons.backgroundColor -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Button background color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonBackgroundColor' -Value $Body.buttons.backgroundColor
+            }
+            
+            if ($Body.buttons.PSObject.Properties.Match('textColor').Count -gt 0) {
+                if ($Body.buttons.textColor -and $Body.buttons.textColor -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Button text color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonTextColor' -Value $Body.buttons.textColor
+            }
+            
+            if ($Body.buttons.PSObject.Properties.Match('borderColor').Count -gt 0) {
+                if ($Body.buttons.borderColor -and $Body.buttons.borderColor -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Button border color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonBorderColor' -Value $Body.buttons.borderColor
+            }
+            
+            if ($Body.buttons.hoverEffect) {
+                if ($Body.buttons.hoverEffect -notin $validHoverEffects) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Hover effect must be 'none', 'lift', 'glow', or 'fill'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonHoverEffect' -Value $Body.buttons.hoverEffect
+            }
+        }
+        
+        # === Text ===
+        if ($Body.text) {
+            if ($Body.text.titleFont) {
+                if ($Body.text.titleFont -notin $validFonts) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Invalid title font" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'TitleFont' -Value $Body.text.titleFont
+            }
+            
+            if ($Body.text.PSObject.Properties.Match('titleColor').Count -gt 0) {
+                if ($Body.text.titleColor -and $Body.text.titleColor -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Title color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'TitleColor' -Value $Body.text.titleColor
+            }
+            
+            if ($Body.text.titleSize) {
+                if ($Body.text.titleSize -notin $validTitleSizes) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Title size must be 'small' or 'large'" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'TitleSize' -Value $Body.text.titleSize
+            }
+            
+            if ($Body.text.bodyFont) {
+                if ($Body.text.bodyFont -notin $validFonts) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Invalid body font" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'BodyFont' -Value $Body.text.bodyFont
+            }
+            
+            if ($Body.text.PSObject.Properties.Match('pageTextColor').Count -gt 0) {
+                if ($Body.text.pageTextColor -and $Body.text.pageTextColor -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Page text color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'PageTextColor' -Value $Body.text.pageTextColor
+            }
+            
+            if ($Body.text.PSObject.Properties.Match('buttonTextColor').Count -gt 0) {
+                if ($Body.text.buttonTextColor -and $Body.text.buttonTextColor -notmatch $hexColorRegex) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Button text color must be a valid hex color" }
+                    }
+                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonTextColor' -Value $Body.text.buttonTextColor
+            }
+        }
+        
+        # === Footer ===
+        if ($Body.PSObject.Properties.Match('hideFooter').Count -gt 0) {
+            Set-EntityProperty -Entity $UserData -PropertyName 'HideFooter' -Value ([bool]$Body.hideFooter)
+        }
+        
+        # === Legacy support ===
         if ($Body.buttonStyle) {
-            if ($Body.buttonStyle -notin @('rounded', 'square', 'pill')) {
+            if ($Body.buttonStyle -notin $validButtonStyles) {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::BadRequest
                     Body = @{ error = "Button style must be 'rounded', 'square', or 'pill'" }
                 }
             }
-            if ($null -eq $UserData.ButtonStyle) {
-                $UserData | Add-Member -MemberType NoteProperty -Name 'ButtonStyle' -Value $Body.buttonStyle -Force
-            } else {
-                $UserData.ButtonStyle = $Body.buttonStyle
-            }
+            Set-EntityProperty -Entity $UserData -PropertyName 'ButtonStyle' -Value $Body.buttonStyle
         }
         
-        # Validate fontFamily
         if ($Body.fontFamily) {
-            if ($Body.fontFamily -notin @('default', 'serif', 'mono', 'poppins', 'roboto')) {
+            if ($Body.fontFamily -notin $validFonts) {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::BadRequest
-                    Body = @{ error = "Font family must be 'default', 'serif', 'mono', 'poppins', or 'roboto'" }
+                    Body = @{ error = "Invalid font family" }
                 }
             }
-            if ($null -eq $UserData.FontFamily) {
-                $UserData | Add-Member -MemberType NoteProperty -Name 'FontFamily' -Value $Body.fontFamily -Force
-            } else {
-                $UserData.FontFamily = $Body.fontFamily
-            }
+            Set-EntityProperty -Entity $UserData -PropertyName 'FontFamily' -Value $Body.fontFamily
         }
         
-        # Validate layoutStyle
         if ($Body.layoutStyle) {
-            if ($Body.layoutStyle -notin @('centered', 'card')) {
+            if ($Body.layoutStyle -notin $validLayoutStyles) {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::BadRequest
                     Body = @{ error = "Layout style must be 'centered' or 'card'" }
                 }
             }
-            if ($null -eq $UserData.LayoutStyle) {
-                $UserData | Add-Member -MemberType NoteProperty -Name 'LayoutStyle' -Value $Body.layoutStyle -Force
-            } else {
-                $UserData.LayoutStyle = $Body.layoutStyle
-            }
+            Set-EntityProperty -Entity $UserData -PropertyName 'LayoutStyle' -Value $Body.layoutStyle
         }
         
-        # Validate hex color codes
-        $hexColorRegex = '^#[0-9A-Fa-f]{6}$'
-        
-        # Handle nested colors object
+        # Handle legacy colors object
         if ($Body.colors) {
-            if ($Body.colors.primary) {
-                if ($Body.colors.primary -notmatch $hexColorRegex) {
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Primary color must be a valid hex color (e.g., #000000)" }
+            foreach ($colorProp in @('primary', 'secondary', 'background', 'buttonBackground', 'buttonText')) {
+                if ($Body.colors.$colorProp) {
+                    if ($Body.colors.$colorProp -notmatch $hexColorRegex) {
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::BadRequest
+                            Body = @{ error = "$colorProp color must be a valid hex color" }
+                        }
                     }
-                }
-                if ($null -eq $UserData.ColorPrimary) {
-                    $UserData | Add-Member -MemberType NoteProperty -Name 'ColorPrimary' -Value $Body.colors.primary -Force
-                } else {
-                    $UserData.ColorPrimary = $Body.colors.primary
-                }
-            }
-            
-            if ($Body.colors.secondary) {
-                if ($Body.colors.secondary -notmatch $hexColorRegex) {
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Secondary color must be a valid hex color (e.g., #666666)" }
-                    }
-                }
-                if ($null -eq $UserData.ColorSecondary) {
-                    $UserData | Add-Member -MemberType NoteProperty -Name 'ColorSecondary' -Value $Body.colors.secondary -Force
-                } else {
-                    $UserData.ColorSecondary = $Body.colors.secondary
-                }
-            }
-            
-            if ($Body.colors.background) {
-                if ($Body.colors.background -notmatch $hexColorRegex) {
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Background color must be a valid hex color (e.g., #ffffff)" }
-                    }
-                }
-                if ($null -eq $UserData.ColorBackground) {
-                    $UserData | Add-Member -MemberType NoteProperty -Name 'ColorBackground' -Value $Body.colors.background -Force
-                } else {
-                    $UserData.ColorBackground = $Body.colors.background
-                }
-            }
-            
-            if ($Body.colors.buttonBackground) {
-                if ($Body.colors.buttonBackground -notmatch $hexColorRegex) {
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Button background color must be a valid hex color (e.g., #000000)" }
-                    }
-                }
-                if ($null -eq $UserData.ColorButtonBackground) {
-                    $UserData | Add-Member -MemberType NoteProperty -Name 'ColorButtonBackground' -Value $Body.colors.buttonBackground -Force
-                } else {
-                    $UserData.ColorButtonBackground = $Body.colors.buttonBackground
-                }
-            }
-            
-            if ($Body.colors.buttonText) {
-                if ($Body.colors.buttonText -notmatch $hexColorRegex) {
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Button text color must be a valid hex color (e.g., #ffffff)" }
-                    }
-                }
-                if ($null -eq $UserData.ColorButtonText) {
-                    $UserData | Add-Member -MemberType NoteProperty -Name 'ColorButtonText' -Value $Body.colors.buttonText -Force
-                } else {
-                    $UserData.ColorButtonText = $Body.colors.buttonText
+                    $propName = "Color" + (Get-Culture).TextInfo.ToTitleCase($colorProp)
+                    Set-EntityProperty -Entity $UserData -PropertyName $propName -Value $Body.colors.$colorProp
                 }
             }
         }
         
-        # Handle customGradient object
+        # Handle legacy customGradient object
         if ($Body.customGradient) {
             if ($Body.customGradient.start) {
                 if ($Body.customGradient.start -notmatch $hexColorRegex) {
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Custom gradient start color must be a valid hex color (e.g., #ff0000)" }
+                        Body = @{ error = "Custom gradient start color must be a valid hex color" }
                     }
                 }
-                if ($null -eq $UserData.CustomGradientStart) {
-                    $UserData | Add-Member -MemberType NoteProperty -Name 'CustomGradientStart' -Value $Body.customGradient.start -Force
-                } else {
-                    $UserData.CustomGradientStart = $Body.customGradient.start
-                }
+                Set-EntityProperty -Entity $UserData -PropertyName 'CustomGradientStart' -Value $Body.customGradient.start
             }
             
             if ($Body.customGradient.end) {
                 if ($Body.customGradient.end -notmatch $hexColorRegex) {
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Custom gradient end color must be a valid hex color (e.g., #00ff00)" }
+                        Body = @{ error = "Custom gradient end color must be a valid hex color" }
                     }
                 }
-                if ($null -eq $UserData.CustomGradientEnd) {
-                    $UserData | Add-Member -MemberType NoteProperty -Name 'CustomGradientEnd' -Value $Body.customGradient.end -Force
-                } else {
-                    $UserData.CustomGradientEnd = $Body.customGradient.end
+                Set-EntityProperty -Entity $UserData -PropertyName 'CustomGradientEnd' -Value $Body.customGradient.end
+            }
+        }
+        
+        # === Handle Social Icons ===
+        if ($Body.socialIcons) {
+            $SocialTable = Get-LinkToMeTable -TableName 'SocialIcons'
+            
+            # Get existing social icons
+            $ExistingIcons = @(Get-LinkToMeAzDataTableEntity @SocialTable -Filter "PartitionKey eq '$SafeUserId'")
+            
+            foreach ($icon in $Body.socialIcons) {
+                $op = ($icon.operation ?? 'update').ToLower()
+                
+                switch ($op) {
+                    'add' {
+                        if (-not $icon.platform -or -not $icon.url) {
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::BadRequest
+                                Body = @{ error = "Social icon requires platform and url" }
+                            }
+                        }
+                        $NewIcon = @{
+                            PartitionKey = $UserId
+                            RowKey = 'social-' + (New-Guid).ToString()
+                            Platform = $icon.platform
+                            Url = $icon.url
+                            Order = if ($null -ne $icon.order) { [int]$icon.order } else { 0 }
+                            Active = if ($null -ne $icon.active) { [bool]$icon.active } else { $true }
+                        }
+                        Add-LinkToMeAzDataTableEntity @SocialTable -Entity $NewIcon -Force
+                    }
+                    'update' {
+                        if (-not $icon.id) {
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::BadRequest
+                                Body = @{ error = "Social icon id required for update" }
+                            }
+                        }
+                        $ExistingIcon = $ExistingIcons | Where-Object { $_.RowKey -eq $icon.id } | Select-Object -First 1
+                        if ($ExistingIcon) {
+                            if ($icon.platform) { $ExistingIcon.Platform = $icon.platform }
+                            if ($icon.url) { $ExistingIcon.Url = $icon.url }
+                            if ($null -ne $icon.order) { $ExistingIcon.Order = [int]$icon.order }
+                            if ($null -ne $icon.active) { $ExistingIcon.Active = [bool]$icon.active }
+                            Add-LinkToMeAzDataTableEntity @SocialTable -Entity $ExistingIcon -Force
+                        }
+                    }
+                    'remove' {
+                        if (-not $icon.id) {
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::BadRequest
+                                Body = @{ error = "Social icon id required for remove" }
+                            }
+                        }
+                        $ExistingIcon = $ExistingIcons | Where-Object { $_.RowKey -eq $icon.id } | Select-Object -First 1
+                        if ($ExistingIcon) {
+                            Remove-AzDataTableEntity -Entity $ExistingIcon -Context $SocialTable.Context
+                        }
+                    }
                 }
             }
         }
         
-        # Save updated appearance
+        # Save updated user data
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
-        $Results = @{
-            theme = $UserData.Theme
-            buttonStyle = $UserData.ButtonStyle
-            fontFamily = $UserData.FontFamily
-            layoutStyle = $UserData.LayoutStyle
-            colors = @{
-                primary = $UserData.ColorPrimary
-                secondary = $UserData.ColorSecondary
-                background = $UserData.ColorBackground
-                buttonBackground = $UserData.ColorButtonBackground
-                buttonText = $UserData.ColorButtonText
-            }
-        }
-        
-        # Add customGradient if it exists
-        if ($UserData.CustomGradientStart -and $UserData.CustomGradientEnd) {
-            $Results.customGradient = @{
-                start = $UserData.CustomGradientStart
-                end = $UserData.CustomGradientEnd
-            }
-        }
-        
+        # Return success with current appearance
+        $Results = @{ success = $true }
         $StatusCode = [HttpStatusCode]::OK
         
     } catch {

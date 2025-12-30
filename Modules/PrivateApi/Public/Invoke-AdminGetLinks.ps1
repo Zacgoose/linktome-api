@@ -4,20 +4,24 @@ function Invoke-AdminGetLinks {
         Entrypoint
     .ROLE
         read:links
+    .DESCRIPTION
+        Returns the user's links and link groups with all properties including thumbnail, layout, animation, schedule, and lock settings.
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
     $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
-
     try {
-        $Table = Get-LinkToMeTable -TableName 'Links'
+        $LinksTable = Get-LinkToMeTable -TableName 'Links'
+        $GroupsTable = Get-LinkToMeTable -TableName 'LinkGroups'
         
         # Sanitize UserId for query
         $SafeUserId = Protect-TableQueryValue -Value $UserId
-        $Links = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
-        $Results = @($Links | ForEach-Object {
+        # Get all links
+        $Links = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+        
+        $LinkResults = @($Links | ForEach-Object {
             $linkObj = @{
                 id = $_.RowKey
                 title = $_.Title
@@ -25,12 +29,61 @@ function Invoke-AdminGetLinks {
                 order = [int]$_.Order
                 active = [bool]$_.Active
             }
-            # Add icon if it exists
-            if ($_.Icon) {
-                $linkObj.icon = $_.Icon
+            
+            # Basic properties
+            if ($_.Icon) { $linkObj.icon = $_.Icon }
+            if ($_.Thumbnail) { $linkObj.thumbnail = $_.Thumbnail }
+            if ($_.ThumbnailType) { $linkObj.thumbnailType = $_.ThumbnailType }
+            if ($_.Layout) { $linkObj.layout = $_.Layout }
+            if ($_.Animation) { $linkObj.animation = $_.Animation }
+            if ($_.GroupId) { $linkObj.groupId = $_.GroupId }
+            
+            # Analytics
+            if ($null -ne $_.Clicks) { $linkObj.clicks = [int]$_.Clicks }
+            if ($_.ClicksTrend) { $linkObj.clicksTrend = $_.ClicksTrend }
+            
+            # Schedule settings (stored as JSON string)
+            if ($_.ScheduleEnabled) {
+                $linkObj.schedule = @{
+                    enabled = [bool]$_.ScheduleEnabled
+                }
+                if ($_.ScheduleStartDate) { $linkObj.schedule.startDate = $_.ScheduleStartDate }
+                if ($_.ScheduleEndDate) { $linkObj.schedule.endDate = $_.ScheduleEndDate }
+                if ($_.ScheduleTimezone) { $linkObj.schedule.timezone = $_.ScheduleTimezone }
             }
+            
+            # Lock settings
+            if ($_.LockEnabled) {
+                $linkObj.lock = @{
+                    enabled = [bool]$_.LockEnabled
+                }
+                if ($_.LockType) { $linkObj.lock.type = $_.LockType }
+                if ($_.LockCode) { $linkObj.lock.code = $_.LockCode }
+                if ($_.LockMessage) { $linkObj.lock.message = $_.LockMessage }
+            }
+            
             $linkObj
         } | Sort-Object order)
+        
+        # Get all groups
+        $Groups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$SafeUserId'"
+        
+        $GroupResults = @($Groups | ForEach-Object {
+            $groupObj = @{
+                id = $_.RowKey
+                title = $_.Title
+                order = [int]$_.Order
+                active = [bool]$_.Active
+            }
+            if ($_.Layout) { $groupObj.layout = $_.Layout }
+            if ($null -ne $_.Collapsed) { $groupObj.collapsed = [bool]$_.Collapsed }
+            $groupObj
+        } | Sort-Object order)
+        
+        $Results = @{
+            links = $LinkResults
+            groups = $GroupResults
+        }
         
         $StatusCode = [HttpStatusCode]::OK
         
@@ -39,9 +92,8 @@ function Invoke-AdminGetLinks {
         $Results = @{ error = "Failed to get links" }
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
-
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Body = @{ links = $Results }
+        Body = $Results
     }
 }

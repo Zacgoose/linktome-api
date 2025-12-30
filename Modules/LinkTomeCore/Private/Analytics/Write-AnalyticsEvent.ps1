@@ -29,14 +29,10 @@ function Write-AnalyticsEvent {
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [ValidateSet('PageView', 'LinkClick')]
         [string]$EventType,
         
-        [Parameter(Mandatory)]
         [string]$UserId,
         
-        [Parameter(Mandatory)]
         [string]$Username,
         
         [string]$IpAddress,
