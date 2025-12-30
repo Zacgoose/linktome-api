@@ -9,7 +9,9 @@ function Invoke-PublicSignup {
     param($Request, $TriggerMetadata)
 
     $Body = $Request.Body
+    $ClientIP = Get-ClientIPAddress -Request $Request
 
+    # === Validate Required Fields ===
     if (-not $Body.email -or -not $Body.username -or -not $Body.password) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
@@ -42,19 +44,36 @@ function Invoke-PublicSignup {
         }
     }
 
+    # === Validate Turnstile Token ===
+    if (-not $Body.turnstileToken) {
+        Write-SecurityEvent -EventType 'TurnstileMissing' -IpAddress $ClientIP -Endpoint 'public/signup' -Email $Body.email -Username $Body.username
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Security verification required" }
+        }
+    }
+
+    if (-not (Test-TurnstileToken -Token $Body.turnstileToken -RemoteIP $ClientIP)) {
+        Write-SecurityEvent -EventType 'TurnstileFailed' -IpAddress $ClientIP -Endpoint 'public/signup' -Email $Body.email -Username $Body.username
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Security verification failed. Please try again." }
+        }
+    }
+
+    # === Log Suspicion Score (set by router) ===
+    if ($Request.SuspicionScore) {
+        Write-Information "Signup attempt | IP: $ClientIP | Email: $($Body.email) | Username: $($Body.username) | Suspicion: $($Request.SuspicionScore) | Flags: $($Request.SuspicionFlags -join ', ')"
+    }
+
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
-        
-        # Get client IP for logging
-        $ClientIP = Get-ClientIPAddress -Request $Request
         
         # Check if email exists - sanitize for query
         $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
         $ExistingEmail = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         if ($ExistingEmail) {
-            # Log failed signup attempt
             Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Reason 'EmailAlreadyRegistered'
-            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
                 Body = @{ error = "Email already registered" }
@@ -65,9 +84,7 @@ function Invoke-PublicSignup {
         $SafeUsername = Protect-TableQueryValue -Value $Body.username.ToLower()
         $ExistingUsername = Get-LinkToMeAzDataTableEntity @Table -Filter "Username eq '$SafeUsername'" | Select-Object -First 1
         if ($ExistingUsername) {
-            # Log failed signup attempt
             Write-SecurityEvent -EventType 'SignupFailed' -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup' -Reason 'UsernameAlreadyTaken'
-            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
                 Body = @{ error = "Username already taken" }
@@ -82,8 +99,6 @@ function Invoke-PublicSignup {
         $DefaultRole = 'user'
         $DefaultPermissions = Get-DefaultRolePermissions -Role $DefaultRole
         
-        # Convert arrays to JSON strings for Azure Table Storage compatibility
-        # Both Roles and Permissions use [string] cast for JSON conversion
         $RolesJson = [string](@($DefaultRole) | ConvertTo-Json -Compress)
         $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
         
@@ -105,7 +120,6 @@ function Invoke-PublicSignup {
         
         $CreatedUser = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$UserId'" | Select-Object -First 1
 
-        # Log successful signup
         Write-SecurityEvent -EventType 'SignupSuccess' -UserId $UserId -Email $Body.email -Username $Body.username -IpAddress $ClientIP -Endpoint 'public/signup'
 
         try {
@@ -120,7 +134,6 @@ function Invoke-PublicSignup {
 
         $Token = New-LinkToMeJWT -User $CreatedUser
 
-        # Generate refresh token
         $RefreshToken = New-RefreshToken
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
         Save-RefreshToken -Token $RefreshToken -UserId $UserId -ExpiresAt $ExpiresAt
@@ -136,10 +149,7 @@ function Invoke-PublicSignup {
                 userManagements = $authContext.UserManagements
             }
         }
-        $StatusCode = [HttpStatusCode]::Created
         
-        # Use single HTTP-only cookie with both tokens as JSON
-        # This avoids Azure Functions PowerShell limitations with multiple Set-Cookie headers
         $AuthData = @{
             accessToken = $Token
             refreshToken = $RefreshToken
@@ -147,9 +157,8 @@ function Invoke-PublicSignup {
         
         $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
         
-        # Return response with HTTP-only cookie containing both tokens
         return [HttpResponseContext]@{
-            StatusCode = $StatusCode
+            StatusCode = [HttpStatusCode]::Created
             Body = $Results
             Headers = @{
                 'Set-Cookie' = $CookieHeader
@@ -159,11 +168,8 @@ function Invoke-PublicSignup {
     } catch {
         Write-Error "Signup error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Signup failed"
-        $StatusCode = [HttpStatusCode]::InternalServerError
-        
-        # Return error response without cookies
         return [HttpResponseContext]@{
-            StatusCode = $StatusCode
+            StatusCode = [HttpStatusCode]::InternalServerError
             Body = $Results
         }
     }

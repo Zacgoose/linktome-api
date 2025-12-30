@@ -100,36 +100,64 @@ function New-LinkTomeCoreRequest {
 
     try {
         # Apply rate limiting for authentication endpoints
-        if ($Endpoint -match '^public/(login|signup)$') {
+        if ($Endpoint -match '^public/(login|signup|refreshToken)$') {
             # Get client IP from headers
             $ClientIP = Get-ClientIPAddress -Request $Request
+
+            # === Bot Detection ===
+            $Suspicion = Get-RequestSuspicionScore -Request $Request
             
-            # Define rate limits based on endpoint
+            # Log for analysis (helps tune thresholds over time)
+            Write-Information "Auth request | IP: $ClientIP | Endpoint: $Endpoint | Score: $($Suspicion.Score) | Flags: $($Suspicion.Flags -join ', ')"
+            
+            # Block obvious bots before they even hit rate limiting
+            if ($Suspicion.IsLikelyBot) {
+                Write-SecurityEvent -EventType 'BotBlocked' -IpAddress $ClientIP -Endpoint $Endpoint -Reason "Suspicion score: $($Suspicion.Score), Flags: $($Suspicion.Flags -join ', ')"
+                
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::BadRequest
+                    Body = @{ error = "Request validation failed" }
+                }
+            }
+            
+            # === Rate Limiting (stricter for suspicious requests) ===
             $RateLimitConfig = @{
-                'public/login' = @{ MaxRequests = 5; WindowSeconds = 60 }  # 5 attempts per minute
-                'public/signup' = @{ MaxRequests = 3; WindowSeconds = 300 }  # 3 signups per 5 minutes
+                'public/login'  = @{ 
+                    Normal     = @{ MaxRequests = 5; WindowSeconds = 60 }
+                    Suspicious = @{ MaxRequests = 2; WindowSeconds = 60 }
+                }
+                'public/signup' = @{ 
+                    Normal     = @{ MaxRequests = 3; WindowSeconds = 300 }
+                    Suspicious = @{ MaxRequests = 1; WindowSeconds = 300 }
+                }
+                'public/refreshToken' = @{
+                    Normal     = @{ MaxRequests = 10; WindowSeconds = 60 }
+                    Suspicious = @{ MaxRequests = 1; WindowSeconds = 60 }
+                }
             }
             
             $Config = $RateLimitConfig[$Endpoint]
             if ($Config) {
-                $RateCheck = Test-RateLimit -Identifier $ClientIP -Endpoint $Endpoint -MaxRequests $Config.MaxRequests -WindowSeconds $Config.WindowSeconds
+                $Limits = if ($Suspicion.IsSuspicious) { $Config.Suspicious } else { $Config.Normal }
+                $RateLimitIdentifier = if ($Suspicion.IsSuspicious) { "suspicious:$ClientIP" } else { $ClientIP }
+                
+                $RateCheck = Test-RateLimit -Identifier $RateLimitIdentifier -Endpoint $Endpoint `
+                    -MaxRequests $Limits.MaxRequests -WindowSeconds $Limits.WindowSeconds
                 
                 if (-not $RateCheck.Allowed) {
-                    Write-Warning "Rate limit exceeded for $Endpoint from $ClientIP"
+                    Write-Warning "Rate limit exceeded for $Endpoint from $ClientIP (suspicious: $($Suspicion.IsSuspicious))"
                     
-                    # Log rate limit event
                     Write-SecurityEvent -EventType 'RateLimitExceeded' -IpAddress $ClientIP -Endpoint $Endpoint -Reason (ConvertTo-Json @{
-                        RequestCount = $RateCheck.RequestCount
-                        MaxRequests = $RateCheck.MaxRequests
+                        RequestCount  = $RateCheck.RequestCount
+                        MaxRequests   = $RateCheck.MaxRequests
+                        WasSuspicious = $Suspicion.IsSuspicious
+                        SuspicionFlags = $Suspicion.Flags
                     })
                     
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::TooManyRequests
                         Headers = @{
                             'Retry-After' = $RateCheck.RetryAfter.ToString()
-                            'X-RateLimit-Limit' = $Config.MaxRequests.ToString()
-                            'X-RateLimit-Remaining' = '0'
-                            'X-RateLimit-Reset' = $RateCheck.RetryAfter.ToString()
                         }
                         Body = @{ 
                             error = "Too many requests. Please try again in $($RateCheck.RetryAfter) seconds."
@@ -138,6 +166,11 @@ function New-LinkTomeCoreRequest {
                     }
                 }
             }
+            
+            # Only require Turnstile for login/signup, NOT refresh
+            $Request | Add-Member -NotePropertyName 'RequiresTurnstile' -NotePropertyValue ($Endpoint -ne 'public/refreshToken') -Force
+            $Request | Add-Member -NotePropertyName 'SuspicionScore' -NotePropertyValue $Suspicion.Score -Force
+            $Request | Add-Member -NotePropertyName 'SuspicionFlags' -NotePropertyValue $Suspicion.Flags -Force
         }
         
         # Check authentication for admin endpoints

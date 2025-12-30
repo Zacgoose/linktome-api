@@ -54,8 +54,20 @@ function Invoke-PublicRefreshToken {
         $TokenRecord = Get-RefreshToken -Token $RefreshTokenValue
         
         if (-not $TokenRecord) {
-            # Log invalid refresh token attempt
             $ClientIP = Get-ClientIPAddress -Request $Request
+            
+            # Rate limit failed refresh attempts by IP
+            $FailedRefreshCheck = Test-RateLimit -Identifier "refresh-failed:$ClientIP" -Endpoint 'public/refreshToken-failed' `
+                -MaxRequests 5 -WindowSeconds 300
+            
+            if (-not $FailedRefreshCheck.Allowed) {
+                Write-SecurityEvent -EventType 'RefreshBruteForce' -IpAddress $ClientIP -Endpoint 'public/refreshToken'
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::TooManyRequests
+                    Body = @{ error = "Too many failed attempts. Please log in again." }
+                }
+            }
+            
             Write-SecurityEvent -EventType 'RefreshTokenFailed' -IpAddress $ClientIP -Endpoint 'public/refreshToken' -Reason 'InvalidOrExpiredToken'
             
             return [HttpResponseContext]@{

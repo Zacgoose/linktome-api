@@ -9,7 +9,9 @@ function Invoke-PublicLogin {
     param($Request, $TriggerMetadata)
 
     $Body = $Request.Body
+    $ClientIP = Get-ClientIPAddress -Request $Request
 
+    # === Validate Required Fields ===
     if (-not $Body.email -or -not $Body.password) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
@@ -17,7 +19,6 @@ function Invoke-PublicLogin {
         }
     }
 
-    # Validate email format
     if (-not (Test-EmailFormat -Email $Body.email)) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
@@ -25,20 +26,36 @@ function Invoke-PublicLogin {
         }
     }
 
+    # === Validate Turnstile Token ===
+    if (-not $Body.turnstileToken) {
+        Write-SecurityEvent -EventType 'TurnstileMissing' -IpAddress $ClientIP -Endpoint 'public/login' -Email $Body.email
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Security verification required" }
+        }
+    }
+
+    if (-not (Test-TurnstileToken -Token $Body.turnstileToken -RemoteIP $ClientIP)) {
+        Write-SecurityEvent -EventType 'TurnstileFailed' -IpAddress $ClientIP -Endpoint 'public/login' -Email $Body.email
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Security verification failed. Please try again." }
+        }
+    }
+
+    # === Log Suspicion Score (set by router, optional) ===
+    if ($Request.SuspicionScore) {
+        Write-Information "Login attempt | IP: $ClientIP | Email: $($Body.email) | Suspicion: $($Request.SuspicionScore) | Flags: $($Request.SuspicionFlags -join ', ')"
+    }
+
     try {
         $Table = Get-LinkToMeTable -TableName 'Users'
         
-        # Sanitize email for query to prevent injection
         $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
         $User = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeEmail'" | Select-Object -First 1
         
-        # Get client IP for logging
-        $ClientIP = Get-ClientIPAddress -Request $Request
-        
         if (-not $User) {
-            # Log failed login attempt
             Write-SecurityEvent -EventType 'LoginFailed' -Email $Body.email -IpAddress $ClientIP -Endpoint 'public/login' -Reason 'UserNotFound'
-            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
                 Body = @{ error = "Invalid credentials" }
@@ -48,9 +65,7 @@ function Invoke-PublicLogin {
         $Valid = Test-PasswordHash -Password $Body.password -StoredHash $User.PasswordHash -StoredSalt $User.PasswordSalt
         
         if (-not $Valid) {
-            # Log failed login attempt
             Write-SecurityEvent -EventType 'LoginFailed' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login' -Reason 'InvalidPassword'
-            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
                 Body = @{ error = "Invalid credentials" }
@@ -68,8 +83,6 @@ function Invoke-PublicLogin {
         }
 
         $Token = New-LinkToMeJWT -User $User
-
-        # Generate refresh token
         $RefreshToken = New-RefreshToken
         $ExpiresAt = (Get-Date).ToUniversalTime().AddDays(7)
         Save-RefreshToken -Token $RefreshToken -UserId $User.RowKey -ExpiresAt $ExpiresAt
@@ -86,13 +99,8 @@ function Invoke-PublicLogin {
             }
         }
 
-        $StatusCode = [HttpStatusCode]::OK
-   
-        # Log successful login
         Write-SecurityEvent -EventType 'LoginSuccess' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
         
-        # Use single HTTP-only cookie with both tokens as JSON
-        # This avoids Azure Functions PowerShell limitations with multiple Set-Cookie headers
         $AuthData = @{
             accessToken = $Token
             refreshToken = $RefreshToken
@@ -100,9 +108,8 @@ function Invoke-PublicLogin {
         
         $CookieHeader = "auth=$AuthData; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
         
-        # Return response with HTTP-only cookie containing both tokens
         return [HttpResponseContext]@{
-            StatusCode = $StatusCode
+            StatusCode = [HttpStatusCode]::OK
             Body = $Results
             Headers = @{
                 'Set-Cookie' = $CookieHeader
@@ -112,11 +119,8 @@ function Invoke-PublicLogin {
     } catch {
         Write-Error "Login error: $($_.Exception.Message)"
         $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Login failed"
-        $StatusCode = [HttpStatusCode]::InternalServerError
-        
-        # Return error response without cookies
         return [HttpResponseContext]@{
-            StatusCode = $StatusCode
+            StatusCode = [HttpStatusCode]::InternalServerError
             Body = $Results
         }
     }
