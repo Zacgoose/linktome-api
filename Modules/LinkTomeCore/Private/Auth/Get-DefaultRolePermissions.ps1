@@ -29,7 +29,11 @@ function Get-DefaultRolePermissions {
             'invite:user_manager',
             'list:user_manager',
             'remove:user_manager',
-            'respond:user_manager'
+            'respond:user_manager',
+            'read:apiauth',
+            'create:apiauth',
+            'update:apiauth',
+            'delete:apiauth'
         )
         'user_manager' = @(
             'read:dashboard',

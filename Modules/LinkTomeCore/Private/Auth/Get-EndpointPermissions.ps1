@@ -33,6 +33,12 @@ function Get-EndpointPermissions {
         'admin/UserManagerInvite' = @('invite:user_manager')
         'admin/UserManagerRemove' = @('remove:user_manager')
         'admin/UserManagerRespond' = @('respond:user_manager')
+
+        # API Authentication endpoints
+        'admin/apiKeysList' = @('read:apiauth')
+        'admin/apiKeysCreate' = @('create:apiauth')
+        'admin/apiKeysUpdate' = @('update:apiauth')
+        'admin/apiKeysDelete' = @('delete:apiauth')
     }
     
     return $EndpointPermissions[$Endpoint]

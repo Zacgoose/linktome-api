@@ -10,6 +10,7 @@ function Invoke-PublicLogin {
 
     $Body = $Request.Body
     $ClientIP = Get-ClientIPAddress -Request $Request
+    Write-Information "DEBUG: Request.Body in the function: $($Request.Body | ConvertTo-Json -Compress -Depth 3)"
 
     # === Validate Required Fields ===
     if (-not $Body.email -or -not $Body.password) {
