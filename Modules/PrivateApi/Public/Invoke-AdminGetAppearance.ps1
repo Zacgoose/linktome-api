@@ -86,7 +86,6 @@ function Invoke-AdminGetAppearance {
                 titleSize = if ($UserData.TitleSize) { $UserData.TitleSize } else { 'small' }
                 bodyFont = if ($UserData.BodyFont) { $UserData.BodyFont } else { 'inter' }
                 pageTextColor = if ($UserData.PageTextColor) { $UserData.PageTextColor } else { '#010101' }
-                buttonTextColor = if ($UserData.ButtonTextColor) { $UserData.ButtonTextColor } else { '#010101' }
             }
             
             # Footer
