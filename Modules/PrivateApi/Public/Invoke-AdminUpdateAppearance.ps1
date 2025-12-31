@@ -379,16 +379,6 @@ function Invoke-AdminUpdateAppearance {
                 }
                 Set-EntityProperty -Entity $UserData -PropertyName 'PageTextColor' -Value $Body.text.pageTextColor
             }
-            
-            if ($Body.text.PSObject.Properties.Match('buttonTextColor').Count -gt 0) {
-                if ($Body.text.buttonTextColor -and $Body.text.buttonTextColor -notmatch $hexColorRegex) {
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Button text color must be a valid hex color" }
-                    }
-                }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonTextColor' -Value $Body.text.buttonTextColor
-            }
         }
         
         # === Footer ===
