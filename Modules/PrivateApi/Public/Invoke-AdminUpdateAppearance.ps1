@@ -42,11 +42,11 @@ function Invoke-AdminUpdateAppearance {
         $urlRegex = '^https?://'
         
         # Valid enum values
-        $validThemes = @('custom', 'air', 'blocks', 'lake', 'mineral', 'agate', 'astrid', 'aura', 'bloom', 'breeze', 'light', 'dark', 'sunset', 'ocean', 'forest')
+        $validThemes = @('custom', 'air', 'blocks', 'lake', 'mineral', 'agate', 'astrid', 'aura', 'bloom', 'breeze', 'light', 'dark', 'sunset', 'ocean', 'forest', 'honeycomb')
         $validProfileImageLayouts = @('classic', 'hero')
         $validTitleStyles = @('text', 'logo')
         $validWallpaperTypes = @('fill', 'gradient', 'blur', 'pattern', 'image', 'video')
-        $validPatternTypes = @('grid', 'dots', 'lines', 'waves', 'geometric')
+        $validPatternTypes = @('grid', 'dots', 'lines', 'waves', 'geometric', 'honey')
         $validButtonTypes = @('solid', 'glass', 'outline')
         $validCornerRadii = @('square', 'rounded', 'pill')
         $validShadows = @('none', 'subtle', 'strong', 'hard')
@@ -196,7 +196,7 @@ function Invoke-AdminUpdateAppearance {
                 if ($Body.wallpaper.patternType -notin $validPatternTypes) {
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::BadRequest
-                        Body = @{ error = "Pattern type must be 'grid', 'dots', 'lines', 'waves', or 'geometric'" }
+                        Body = @{ error = "Pattern type must be 'grid', 'dots', 'lines', 'waves', 'geometric' or 'honey'" }
                     }
                 }
                 Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperPatternType' -Value $Body.wallpaper.patternType
