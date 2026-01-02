@@ -61,7 +61,7 @@ function Invoke-AdminUpdateLinks {
             }
             
             # Get tier features to check link limit
-            $UserTier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { 'free' }
+            $UserTier = $User.SubscriptionTier
             $TierInfo = Get-TierFeatures -Tier $UserTier
             $MaxLinks = $TierInfo.limits.maxLinks
             

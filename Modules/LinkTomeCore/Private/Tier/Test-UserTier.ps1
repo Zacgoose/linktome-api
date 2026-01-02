@@ -21,26 +21,17 @@ function Test-UserTier {
         'enterprise' = 3
     }
     
-    # Get user's subscription tier (default to 'free' if not set)
-    $UserTier = if ($User.SubscriptionTier) { 
-        $User.SubscriptionTier 
-    } else { 
-        'free' 
-    }
+    # Get user's subscription tier
+    $UserTier = $User.SubscriptionTier
     
     # Validate tier exists
     if (-not $TierHierarchy.ContainsKey($UserTier)) {
-        Write-Warning "Invalid user tier: $UserTier. Defaulting to 'free'"
-        $UserTier = 'free'
+        throw "Invalid user tier: $UserTier"
     }
     
     # Check subscription status (if user has a paid tier)
     if ($UserTier -ne 'free') {
-        $SubscriptionStatus = if ($User.SubscriptionStatus) { 
-            $User.SubscriptionStatus 
-        } else { 
-            'expired' 
-        }
+        $SubscriptionStatus = $User.SubscriptionStatus
         
         # Check if subscription is active
         if ($SubscriptionStatus -ne 'active' -and $SubscriptionStatus -ne 'trial') {

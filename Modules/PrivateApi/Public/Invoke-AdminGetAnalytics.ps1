@@ -31,7 +31,7 @@ function Invoke-AdminGetAnalytics {
         $ClientIP = Get-ClientIPAddress -Request $Request
         
         # Track feature usage
-        $UserTier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { 'free' }
+        $UserTier = $User.SubscriptionTier
         Write-FeatureUsageEvent -UserId $UserId -Feature 'advanced_analytics' -Allowed $HasAdvancedAnalytics -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/getAnalytics'
         
         $Table = Get-LinkToMeTable -TableName 'Analytics'

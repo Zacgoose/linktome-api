@@ -20,26 +20,17 @@ function Test-FeatureAccess {
     )
     
     # Get user's effective tier
-    $UserTier = if ($User.SubscriptionTier) { 
-        $User.SubscriptionTier 
-    } else { 
-        'free' 
-    }
+    $UserTier = $User.SubscriptionTier
     
     # Validate tier exists
     $ValidTiers = @('free', 'premium', 'enterprise')
     if (-not ($ValidTiers -contains $UserTier)) {
-        Write-Warning "Invalid user tier: $UserTier. Defaulting to 'free'"
-        $UserTier = 'free'
+        throw "Invalid user tier: $UserTier"
     }
     
     # Check subscription status for paid tiers
     if ($UserTier -ne 'free') {
-        $SubscriptionStatus = if ($User.SubscriptionStatus) { 
-            $User.SubscriptionStatus 
-        } else { 
-            'expired' 
-        }
+        $SubscriptionStatus = $User.SubscriptionStatus
         
         # Check if subscription is active
         if ($SubscriptionStatus -ne 'active' -and $SubscriptionStatus -ne 'trial') {

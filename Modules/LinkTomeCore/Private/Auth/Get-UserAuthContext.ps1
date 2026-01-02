@@ -66,26 +66,6 @@ function Get-UserAuthContext {
         }
     }
     
-    # Get subscription tier information
-    $UserTier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { 'free' }
-    $SubscriptionStatus = if ($User.SubscriptionStatus) { $User.SubscriptionStatus } else { 'active' }
-    
-    # Check if subscription is expired
-    if ($UserTier -ne 'free' -and $User.SubscriptionExpiresAt) {
-        try {
-            $ExpiresAt = [DateTimeOffset]$User.SubscriptionExpiresAt
-            if ($ExpiresAt -lt [DateTimeOffset]::UtcNow) {
-                $UserTier = 'free'
-                $SubscriptionStatus = 'expired'
-            }
-        } catch {
-            Write-Warning "Failed to parse SubscriptionExpiresAt: $($_.Exception.Message)"
-        }
-    }
-    
-    # Get tier features and limits
-    $TierInfo = Get-TierFeatures -Tier $UserTier
-    
     return @{
         UserId = $User.RowKey
         Email = $User.PartitionKey
@@ -94,9 +74,5 @@ function Get-UserAuthContext {
         Roles = $Roles
         Permissions = $Permissions
         UserManagements = $UserManagements
-        SubscriptionTier = $UserTier
-        SubscriptionStatus = $SubscriptionStatus
-        TierFeatures = $TierInfo.features
-        TierLimits = $TierInfo.limits
     }
 }
