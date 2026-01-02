@@ -10,15 +10,16 @@ function Test-UserTier {
         [object]$User,
         
         [Parameter(Mandatory)]
-        [ValidateSet('free', 'premium', 'enterprise')]
+        [ValidateSet('free', 'pro', 'premium', 'enterprise')]
         [string]$RequiredTier
     )
     
     # Define tier hierarchy (higher number = higher tier)
     $TierHierarchy = @{
         'free' = 1
-        'premium' = 2
-        'enterprise' = 3
+        'pro' = 2
+        'premium' = 3
+        'enterprise' = 4
     }
     
     # Get user's subscription tier

@@ -23,7 +23,7 @@ function Test-FeatureAccess {
     $UserTier = $User.SubscriptionTier
     
     # Validate tier exists
-    $ValidTiers = @('free', 'premium', 'enterprise')
+    $ValidTiers = @('free', 'pro', 'premium', 'enterprise')
     if (-not ($ValidTiers -contains $UserTier)) {
         throw "Invalid user tier: $UserTier"
     }
