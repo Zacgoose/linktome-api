@@ -189,7 +189,19 @@ try {
     "userRole": "user",
     "roles": ["user"],
     "permissions": ["read:profile", "write:profile"],
-    "userManagements": []
+    "userManagements": [],
+    "subscriptionTier": "free",
+    "subscriptionStatus": "active",
+    "tierFeatures": ["basic_profile", "basic_links", "basic_analytics", "basic_appearance"],
+    "tierLimits": {
+      "maxLinks": 5,
+      "analyticsRetentionDays": 30,
+      "customThemes": false,
+      "advancedAnalytics": false,
+      "apiAccess": false,
+      "customDomain": false,
+      "prioritySupport": false
+    }
   }
 }
 ```
@@ -214,7 +226,16 @@ try {
     "userRole": "user",
     "roles": ["user"],
     "permissions": ["read:profile", "write:profile"],
-    "userManagements": []
+    "userManagements": [],
+    "subscriptionTier": "free",
+    "subscriptionStatus": "active",
+    "tierFeatures": ["basic_profile", "basic_links", "basic_analytics", "basic_appearance"],
+    "tierLimits": {
+      "maxLinks": 5,
+      "analyticsRetentionDays": 30,
+      "customThemes": false,
+      "advancedAnalytics": false
+    }
   }
 }
 ```
@@ -339,6 +360,90 @@ interface LinksResponse {
 }
 ```
 
+## Subscription Tier Responses
+
+### Tier-Gated Feature Responses
+
+When a user tries to access a premium feature without the required subscription tier, the response includes tier information:
+
+#### Analytics Endpoint (Free Tier)
+**Success (200)** - Limited data with upgrade message:
+```json
+{
+  "summary": {
+    "totalPageViews": 150,
+    "totalLinkClicks": 45,
+    "uniqueVisitors": 30
+  },
+  "hasAdvancedAnalytics": false,
+  "upgradeMessage": "Upgrade to Premium to unlock detailed analytics including visitor details, click patterns, and historical trends.",
+  "recentPageViews": [],
+  "recentLinkClicks": [],
+  "linkClicksByLink": [],
+  "viewsByDay": [],
+  "clicksByDay": []
+}
+```
+
+#### Analytics Endpoint (Premium/Enterprise Tier)
+**Success (200)** - Full data:
+```json
+{
+  "summary": {
+    "totalPageViews": 150,
+    "totalLinkClicks": 45,
+    "uniqueVisitors": 30
+  },
+  "hasAdvancedAnalytics": true,
+  "recentPageViews": [...],
+  "recentLinkClicks": [...],
+  "linkClicksByLink": [...],
+  "viewsByDay": [...],
+  "clicksByDay": [...]
+}
+```
+
+#### Links Endpoint (Limit Exceeded)
+**Error (403)** - Tier limit exceeded:
+```json
+{
+  "error": "Link limit exceeded. Your Free plan allows up to 5 links. You currently have 5 links.",
+  "currentTier": "free",
+  "maxLinks": 5,
+  "currentLinks": 5,
+  "upgradeRequired": true
+}
+```
+
+### Tier Information in User Object
+
+All authentication endpoints now include tier information in the user object:
+```typescript
+interface User {
+  UserId: string;
+  email: string;
+  username: string;
+  userRole: string;
+  roles: string[];
+  permissions: string[];
+  userManagements: any[];
+  subscriptionTier: 'free' | 'premium' | 'enterprise';
+  subscriptionStatus: 'active' | 'trial' | 'expired';
+  tierFeatures: string[];
+  tierLimits: {
+    maxLinks: number;
+    analyticsRetentionDays: number;
+    customThemes: boolean;
+    advancedAnalytics: boolean;
+    apiAccess: boolean;
+    customDomain: boolean;
+    prioritySupport: boolean;
+  };
+}
+```
+
 ## Questions?
 
 If you encounter any response format that doesn't match this specification, please report it as it may be a bug that needs fixing.
+
+For information about subscription tiers and feature gating, see [TIER_SYSTEM.md](./TIER_SYSTEM.md).

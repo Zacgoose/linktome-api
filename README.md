@@ -22,10 +22,12 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
   - `RateLimits` - IP-based rate limiting tracking
   - `SecurityEvents` - Security event audit log
   - `Analytics` - Page views and analytics tracking
+  - `FeatureUsage` - Feature access tracking for tier validation
 - **Authentication:** JWT with PBKDF2-SHA256 password hashing
 - **Frontend Integration:** Azure Static Web Apps (handles CORS and security headers)
 - **Rate Limiting:** IP-based using Azure Table Storage (5 login/min, 3 signup/hour)
 - **Logging:** Azure Table Storage for security events and analytics
+- **Subscription Tiers:** Free, Premium, and Enterprise tiers with feature-based access control
 
 ## Features
 
@@ -47,6 +49,17 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Analytics dashboard data via admin endpoint (views, clicks, popular links)
 - ✅ Dashboard statistics (total links, views, clicks, unique visitors)
 - ✅ Time-series data (views and clicks by day)
+- ✅ **Advanced analytics restricted to Premium/Enterprise tiers**
+
+### Subscription Tiers & Feature Gating
+- ✅ Three-tier system: Free, Premium, Enterprise
+- ✅ Tier-based feature access control
+- ✅ Link limits by tier (Free: 5, Premium: 25, Enterprise: 100)
+- ✅ Advanced analytics for Premium/Enterprise users only
+- ✅ Feature usage tracking and analytics
+- ✅ Automatic subscription expiration handling
+- ✅ Graceful degradation for expired subscriptions
+- 📄 See [TIER_SYSTEM.md](./TIER_SYSTEM.md) for complete documentation
 
 ### Customization
 - ✅ Appearance customization (theme: light/dark)
