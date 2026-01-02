@@ -49,16 +49,56 @@ function Invoke-AdminUpdateLinks {
         
         # === Process Links ===
         if ($Body.links) {
-            # Validate max number of links (excluding removes)
+            # Get user object to check tier limits
+            $UsersTable = Get-LinkToMeTable -TableName 'Users'
+            $User = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+            
+            if (-not $User) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::NotFound
+                    Body = @{ error = "User not found" }
+                }
+            }
+            
+            # Get tier features to check link limit
+            $UserTier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { 'free' }
+            $TierInfo = Get-TierFeatures -Tier $UserTier
+            $MaxLinks = $TierInfo.limits.maxLinks
+            
+            # Get existing links to check total count
+            $ExistingLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+            
+            # Count adds vs removes to determine final count
+            $addsCount = ($Body.links | Where-Object { $_.operation -eq 'add' }).Count
+            $removesCount = ($Body.links | Where-Object { $_.operation -eq 'remove' }).Count
+            $projectedTotal = $ExistingLinks.Count + $addsCount - $removesCount
+            
+            # Check against tier limit
+            if ($projectedTotal -gt $MaxLinks) {
+                # Track feature usage for blocked attempt
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'link_limit_exceeded' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateLinks'
+                
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ 
+                        error = "Link limit exceeded. Your $($TierInfo.tierName) plan allows up to $MaxLinks links. You currently have $($ExistingLinks.Count) links."
+                        currentTier = $UserTier
+                        maxLinks = $MaxLinks
+                        currentLinks = $ExistingLinks.Count
+                        upgradeRequired = $true
+                    }
+                }
+            }
+            
+            # Validate max number of links in single request (excluding removes)
             $addOrUpdateCount = ($Body.links | Where-Object { $_.operation -in @('add','update') }).Count
             if ($addOrUpdateCount -gt 50) {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::BadRequest
-                    Body = @{ error = "Maximum 50 links allowed per user" }
+                    Body = @{ error = "Maximum 50 links allowed per request" }
                 }
             }
-
-            $ExistingLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
 
             foreach ($Link in $Body.links) {
                 $op = ($Link.operation ?? '').ToLower()
