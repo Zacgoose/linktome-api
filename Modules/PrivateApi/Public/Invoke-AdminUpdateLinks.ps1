@@ -83,10 +83,6 @@ function Invoke-AdminUpdateLinks {
                     StatusCode = [HttpStatusCode]::Forbidden
                     Body = @{ 
                         error = "Link limit exceeded. Your $($TierInfo.tierName) plan allows up to $MaxLinks links. You currently have $($ExistingLinks.Count) links."
-                        currentTier = $UserTier
-                        maxLinks = $MaxLinks
-                        currentLinks = $ExistingLinks.Count
-                        upgradeRequired = $true
                     }
                 }
             }
