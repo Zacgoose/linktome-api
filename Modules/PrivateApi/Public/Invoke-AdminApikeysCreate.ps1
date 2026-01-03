@@ -11,6 +11,32 @@ function Invoke-AdminApikeysCreate {
     $User = $Request.AuthenticatedUser
     $Body = $Request.Body
     
+    # Get user object to check tier
+    $UsersTable = Get-LinkToMeTable -TableName 'Users'
+    $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+    $UserData = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+    
+    if (-not $UserData) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::NotFound
+            Body = @{ error = "User not found" }
+        }
+    }
+    
+    # Check if user has API access
+    $UserTier = $UserData.SubscriptionTier
+    $TierInfo = Get-TierFeatures -Tier $UserTier
+    
+    if (-not $TierInfo.limits.apiAccess) {
+        $ClientIP = Get-ClientIPAddress -Request $Request
+        Write-FeatureUsageEvent -UserId $User.UserId -Feature 'apiAccess' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/apikeys/create'
+        
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{ error = "API access requires Pro tier or higher. Upgrade to create and use API keys." }
+        }
+    }
+    
     if (-not $Body.name) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
@@ -18,12 +44,17 @@ function Invoke-AdminApikeysCreate {
         }
     }
     
-    # Limit keys per user
+    # Check API keys limit based on tier
     $ExistingKeys = Get-UserApiKeys -UserId $User.UserId
-    if ($ExistingKeys.Count -ge 10) {
+    $MaxKeys = $TierInfo.limits.apiKeysLimit
+    
+    if ($MaxKeys -ne -1 -and $ExistingKeys.Count -ge $MaxKeys) {
+        $ClientIP = Get-ClientIPAddress -Request $Request
+        Write-FeatureUsageEvent -UserId $User.UserId -Feature 'apiKeysLimit_exceeded' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/apikeys/create'
+        
         return [HttpResponseContext]@{
-            StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ error = "Maximum 10 API keys allowed" }
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{ error = "API key limit exceeded. Your $($TierInfo.tierName) plan allows up to $MaxKeys API keys. You currently have $($ExistingKeys.Count) keys." }
         }
     }
     

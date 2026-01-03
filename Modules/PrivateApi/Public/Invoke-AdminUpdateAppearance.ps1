@@ -27,6 +27,72 @@ function Invoke-AdminUpdateAppearance {
             }
         }
         
+        # Get tier features for validation
+        $UserTier = $UserData.SubscriptionTier
+        $TierInfo = Get-TierFeatures -Tier $UserTier
+        
+        # Validate premium appearance features against tier
+        # Check custom logos (logoUrl)
+        if ($Body.header -and $Body.header.PSObject.Properties.Match('logoUrl').Count -gt 0 -and $Body.header.logoUrl) {
+            if (-not $TierInfo.limits.customLogos) {
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'customLogos' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "Custom logos require Pro tier or higher. Upgrade to use a custom logo in your header." }
+                }
+            }
+        }
+        
+        # Check video backgrounds (videoUrl)
+        if ($Body.wallpaper -and $Body.wallpaper.PSObject.Properties.Match('videoUrl').Count -gt 0 -and $Body.wallpaper.videoUrl) {
+            if (-not $TierInfo.limits.videoBackgrounds) {
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'videoBackgrounds' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "Video backgrounds require Premium tier or higher. Upgrade to use video as your background." }
+                }
+            }
+        }
+        
+        # Check video type wallpaper
+        if ($Body.wallpaper -and $Body.wallpaper.type -eq 'video') {
+            if (-not $TierInfo.limits.videoBackgrounds) {
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'videoBackgrounds' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "Video backgrounds require Premium tier or higher. Upgrade to use video as your background." }
+                }
+            }
+        }
+        
+        # Check remove footer (hideFooter)
+        if ($Body.PSObject.Properties.Match('hideFooter').Count -gt 0 -and $Body.hideFooter -eq $true) {
+            if (-not $TierInfo.limits.removeFooter) {
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'removeFooter' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "Removing footer requires Pro tier or higher. Upgrade to hide the 'Powered by LinkToMe' footer." }
+                }
+            }
+        }
+        
+        # Check premium fonts
+        $premiumFonts = @('space-mono', 'playfair', 'oswald', 'montserrat', 'raleway', 'dm-sans')
+        if ($Body.fontFamily -and $Body.fontFamily -in $premiumFonts) {
+            if (-not $TierInfo.limits.premiumFonts) {
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'premiumFonts' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "Premium fonts require Pro tier or higher. Upgrade to use fonts like Space Mono, Playfair, Oswald, Montserrat, Raleway, or DM Sans." }
+                }
+            }
+        }
+        
         # Helper function to safely set property
         function Set-EntityProperty {
             param($Entity, $PropertyName, $Value)
