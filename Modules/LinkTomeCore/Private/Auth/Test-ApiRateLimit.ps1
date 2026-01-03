@@ -17,16 +17,20 @@ function Test-ApiRateLimit {
     
     $TierLimits = @{
         'free' = @{
-            RequestsPerMinute = 20
-            RequestsPerDay    = 1000
+            RequestsPerMinute = 0
+            RequestsPerDay    = 0
         }
         'pro' = @{
-            RequestsPerMinute = 100
+            RequestsPerMinute = 60
+            RequestsPerDay    = 10000
+        }
+        'premium' = @{
+            RequestsPerMinute = 120
             RequestsPerDay    = 50000
         }
         'enterprise' = @{
-            RequestsPerMinute = 500
-            RequestsPerDay    = 500000
+            RequestsPerMinute = 300
+            RequestsPerDay    = -1
         }
     }
     
