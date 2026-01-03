@@ -53,6 +53,7 @@ function Get-UserAuthContext {
             foreach ($um in $managees) {
                 $manageePermissions = Get-DefaultRolePermissions -Role $um.Role
                 $UserManager = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($um.RowKey)'" | Select-Object -First 1
+                $manageeTier = if ($UserManager.SubscriptionTier) { $UserManager.SubscriptionTier } else { $null }
                 $UserManagements += @{
                     UserId = $um.RowKey
                     role = $um.Role
@@ -61,10 +62,14 @@ function Get-UserAuthContext {
                     permissions = $manageePermissions
                     DisplayName = $UserManager.DisplayName
                     Email = $UserManager.PartitionKey
+                    tier = $manageeTier
                 }
             }
         }
     }
+    
+    # Get user's subscription tier
+    $Tier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { $null }
     
     return @{
         UserId = $User.RowKey
@@ -74,5 +79,6 @@ function Get-UserAuthContext {
         Roles = $Roles
         Permissions = $Permissions
         UserManagements = $UserManagements
+        Tier = $Tier
     }
 }

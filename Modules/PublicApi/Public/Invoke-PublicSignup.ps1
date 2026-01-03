@@ -114,6 +114,8 @@ function Invoke-PublicSignup {
             IsActive = [bool]$true
             Roles = $RolesJson
             Permissions = $PermissionsJson
+            SubscriptionTier = [string]'free'
+            SubscriptionStatus = [string]'active'
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force
@@ -147,6 +149,7 @@ function Invoke-PublicSignup {
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
+                tier = $authContext.Tier
             }
         }
         

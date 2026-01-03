@@ -49,16 +49,105 @@ function Invoke-AdminUpdateLinks {
         
         # === Process Links ===
         if ($Body.links) {
-            # Validate max number of links (excluding removes)
+            # Get user object to check tier limits
+            $UsersTable = Get-LinkToMeTable -TableName 'Users'
+            $User = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+            
+            if (-not $User) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::NotFound
+                    Body = @{ error = "User not found" }
+                }
+            }
+            
+            # Get tier features to check link limit
+            $UserTier = $User.SubscriptionTier
+            $TierInfo = Get-TierFeatures -Tier $UserTier
+            $MaxLinks = $TierInfo.limits.maxLinks
+            
+            # Get existing links to check total count
+            $ExistingLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+            
+            # Count adds vs removes to determine final count
+            $addsCount = ($Body.links | Where-Object { $_.operation -eq 'add' }).Count
+            $removesCount = ($Body.links | Where-Object { $_.operation -eq 'remove' }).Count
+            $projectedTotal = $ExistingLinks.Count + $addsCount - $removesCount
+            
+            # Check against tier limit
+            if ($projectedTotal -gt $MaxLinks) {
+                # Track feature usage for blocked attempt
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'link_limit_exceeded' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateLinks'
+                
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ 
+                        error = "Link limit exceeded. Your $($TierInfo.tierName) plan allows up to $MaxLinks links. You currently have $($ExistingLinks.Count) links."
+                    }
+                }
+            }
+            
+            # Validate max number of links in single request (excluding removes)
             $addOrUpdateCount = ($Body.links | Where-Object { $_.operation -in @('add','update') }).Count
             if ($addOrUpdateCount -gt 50) {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::BadRequest
-                    Body = @{ error = "Maximum 50 links allowed per user" }
+                    Body = @{ error = "Maximum 50 links allowed per request" }
                 }
             }
-
-            $ExistingLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+            
+            # Validate premium link features against tier
+            foreach ($Link in $Body.links) {
+                if ($Link.operation -in @('add', 'update')) {
+                    # Check custom layouts (featured, thumbnail-*)
+                    if ($Link.layout -and $Link.layout -ne 'classic') {
+                        if (-not $TierInfo.limits.customLayouts) {
+                            $ClientIP = Get-ClientIPAddress -Request $Request
+                            Write-FeatureUsageEvent -UserId $UserId -Feature 'customLayouts' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateLinks'
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::Forbidden
+                                Body = @{ error = "Custom layouts require Pro tier or higher. Your $($TierInfo.tierName) plan only supports classic layout." }
+                            }
+                        }
+                    }
+                    
+                    # Check link animations
+                    if ($Link.animation -and $Link.animation -ne 'none') {
+                        if (-not $TierInfo.limits.linkAnimations) {
+                            $ClientIP = Get-ClientIPAddress -Request $Request
+                            Write-FeatureUsageEvent -UserId $UserId -Feature 'linkAnimations' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateLinks'
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::Forbidden
+                                Body = @{ error = "Link animations require Pro tier or higher. Upgrade to use animations like shake, pulse, bounce, or glow." }
+                            }
+                        }
+                    }
+                    
+                    # Check link scheduling
+                    if ($Link.schedule -and $Link.schedule.enabled) {
+                        if (-not $TierInfo.limits.linkScheduling) {
+                            $ClientIP = Get-ClientIPAddress -Request $Request
+                            Write-FeatureUsageEvent -UserId $UserId -Feature 'linkScheduling' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateLinks'
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::Forbidden
+                                Body = @{ error = "Link scheduling requires Pro tier or higher. Upgrade to schedule when your links are visible." }
+                            }
+                        }
+                    }
+                    
+                    # Check link locking
+                    if ($Link.lock -and $Link.lock.enabled) {
+                        if (-not $TierInfo.limits.linkLocking) {
+                            $ClientIP = Get-ClientIPAddress -Request $Request
+                            Write-FeatureUsageEvent -UserId $UserId -Feature 'linkLocking' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateLinks'
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::Forbidden
+                                Body = @{ error = "Link locking requires Pro tier or higher. Upgrade to protect your links with access codes or age verification." }
+                            }
+                        }
+                    }
+                }
+            }
 
             foreach ($Link in $Body.links) {
                 $op = ($Link.operation ?? '').ToLower()
@@ -326,7 +415,41 @@ function Invoke-AdminUpdateLinks {
         
         # === Process Groups ===
         if ($Body.groups) {
+            # Get user object to check tier limits (if not already fetched for links)
+            if (-not $User) {
+                $UsersTable = Get-LinkToMeTable -TableName 'Users'
+                $User = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+                
+                if (-not $User) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::NotFound
+                        Body = @{ error = "User not found" }
+                    }
+                }
+                
+                $UserTier = $User.SubscriptionTier
+                $TierInfo = Get-TierFeatures -Tier $UserTier
+            }
+            
             $ExistingGroups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$SafeUserId'"
+            
+            # Check maxLinkGroups limit for add operations
+            $addsCount = ($Body.groups | Where-Object { $_.operation -eq 'add' }).Count
+            $removesCount = ($Body.groups | Where-Object { $_.operation -eq 'remove' }).Count
+            $projectedGroupTotal = $ExistingGroups.Count + $addsCount - $removesCount
+            $MaxGroups = $TierInfo.limits.maxLinkGroups
+            
+            if ($MaxGroups -ne -1 -and $projectedGroupTotal -gt $MaxGroups) {
+                $ClientIP = Get-ClientIPAddress -Request $Request
+                Write-FeatureUsageEvent -UserId $UserId -Feature 'linkGroups_limit_exceeded' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateLinks'
+                
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ 
+                        error = "Link group limit exceeded. Your $($TierInfo.tierName) plan allows up to $MaxGroups link groups. You currently have $($ExistingGroups.Count) groups."
+                    }
+                }
+            }
             
             foreach ($Group in $Body.groups) {
                 $op = ($Group.operation ?? '').ToLower()

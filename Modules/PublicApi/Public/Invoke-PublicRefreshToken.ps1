@@ -123,6 +123,7 @@ function Invoke-PublicRefreshToken {
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
+                tier = $authContext.Tier
             }
         }
         $StatusCode = [HttpStatusCode]::OK
