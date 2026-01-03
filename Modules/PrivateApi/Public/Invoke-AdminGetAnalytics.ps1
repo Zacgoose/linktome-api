@@ -120,8 +120,7 @@ function Invoke-AdminGetAnalytics {
             $Results.viewsByDay = $ViewsByDay
             $Results.clicksByDay = $ClicksByDay
         } else {
-            # Return limited data for free tier with upgrade message
-            $Results.upgradeMessage = "Upgrade to Premium to unlock detailed analytics including visitor details, click patterns, and historical trends."
+            # Return limited data for free tier (frontend manages upgrade prompts)
             $Results.recentPageViews = @()
             $Results.recentLinkClicks = @()
             $Results.linkClicksByLink = @()
