@@ -149,6 +149,7 @@ function Invoke-PublicSignup {
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
+                tier = $authContext.Tier
             }
         }
         

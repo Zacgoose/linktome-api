@@ -97,6 +97,7 @@ function Invoke-PublicLogin {
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
+                tier = $authContext.Tier
             }
         }
 

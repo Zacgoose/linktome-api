@@ -66,6 +66,9 @@ function Get-UserAuthContext {
         }
     }
     
+    # Get user's subscription tier
+    $Tier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { $null }
+    
     return @{
         UserId = $User.RowKey
         Email = $User.PartitionKey
@@ -74,5 +77,6 @@ function Get-UserAuthContext {
         Roles = $Roles
         Permissions = $Permissions
         UserManagements = $UserManagements
+        Tier = $Tier
     }
 }
