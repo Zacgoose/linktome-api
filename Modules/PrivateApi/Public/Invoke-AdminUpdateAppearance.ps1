@@ -109,6 +109,7 @@ function Invoke-AdminUpdateAppearance {
         
         # Valid enum values
         $validThemes = @('custom', 'air', 'blocks', 'lake', 'mineral', 'agate', 'astrid', 'aura', 'bloom', 'breeze', 'light', 'dark', 'sunset', 'ocean', 'forest', 'honeycomb')
+        $premiumThemes = @('agate', 'astrid', 'aura', 'bloom', 'breeze')
         $validProfileImageLayouts = @('classic', 'hero')
         $validTitleStyles = @('text', 'logo')
         $validWallpaperTypes = @('fill', 'gradient', 'blur', 'pattern', 'image', 'video')
@@ -130,6 +131,17 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Invalid theme value" }
                 }
             }
+            # Validate premium themes require Pro+ tier
+            if ($Body.theme -and $Body.theme -in $premiumThemes) {
+                if (-not $TierInfo.limits.customThemes) {
+                    $ClientIP = Get-ClientIPAddress -Request $Request
+                    Write-FeatureUsageEvent -UserId $UserId -Feature 'customThemes' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::Forbidden
+                        Body = @{ error = "Premium themes require Pro tier or higher. Upgrade to use themes like Agate, Astrid, Aura, Bloom, and Breeze." }
+                    }
+                }
+            }
             Set-EntityProperty -Entity $UserData -PropertyName 'Theme' -Value $Body.theme
         }
         
@@ -146,6 +158,17 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Profile image layout must be 'classic' or 'hero'" }
                     }
                 }
+                # Validate hero layout requires Pro+ tier
+                if ($Body.header.profileImageLayout -eq 'hero') {
+                    if (-not (Test-UserTier -User $UserData -MinimumTier 'pro')) {
+                        $ClientIP = Get-ClientIPAddress -Request $Request
+                        Write-FeatureUsageEvent -UserId $UserId -Feature 'heroProfileLayout' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::Forbidden
+                            Body = @{ error = "Hero profile layout requires Pro tier or higher. Upgrade to use the hero-style profile display." }
+                        }
+                    }
+                }
                 Set-EntityProperty -Entity $UserData -PropertyName 'ProfileImageLayout' -Value $Body.header.profileImageLayout
             }
             
@@ -154,6 +177,17 @@ function Invoke-AdminUpdateAppearance {
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::BadRequest
                         Body = @{ error = "Title style must be 'text' or 'logo'" }
+                    }
+                }
+                # Validate logo title style requires Pro+ tier
+                if ($Body.header.titleStyle -eq 'logo') {
+                    if (-not (Test-UserTier -User $UserData -MinimumTier 'pro')) {
+                        $ClientIP = Get-ClientIPAddress -Request $Request
+                        Write-FeatureUsageEvent -UserId $UserId -Feature 'logoTitleStyle' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::Forbidden
+                            Body = @{ error = "Logo title style requires Pro tier or higher. Upgrade to use a logo instead of text for your title." }
+                        }
                     }
                 }
                 Set-EntityProperty -Entity $UserData -PropertyName 'TitleStyle' -Value $Body.header.titleStyle
@@ -285,7 +319,30 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Wallpaper image URL must be a valid http or https URL" }
                     }
                 }
+                # Validate image backgrounds require Premium+ tier
+                if ($Body.wallpaper.imageUrl) {
+                    if (-not (Test-UserTier -User $UserData -MinimumTier 'premium')) {
+                        $ClientIP = Get-ClientIPAddress -Request $Request
+                        Write-FeatureUsageEvent -UserId $UserId -Feature 'imageBackgrounds' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::Forbidden
+                            Body = @{ error = "Image backgrounds require Premium tier or higher. Upgrade to use custom images as your background." }
+                        }
+                    }
+                }
                 Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperImageUrl' -Value $Body.wallpaper.imageUrl
+            }
+            
+            # Check image type wallpaper
+            if ($Body.wallpaper -and $Body.wallpaper.type -eq 'image') {
+                if (-not (Test-UserTier -User $UserData -MinimumTier 'premium')) {
+                    $ClientIP = Get-ClientIPAddress -Request $Request
+                    Write-FeatureUsageEvent -UserId $UserId -Feature 'imageBackgrounds' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::Forbidden
+                        Body = @{ error = "Image backgrounds require Premium tier or higher. Upgrade to use custom images as your background." }
+                    }
+                }
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('videoUrl').Count -gt 0) {
@@ -421,6 +478,17 @@ function Invoke-AdminUpdateAppearance {
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::BadRequest
                         Body = @{ error = "Title size must be 'small' or 'large'" }
+                    }
+                }
+                # Validate large title size requires Pro+ tier
+                if ($Body.text.titleSize -eq 'large') {
+                    if (-not (Test-UserTier -User $UserData -MinimumTier 'pro')) {
+                        $ClientIP = Get-ClientIPAddress -Request $Request
+                        Write-FeatureUsageEvent -UserId $UserId -Feature 'largeTitleSize' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/updateAppearance'
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::Forbidden
+                            Body = @{ error = "Large title size requires Pro tier or higher. Upgrade to use larger title text." }
+                        }
                     }
                 }
                 Set-EntityProperty -Entity $UserData -PropertyName 'TitleSize' -Value $Body.text.titleSize

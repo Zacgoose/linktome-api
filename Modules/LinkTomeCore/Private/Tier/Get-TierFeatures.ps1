@@ -32,7 +32,7 @@ function Get-TierFeatures {
                 linkLocking = $false
                 
                 # Appearance features
-                customThemes = $true
+                customThemes = $false  # Premium themes (agate, astrid, aura, bloom, breeze)
                 premiumFonts = $false
                 customLogos = $false
                 videoBackgrounds = $false
