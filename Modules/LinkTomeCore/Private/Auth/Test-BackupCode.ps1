@@ -74,7 +74,7 @@ function Test-BackupCode {
         
         if ($MatchFound) {
             # Update user with remaining codes
-            $User.BackupCodes = ($RemainingCodes | ConvertTo-Json -Compress)
+            $User.BackupCodes = [string]($RemainingCodes | ConvertTo-Json -Compress)
             Add-LinkToMeAzDataTableEntity @Table -Entity $User -Force
             
             return $true
