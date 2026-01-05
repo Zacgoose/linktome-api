@@ -110,6 +110,10 @@ function Invoke-PublicSignup {
             Permissions = ([string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress))
             SubscriptionTier = [string]'free'
             SubscriptionStatus = [string]'active'
+            TwoFactorEmailEnabled = [bool]$false
+            TwoFactorTotpEnabled = [bool]$false
+            TotpSecret = [string]''
+            BackupCodes = [string]'[]'
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force
@@ -144,6 +148,9 @@ function Invoke-PublicSignup {
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
                 tier = $authContext.Tier
+                twoFactorEnabled = $authContext.TwoFactorEnabled
+                twoFactorEmailEnabled = $authContext.TwoFactorEmailEnabled
+                twoFactorTotpEnabled = $authContext.TwoFactorTotpEnabled
             }
         }
         

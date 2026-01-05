@@ -15,6 +15,9 @@ function Get-EndpointPermissions {
         # Profile endpoints
         'admin/getProfile' = @('read:profile')
         'admin/updateProfile' = @('write:profile')
+
+        # User 2fa endpoints
+        'admin/2fatokensetup' = @('write:2fauth')
         
         # Links endpoints
         'admin/getLinks' = @('read:links')
