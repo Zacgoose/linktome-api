@@ -86,6 +86,11 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - `GET /public/getUserProfile?username={username}` - Get public profile and links (auto-tracks page view)
 - `POST /public/trackLinkClick` - Track link click analytics (requires username and linkId)
 
+#### 2FA Management Endpoints (Requires JWT Authentication)
+- `POST /public/2fatoken?action=setup` - Setup 2FA (generates TOTP secret, QR code, backup codes)
+- `POST /public/2fatoken?action=enable` - Enable 2FA after verification
+- `POST /public/2fatoken?action=disable` - Disable 2FA
+
 #### Admin Endpoints (Requires JWT Authentication)
 - `GET /admin/getProfile` - Get authenticated user's profile
 - `PUT /admin/updateProfile` - Update profile (displayName, bio, avatar)

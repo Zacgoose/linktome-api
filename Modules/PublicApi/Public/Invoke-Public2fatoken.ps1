@@ -5,11 +5,14 @@ function Invoke-Public2fatoken {
     .ROLE
         auth:public
     .SYNOPSIS
-        Handle 2FA token verification and resend requests
+        Handle 2FA token verification, setup, and management
     .DESCRIPTION
-        Handles 2FA token verification and resend requests via action query parameter
-        - ?action=verify: Verify 2FA code and complete authentication
-        - ?action=resend: Resend 2FA email code
+        Handles 2FA operations via action query parameter
+        - ?action=verify: Verify 2FA code and complete authentication (public)
+        - ?action=resend: Resend 2FA email code (public)
+        - ?action=setup: Setup 2FA for user (requires authentication)
+        - ?action=enable: Enable 2FA after verification (requires authentication)
+        - ?action=disable: Disable 2FA for user (requires authentication)
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
@@ -271,6 +274,259 @@ function Invoke-Public2fatoken {
             } catch {
                 Write-Error "2FA resend error: $($_.Exception.Message)"
                 $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Resend failed"
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::InternalServerError
+                    Body = $Results
+                }
+            }
+        }
+        
+        "setup" {
+            # === Setup 2FA for authenticated user ===
+            # This action requires authentication
+            if (-not $Request.AuthenticatedUser) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Unauthorized
+                    Body = @{ error = "Authentication required" }
+                }
+            }
+
+            try {
+                $User = $Request.AuthenticatedUser
+                $UserId = $User.UserId
+                
+                # Get full user record from database
+                $UsersTable = Get-LinkToMeTable -TableName 'Users'
+                $UserRecord = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$UserId'" | Select-Object -First 1
+                
+                if (-not $UserRecord) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::NotFound
+                        Body = @{ error = "User not found" }
+                    }
+                }
+                
+                # Check if setup type is specified (email, totp, or both)
+                $SetupType = $Body.type
+                if (-not $SetupType) {
+                    $SetupType = "totp"  # Default to TOTP
+                }
+                
+                $Response = @{}
+                
+                # Setup TOTP if requested
+                if ($SetupType -eq "totp" -or $SetupType -eq "both") {
+                    # Generate TOTP secret
+                    $TotpSecret = New-TotpSecret
+                    
+                    # Encrypt the secret
+                    $EncryptedSecret = Protect-TotpSecret -PlainText $TotpSecret
+                    
+                    # Generate QR code data
+                    $QRData = New-TotpQRCode -Secret $TotpSecret -AccountName $UserRecord.PartitionKey
+                    
+                    # Generate backup codes
+                    $BackupCodes = New-BackupCodes -Count 10
+                    
+                    # Store encrypted secret and backup codes
+                    $UserRecord.TotpSecret = $EncryptedSecret
+                    Save-BackupCodes -UserId $UserId -PlainTextCodes $BackupCodes | Out-Null
+                    
+                    # Don't enable yet - user needs to verify it works first
+                    # That will happen in a separate "enable" action
+                    
+                    Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -Force
+                    
+                    $Response.totp = @{
+                        secret = $TotpSecret
+                        qrCodeUri = $QRData.uri
+                        backupCodes = $BackupCodes
+                        issuer = $QRData.issuer
+                        accountName = $QRData.accountName
+                    }
+                }
+                
+                # Setup email 2FA if requested
+                if ($SetupType -eq "email" -or $SetupType -eq "both") {
+                    # Email 2FA doesn't require setup - just enable it
+                    $Response.email = @{
+                        ready = $true
+                        accountEmail = $UserRecord.PartitionKey
+                    }
+                }
+                
+                Write-SecurityEvent -EventType '2FASetupInitiated' -UserId $UserId -Email $UserRecord.PartitionKey -Username $UserRecord.Username -IpAddress $ClientIP -Endpoint 'public/2fatoken' -Reason "Type:$SetupType"
+                
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::OK
+                    Body = @{
+                        message = "2FA setup initiated"
+                        type = $SetupType
+                        data = $Response
+                        note = "Please verify TOTP code before enabling. Use action=enable to complete setup."
+                    }
+                }
+                
+            } catch {
+                Write-Error "2FA setup error: $($_.Exception.Message)"
+                $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Setup failed"
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::InternalServerError
+                    Body = $Results
+                }
+            }
+        }
+        
+        "enable" {
+            # === Enable 2FA after verification ===
+            # This action requires authentication
+            if (-not $Request.AuthenticatedUser) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Unauthorized
+                    Body = @{ error = "Authentication required" }
+                }
+            }
+
+            # === Validate Required Fields ===
+            if (-not $Body.type -or -not $Body.token) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::BadRequest
+                    Body = @{ error = "Type and verification token required" }
+                }
+            }
+
+            try {
+                $User = $Request.AuthenticatedUser
+                $UserId = $User.UserId
+                
+                # Get full user record from database
+                $UsersTable = Get-LinkToMeTable -TableName 'Users'
+                $UserRecord = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$UserId'" | Select-Object -First 1
+                
+                if (-not $UserRecord) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::NotFound
+                        Body = @{ error = "User not found" }
+                    }
+                }
+                
+                $EnableType = $Body.type  # "email", "totp", or "both"
+                $TokenValid = $false
+                
+                # Verify token before enabling
+                if ($EnableType -eq "totp" -or $EnableType -eq "both") {
+                    if ($UserRecord.TotpSecret) {
+                        try {
+                            $DecryptedSecret = Unprotect-TotpSecret -EncryptedText $UserRecord.TotpSecret
+                            if (Test-TotpToken -Token $Body.token -Secret $DecryptedSecret) {
+                                $TokenValid = $true
+                                $UserRecord.TwoFactorTotpEnabled = $true
+                            }
+                        }
+                        catch {
+                            Write-Warning "TOTP verification failed during enable for user $UserId"
+                        }
+                    }
+                    else {
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::BadRequest
+                            Body = @{ error = "TOTP not set up. Use action=setup first." }
+                        }
+                    }
+                }
+                
+                # Email doesn't need token verification for enable
+                if ($EnableType -eq "email") {
+                    $TokenValid = $true
+                    $UserRecord.TwoFactorEmailEnabled = $true
+                }
+                
+                # For "both", enable email too if TOTP was verified
+                if ($EnableType -eq "both" -and $TokenValid) {
+                    $UserRecord.TwoFactorEmailEnabled = $true
+                }
+                
+                if (-not $TokenValid) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Invalid verification code. Please try again." }
+                    }
+                }
+                
+                # Save the enabled status
+                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -Force
+                
+                Write-SecurityEvent -EventType '2FAEnabled' -UserId $UserId -Email $UserRecord.PartitionKey -Username $UserRecord.Username -IpAddress $ClientIP -Endpoint 'public/2fatoken' -Reason "Type:$EnableType"
+                
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::OK
+                    Body = @{
+                        message = "Two-factor authentication enabled successfully"
+                        type = $EnableType
+                        emailEnabled = $UserRecord.TwoFactorEmailEnabled -eq $true
+                        totpEnabled = $UserRecord.TwoFactorTotpEnabled -eq $true
+                    }
+                }
+                
+            } catch {
+                Write-Error "2FA enable error: $($_.Exception.Message)"
+                $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Enable failed"
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::InternalServerError
+                    Body = $Results
+                }
+            }
+        }
+        
+        "disable" {
+            # === Disable 2FA for authenticated user ===
+            # This action requires authentication
+            if (-not $Request.AuthenticatedUser) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Unauthorized
+                    Body = @{ error = "Authentication required" }
+                }
+            }
+
+            try {
+                $User = $Request.AuthenticatedUser
+                $UserId = $User.UserId
+                
+                # Get full user record from database
+                $UsersTable = Get-LinkToMeTable -TableName 'Users'
+                $UserRecord = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$UserId'" | Select-Object -First 1
+                
+                if (-not $UserRecord) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::NotFound
+                        Body = @{ error = "User not found" }
+                    }
+                }
+                
+                # Disable both methods
+                $UserRecord.TwoFactorEmailEnabled = $false
+                $UserRecord.TwoFactorTotpEnabled = $false
+                
+                # Optionally clear TOTP secret and backup codes for security
+                # $UserRecord.TotpSecret = ""
+                # $UserRecord.BackupCodes = "[]"
+                
+                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -Force
+                
+                Write-SecurityEvent -EventType '2FADisabled' -UserId $UserId -Email $UserRecord.PartitionKey -Username $UserRecord.Username -IpAddress $ClientIP -Endpoint 'public/2fatoken'
+                
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::OK
+                    Body = @{
+                        message = "Two-factor authentication disabled successfully"
+                        emailEnabled = $false
+                        totpEnabled = $false
+                    }
+                }
+                
+            } catch {
+                Write-Error "2FA disable error: $($_.Exception.Message)"
+                $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Disable failed"
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::InternalServerError
                     Body = $Results

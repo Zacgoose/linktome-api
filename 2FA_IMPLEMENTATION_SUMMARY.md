@@ -95,6 +95,79 @@ Resend email 2FA code (only for email method).
 - 400: Not an email 2FA session
 - 429: Rate limit exceeded (60s cooldown)
 
+#### POST /api/public/2fatoken?action=setup (Requires Authentication)
+Setup 2FA for the authenticated user. Generates TOTP secret, QR code, and backup codes.
+
+**Request:**
+```json
+{
+  "type": "totp"  // "email", "totp", or "both"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "message": "2FA setup initiated",
+  "type": "totp",
+  "data": {
+    "totp": {
+      "secret": "BASE32SECRET...",
+      "qrCodeUri": "otpauth://totp/LinkToMe:user@example.com?secret=...",
+      "backupCodes": ["CODE1234", "CODE5678", ...],
+      "issuer": "LinkToMe",
+      "accountName": "user@example.com"
+    }
+  },
+  "note": "Please verify TOTP code before enabling. Use action=enable to complete setup."
+}
+```
+
+**Error Responses:**
+- 401: Authentication required
+- 500: Setup failed
+
+#### POST /api/public/2fatoken?action=enable (Requires Authentication)
+Enable 2FA after verifying it works. Requires a valid TOTP token for verification.
+
+**Request:**
+```json
+{
+  "type": "totp",  // "email", "totp", or "both"
+  "token": "123456"  // Required for TOTP, not needed for email only
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "message": "Two-factor authentication enabled successfully",
+  "type": "totp",
+  "emailEnabled": false,
+  "totpEnabled": true
+}
+```
+
+**Error Responses:**
+- 401: Authentication required
+- 400: Invalid verification code
+- 400: TOTP not set up (need to call setup first)
+
+#### POST /api/public/2fatoken?action=disable (Requires Authentication)
+Disable 2FA for the authenticated user.
+
+**Success Response (200):**
+```json
+{
+  "message": "Two-factor authentication disabled successfully",
+  "emailEnabled": false,
+  "totpEnabled": false
+}
+```
+
+**Error Responses:**
+- 401: Authentication required
+
 ### Modified Endpoints
 
 #### POST /api/public/login
@@ -194,27 +267,24 @@ See `local.settings.json.example` for a complete example.
    - Frontend can use this URI to generate QR code images
    - Supports issuer and account name customization
 
+7. **Complete Setup Flow** ✅ NEW
+   - Setup endpoint generates TOTP secret, QR code, and backup codes
+   - Enable endpoint verifies and activates 2FA
+   - Disable endpoint turns off 2FA
+   - All integrated into single endpoint with action parameter
 
-### Future Enhancements (Not Implemented)
 
-The following endpoints were mentioned in the requirements but are not implemented yet:
+### Implementation Status
 
-1. **POST /api/protected/2fatoken?action=setup-totp**
-   - Generate TOTP secret and QR code data
-   - Return backup codes
-   - **Helper function `New-TotpQRCode` is available for this**
+All core features are now implemented:
 
-2. **POST /api/protected/2fatoken?action=enable-totp**
-   - Verify TOTP setup
-   - Enable TOTP 2FA for user
+✅ **POST /api/public/2fatoken?action=setup** - Generate TOTP secret, QR code, and backup codes
+✅ **POST /api/public/2fatoken?action=enable** - Verify and enable 2FA (email, TOTP, or both)
+✅ **POST /api/public/2fatoken?action=disable** - Disable 2FA for user
+✅ **POST /api/public/2fatoken?action=verify** - Verify 2FA code during login
+✅ **POST /api/public/2fatoken?action=resend** - Resend email 2FA code
 
-3. **POST /api/protected/2fatoken?action=enable-email**
-   - Enable email 2FA for user
-
-4. **POST /api/protected/2fatoken?action=disable**
-   - Disable 2FA for user
-
-These can be implemented later as user settings features. The core helper functions are in place.
+All endpoints use the same `/api/public/2fatoken` path with different `action` query parameters.
 
 ## Testing Recommendations
 
