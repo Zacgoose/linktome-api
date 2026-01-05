@@ -36,10 +36,13 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ JWT-based authentication with Bearer tokens
 - ✅ Strong password hashing (PBKDF2-SHA256, 100K iterations)
 - ✅ Two-Factor Authentication (2FA) support
-  - ✅ Email-based 2FA with 6-digit codes
+  - ✅ Email-based 2FA with 6-digit codes (SHA-256 hashed)
   - ✅ TOTP-based 2FA (compatible with Google Authenticator, Authy, etc.)
+  - ✅ TOTP secrets encrypted at rest (AES-256)
   - ✅ Support for dual 2FA (both email and TOTP enabled)
+  - ✅ Backup codes for account recovery (SHA-256 hashed, single-use)
   - ✅ Secure session management with expiration
+  - ✅ 2FA is optional (user opt-in)
 - ✅ Input validation and sanitization
 - ✅ Protection against NoSQL injection
 - ✅ Rate limiting (5 login attempts/min, 3 signups/hour per IP)
@@ -161,6 +164,7 @@ All environment variables are configured in `local.settings.json`:
 | `AzureWebJobsStorage` | Storage connection string | `UseDevelopmentStorage=true` |
 | `JWT_SECRET` | Secret key for JWT signing | Dev secret (64+ chars) |
 | `AZURE_FUNCTIONS_ENVIRONMENT` | Environment indicator | `Development` (implicit) |
+| `ENCRYPTION_KEY` | AES-256 key for encrypting TOTP secrets | 32+ characters required |
 | `SMTP_SERVER` | SMTP server for 2FA emails | Required for email 2FA |
 | `SMTP_PORT` | SMTP port (usually 587) | Required for email 2FA |
 | `SMTP_USERNAME` | SMTP username | Required for email 2FA |
@@ -285,6 +289,7 @@ func azure functionapp publish <function-app-name>
 | `AzureWebJobsStorage` | ✅ Yes | Azure Storage connection string (auto-configured) |
 | `AZURE_FUNCTIONS_ENVIRONMENT` | ✅ Yes | Set to `Production` |
 | `CORS_ALLOWED_ORIGINS` | ⚠️ Optional | Only if NOT using Azure Static Web Apps |
+| `ENCRYPTION_KEY` | ⚠️ Optional | AES-256 key for TOTP secrets (32+ chars, required for TOTP 2FA) |
 | `SMTP_SERVER` | ⚠️ Optional | SMTP server for 2FA emails (required for email 2FA) |
 | `SMTP_PORT` | ⚠️ Optional | SMTP port (required for email 2FA) |
 | `SMTP_USERNAME` | ⚠️ Optional | SMTP username (required for email 2FA) |

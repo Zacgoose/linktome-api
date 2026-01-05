@@ -13,31 +13,43 @@ This document summarizes the Two-Factor Authentication (2FA) implementation for 
    - 10-minute expiration
    - Rate limiting: max 5 verification attempts per session
    - Rate limiting: 60-second cooldown between resend requests
-   - Codes are hashed before storage using SHA256
+   - Codes are hashed before storage using SHA-256
 
 2. **TOTP-based 2FA**
    - RFC 6238 compliant implementation
    - Compatible with Google Authenticator, Authy, 1Password, etc.
    - BASE32-encoded secrets
+   - Secrets encrypted at rest using AES-256
    - 30-second time step
    - Accepts tokens from ±1 time window (90 seconds total)
 
-3. **Dual 2FA Support**
+3. **Backup Codes**
+   - 10 single-use backup codes generated per user
+   - Hashed before storage using SHA-256
+   - Can be used when primary 2FA method is unavailable
+   - Automatically removed after use
+
+4. **Dual 2FA Support**
    - Users can enable both email and TOTP
    - Either method can be used for verification
    - Email code sent automatically on login
    - Frontend can present choice to user
 
+5. **Optional 2FA**
+   - 2FA is disabled by default for all users
+   - Users must opt-in to enable 2FA
+   - Only enforced for users who have enabled it
+
 ### API Endpoints
 
 #### POST /api/public/2fatoken?action=verify
-Verify a 2FA code and complete authentication.
+Verify a 2FA code and complete authentication. Accepts email codes, TOTP codes, or backup codes.
 
 **Request:**
 ```json
 {
   "sessionId": "tfa-12345-...",
-  "token": "123456",
+  "token": "123456",  // Email code, TOTP code, or backup code
   "method": "email"  // optional, informational only
 }
 ```
@@ -58,6 +70,8 @@ Verify a 2FA code and complete authentication.
 - 401: Session expired or invalid
 - 400: Invalid verification code
 - 401: Maximum attempts exceeded
+
+**Note:** Backup codes are automatically detected and validated if email/TOTP verification fails.
 
 #### POST /api/public/2fatoken?action=resend
 Resend email 2FA code (only for email method).
@@ -114,7 +128,8 @@ New users now include 2FA fields (default: disabled).
 Added fields:
 - `TwoFactorEmailEnabled` (boolean) - Email 2FA enabled
 - `TwoFactorTotpEnabled` (boolean) - TOTP 2FA enabled
-- `TotpSecret` (string) - Encrypted TOTP secret (BASE32)
+- `TotpSecret` (string) - Encrypted TOTP secret (AES-256, BASE32)
+- `BackupCodes` (string) - JSON array of hashed backup codes (SHA-256)
 
 #### TwoFactorSessions Table (New)
 Fields:
@@ -122,13 +137,16 @@ Fields:
 - `RowKey` (string) - User ID
 - `Method` (string) - "email", "totp", or "both"
 - `AvailableMethods` (string) - JSON array of available methods
-- `EmailCodeHash` (string) - SHA256 hash of email code
+- `EmailCodeHash` (string) - SHA-256 hash of email code
 - `AttemptsRemaining` (int) - Verification attempts left
 - `CreatedAt` (datetime) - Session creation time
 - `ExpiresAt` (datetime) - Session expiration (10 minutes)
 - `LastResendAt` (datetime) - Last resend timestamp
 
 ### Environment Variables
+
+#### Required for TOTP 2FA
+- `ENCRYPTION_KEY` - AES-256 encryption key (minimum 32 characters)
 
 #### Required for Email 2FA
 - `SMTP_SERVER` - SMTP server hostname
@@ -145,7 +163,9 @@ See `local.settings.json.example` for a complete example.
 1. **Cryptographic Security**
    - Uses `RandomNumberGenerator` for secure random generation
    - Proper resource disposal for all crypto objects
-   - Email codes hashed before storage (SHA256)
+   - Email codes hashed before storage (SHA-256)
+   - TOTP secrets encrypted at rest (AES-256)
+   - Backup codes hashed before storage (SHA-256)
 
 2. **Session Management**
    - 10-minute session expiration
@@ -160,6 +180,13 @@ See `local.settings.json.example` for a complete example.
 4. **Security Event Logging**
    - All 2FA events logged to SecurityEvents table
    - Events: 2FAVerifySuccess, 2FAVerifyFailed, 2FACodeResent, LoginRequires2FA
+   - No sensitive data (codes, secrets) logged
+
+5. **Backup Code Security**
+   - Single-use codes automatically removed after validation
+   - Hashed using SHA-256 (same as email codes)
+   - Can be used when primary 2FA method is unavailable
+
 
 ### Future Enhancements (Not Implemented)
 
@@ -214,11 +241,18 @@ These can be implemented later as user settings features.
    - Attempt verification
    - Verify session expired error
 
+6. **Backup Codes**
+   - Test backup code generation
+   - Test backup code verification
+   - Verify single-use (code removed after use)
+   - Test backup code with both email and TOTP enabled
+
 ### Security Testing
 
 1. **Code Reuse**
    - Verify codes cannot be reused after successful verification
    - Verify session is deleted after use
+   - Verify backup codes are single-use
 
 2. **Timing Attacks**
    - TOTP accepts ±1 time window (90 seconds total)
@@ -228,6 +262,11 @@ These can be implemented later as user settings features.
    - Verify 5-attempt limit is enforced
    - Verify session is deleted after max attempts
 
+4. **Encryption**
+   - Verify TOTP secrets are encrypted at rest
+   - Test encryption/decryption with various keys
+   - Verify secrets cannot be read without decryption
+
 ## Known Limitations
 
 1. **SMTP Configuration Required**
@@ -235,45 +274,45 @@ These can be implemented later as user settings features.
    - No email will be sent if SMTP is not configured
    - Users should be warned during 2FA setup
 
-2. **No Backup Codes**
-   - Backup codes not implemented yet
-   - Users could be locked out if they lose their device
-   - Should be added in future enhancement
+2. **Encryption Key Management**
+   - Encryption key stored in environment variable (not Azure Key Vault)
+   - Key rotation not implemented
+   - Consider moving to Key Vault for production
 
 3. **No QR Code Generation**
    - TOTP setup endpoint not implemented
    - Users must manually enter secret in authenticator app
    - Should be added in future enhancement
 
-4. **No 2FA Recovery**
-   - No account recovery mechanism if 2FA device is lost
-   - Admin intervention may be required
-   - Should be considered for production deployment
-
 ## Production Deployment Checklist
 
+- [ ] Generate strong ENCRYPTION_KEY (32+ characters)
+- [ ] Configure ENCRYPTION_KEY in Azure App Settings
 - [ ] Configure SMTP credentials in Azure App Settings
 - [ ] Test email delivery in production environment
 - [ ] Ensure TwoFactorSessions table is created
 - [ ] Monitor SecurityEvents for 2FA-related events
 - [ ] Set up alerts for failed 2FA attempts
 - [ ] Document 2FA setup process for users
-- [ ] Consider implementing backup codes
+- [ ] Test backup code generation and usage
 - [ ] Consider implementing QR code generation
-- [ ] Consider implementing 2FA recovery mechanism
+- [ ] Consider migrating ENCRYPTION_KEY to Azure Key Vault
 
 ## Questions for Product Owner
 
-1. Should we implement backup codes before production?
-2. What should the account recovery process be if a user loses their 2FA device?
-3. Should 2FA be optional or mandatory for all users?
+1. ~~Should we implement backup codes before production?~~ **Implemented**
+2. What should the account recovery process be if a user loses all backup codes?
+3. ~~Should 2FA be optional or mandatory for all users?~~ **Optional (already implemented)**
 4. Should admins be able to disable 2FA for users who are locked out?
 5. Do we need to support SMS-based 2FA in the future?
+6. Should we implement key rotation for ENCRYPTION_KEY?
 
 ## Additional Notes
 
 - The implementation follows the RFC 6238 standard for TOTP
-- TOTP secrets are stored in plain text in the database (should be encrypted in production)
-- Email codes are hashed before storage (secure)
+- TOTP secrets are encrypted at rest using AES-256 (key stored in environment)
+- Email codes are hashed before storage using SHA-256 (secure)
+- Backup codes are hashed before storage using SHA-256 (secure)
 - All cryptographic objects properly disposed to prevent memory leaks
 - Implementation is compatible with standard authenticator apps
+- Backup codes provide recovery mechanism if primary 2FA method is lost

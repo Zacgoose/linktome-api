@@ -89,10 +89,25 @@ function Invoke-Public2fatoken {
                 # Check TOTP if not already valid and TOTP is enabled
                 if (-not $TokenValid -and ($Session.Method -eq 'totp' -or $Session.Method -eq 'both')) {
                     if ($User.TotpSecret) {
-                        if (Test-TotpToken -Token $Body.token -Secret $User.TotpSecret) {
-                            $TokenValid = $true
-                            $MethodUsed = "totp"
+                        try {
+                            # Decrypt TOTP secret before verification
+                            $DecryptedSecret = Unprotect-TotpSecret -EncryptedText $User.TotpSecret
+                            if (Test-TotpToken -Token $Body.token -Secret $DecryptedSecret) {
+                                $TokenValid = $true
+                                $MethodUsed = "totp"
+                            }
                         }
+                        catch {
+                            Write-Warning "Failed to decrypt TOTP secret: $($_.Exception.Message)"
+                        }
+                    }
+                }
+
+                # Check backup code if not already valid
+                if (-not $TokenValid) {
+                    if (Test-BackupCode -UserId $Session.RowKey -SubmittedCode $Body.token) {
+                        $TokenValid = $true
+                        $MethodUsed = "backup"
                     }
                 }
 

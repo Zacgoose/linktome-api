@@ -113,6 +113,7 @@ function Invoke-PublicSignup {
             TwoFactorEmailEnabled = [bool]$false
             TwoFactorTotpEnabled = [bool]$false
             TotpSecret = [string]''
+            BackupCodes = [string]'[]'
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force
