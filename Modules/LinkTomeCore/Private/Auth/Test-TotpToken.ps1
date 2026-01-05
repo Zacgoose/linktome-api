@@ -56,6 +56,8 @@ function Test-TotpToken {
         try {
             $Hmac.Key = $SecretBytes
             
+            Write-Information "Testing TOTP: TimeStep=$TimeStep, Window=±$TimeWindow, Token=$Token"
+            
             for ($i = -$TimeWindow; $i -le $TimeWindow; $i++) {
                 $Counter = $TimeStep + $i
                 
@@ -79,10 +81,15 @@ function Test-TotpToken {
                 # Generate 6-digit code
                 $Otp = ($Code % 1000000).ToString('D6')
                 
+                Write-Information "  Window $i (counter=$($TimeStep + $i)): Generated OTP=$Otp"
+                
                 if ($Otp -eq $Token) {
+                    Write-Information "  Match found at window $i!"
                     return $true
                 }
             }
+            
+            Write-Warning "No TOTP match found in any time window"
         }
         finally {
             $Hmac.Dispose()

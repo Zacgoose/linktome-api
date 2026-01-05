@@ -160,7 +160,13 @@ function Invoke-Admin2fatokensetup {
                         try {
                             Write-Information "Attempting to decrypt TOTP secret for user $UserId"
                             $DecryptedSecret = Unprotect-TotpSecret -EncryptedText $UserRecord.TotpSecret
-                            Write-Information "TOTP secret decrypted successfully, verifying token"
+                            Write-Information "TOTP secret decrypted successfully: length=$($DecryptedSecret.Length)"
+                            Write-Information "Token received: '$($Body.token)' (length=$($Body.token.Length))"
+                            
+                            # Log the current time window for debugging
+                            $UnixTime = [int]((Get-Date).ToUniversalTime() - [datetime]'1970-01-01T00:00:00Z').TotalSeconds
+                            $TimeStep = [Math]::Floor($UnixTime / 30)
+                            Write-Information "Current time step: $TimeStep (Unix: $UnixTime)"
                             
                             if (Test-TotpToken -Token $Body.token -Secret $DecryptedSecret) {
                                 Write-Information "TOTP token verified successfully"
@@ -169,6 +175,7 @@ function Invoke-Admin2fatokensetup {
                             }
                             else {
                                 Write-Warning "TOTP token verification failed - token does not match"
+                                Write-Warning "Secret (first 10 chars): $($DecryptedSecret.Substring(0, [Math]::Min(10, $DecryptedSecret.Length)))"
                             }
                         }
                         catch {
