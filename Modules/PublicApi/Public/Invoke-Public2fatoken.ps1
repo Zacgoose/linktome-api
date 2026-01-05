@@ -106,11 +106,23 @@ function Invoke-Public2fatoken {
                 # Check backup code if not already valid
                 if (-not $TokenValid) {
                     # Only check backup codes if user has them
-                    if ($User.BackupCodes -and $User.BackupCodes -ne '[]') {
-                        if (Test-BackupCode -UserId $Session.RowKey -SubmittedCode $Body.token) {
-                            $TokenValid = $true
-                            $MethodUsed = "backup"
+                    Write-Information "Checking backup codes for user $($Session.RowKey)"
+                    if ($User.BackupCodes) {
+                        Write-Information "User has BackupCodes field: $($User.BackupCodes)"
+                        if ($User.BackupCodes -ne '[]' -and $User.BackupCodes -ne '') {
+                            Write-Information "Attempting to verify backup code: $($Body.token)"
+                            if (Test-BackupCode -UserId $Session.RowKey -SubmittedCode $Body.token) {
+                                $TokenValid = $true
+                                $MethodUsed = "backup"
+                                Write-Information "Backup code verified successfully"
+                            } else {
+                                Write-Warning "Backup code verification failed"
+                            }
+                        } else {
+                            Write-Information "No backup codes available (empty array)"
                         }
+                    } else {
+                        Write-Information "User does not have BackupCodes field"
                     }
                 }
 
