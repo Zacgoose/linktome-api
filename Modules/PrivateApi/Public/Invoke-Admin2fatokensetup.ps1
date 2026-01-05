@@ -86,7 +86,7 @@ function Invoke-Admin2fatokensetup {
                     # Don't enable yet - user needs to verify it works first
                     # That will happen in a separate "enable" action
                     
-                    Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -Force
+                    Add-LinkToMeAzDataTableEntity @UsersTable -OperationType 'UpsertMerge' -Entity $UserRecord
                     
                     $Response.totp = @{
                         secret = $TotpSecret
