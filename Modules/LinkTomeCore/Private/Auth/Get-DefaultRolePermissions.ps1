@@ -17,6 +17,7 @@ function Get-DefaultRolePermissions {
     $RolePermissions = @{
         'user' = @(
             'read:dashboard',
+            'write:2fauth',
             'read:profile',
             'write:profile',
             'read:links',

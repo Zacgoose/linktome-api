@@ -3,7 +3,7 @@ function Invoke-Admin2fatokensetup {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        auth:user
+        write:2fauth
     .SYNOPSIS
         Handle 2FA setup, enable, and disable for authenticated users
     .DESCRIPTION
@@ -68,13 +68,18 @@ function Invoke-Admin2fatokensetup {
                     $BackupCodes = New-BackupCodes -Count 10
                     
                     # Store encrypted secret and backup codes
-                    $UserRecord.TotpSecret = $EncryptedSecret
-                    Save-BackupCodes -UserId $UserId -PlainTextCodes $BackupCodes | Out-Null
+                    if (-not $UserRecord.PSObject.Properties['TotpSecret']) {
+                        $UserRecord | Add-Member -NotePropertyName TotpSecret -NotePropertyValue $EncryptedSecret -Force
+                    } else {
+                        $UserRecord.TotpSecret = $EncryptedSecret
+                    }
+
+                    Save-BackupCodes -UserId $UserId -PlainTextCodes $BackupCodes
                     
                     # Don't enable yet - user needs to verify it works first
                     # That will happen in a separate "enable" action
                     
-                    Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -Force
+                    Add-LinkToMeAzDataTableEntity @UsersTable -OperationType 'UpsertMerge' -Entity $UserRecord -Force
                     
                     $Response.totp = @{
                         secret = $TotpSecret
