@@ -158,14 +158,25 @@ function Invoke-Admin2fatokensetup {
                 if ($EnableType -eq "totp" -or $EnableType -eq "both") {
                     if ($UserRecord.TotpSecret) {
                         try {
+                            Write-Information "Attempting to decrypt TOTP secret for user $UserId"
                             $DecryptedSecret = Unprotect-TotpSecret -EncryptedText $UserRecord.TotpSecret
+                            Write-Information "TOTP secret decrypted successfully, verifying token"
+                            
                             if (Test-TotpToken -Token $Body.token -Secret $DecryptedSecret) {
+                                Write-Information "TOTP token verified successfully"
                                 $TokenValid = $true
                                 $UserRecord.TwoFactorTotpEnabled = $true
                             }
+                            else {
+                                Write-Warning "TOTP token verification failed - token does not match"
+                            }
                         }
                         catch {
-                            Write-Warning "TOTP verification failed during enable for user $UserId"
+                            Write-Error "TOTP verification error during enable for user $UserId : $($_.Exception.Message)"
+                            return [HttpResponseContext]@{
+                                StatusCode = [HttpStatusCode]::InternalServerError
+                                Body = @{ error = "Failed to verify TOTP token. Error: $($_.Exception.Message)" }
+                            }
                         }
                     }
                     else {
