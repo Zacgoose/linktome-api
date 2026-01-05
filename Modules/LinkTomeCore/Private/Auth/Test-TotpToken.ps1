@@ -52,20 +52,21 @@ function Test-TotpToken {
         $TimeStep = [Math]::Floor($UnixTime / 30)
         
         # Check current time and ±TimeWindow
-        for ($i = -$TimeWindow; $i -le $TimeWindow; $i++) {
-            $Counter = $TimeStep + $i
+        $Hmac = New-Object System.Security.Cryptography.HMACSHA1
+        try {
+            $Hmac.Key = $SecretBytes
             
-            # Convert counter to 8-byte array (big-endian)
-            $CounterBytes = [byte[]]::new(8)
-            for ($j = 7; $j -ge 0; $j--) {
-                $CounterBytes[$j] = $Counter -band 0xFF
-                $Counter = $Counter -shr 8
-            }
-            
-            # HMAC-SHA1
-            $Hmac = New-Object System.Security.Cryptography.HMACSHA1
-            try {
-                $Hmac.Key = $SecretBytes
+            for ($i = -$TimeWindow; $i -le $TimeWindow; $i++) {
+                $Counter = $TimeStep + $i
+                
+                # Convert counter to 8-byte array (big-endian)
+                $CounterBytes = [byte[]]::new(8)
+                for ($j = 7; $j -ge 0; $j--) {
+                    $CounterBytes[$j] = $Counter -band 0xFF
+                    $Counter = $Counter -shr 8
+                }
+                
+                # HMAC-SHA1
                 $Hash = $Hmac.ComputeHash($CounterBytes)
                 
                 # Dynamic truncation
@@ -82,9 +83,9 @@ function Test-TotpToken {
                     return $true
                 }
             }
-            finally {
-                $Hmac.Dispose()
-            }
+        }
+        finally {
+            $Hmac.Dispose()
         }
         
         return $false
