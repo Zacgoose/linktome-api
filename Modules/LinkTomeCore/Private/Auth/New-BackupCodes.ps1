@@ -17,14 +17,20 @@ function New-BackupCodes {
     $Random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
     
     try {
+        # Alphanumeric characters for codes (excluding ambiguous characters)
+        $Chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # Removed I, O, 0, 1 to avoid confusion
+        
         for ($i = 0; $i -lt $Count; $i++) {
-            # Generate 8 random bytes
+            # Generate 8-character code directly from random selection
+            $Code = ""
             $Bytes = New-Object byte[] 8
             $Random.GetBytes($Bytes)
             
-            # Convert to alphanumeric code (8 characters)
-            $Code = [Convert]::ToBase64String($Bytes) -replace '[^a-zA-Z0-9]', ''
-            $Code = $Code.Substring(0, 8).ToUpper()
+            foreach ($Byte in $Bytes) {
+                # Map byte to character index
+                $Index = $Byte % $Chars.Length
+                $Code += $Chars[$Index]
+            }
             
             $Codes += $Code
         }

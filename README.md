@@ -164,7 +164,7 @@ All environment variables are configured in `local.settings.json`:
 | `AzureWebJobsStorage` | Storage connection string | `UseDevelopmentStorage=true` |
 | `JWT_SECRET` | Secret key for JWT signing | Dev secret (64+ chars) |
 | `AZURE_FUNCTIONS_ENVIRONMENT` | Environment indicator | `Development` (implicit) |
-| `ENCRYPTION_KEY` | AES-256 key for encrypting TOTP secrets | 32+ characters required |
+| `ENCRYPTION_KEY` | AES-256 key for encrypting TOTP secrets | **Exactly 32 characters required** |
 | `SMTP_SERVER` | SMTP server for 2FA emails | Required for email 2FA |
 | `SMTP_PORT` | SMTP port (usually 587) | Required for email 2FA |
 | `SMTP_USERNAME` | SMTP username | Required for email 2FA |
@@ -289,7 +289,7 @@ func azure functionapp publish <function-app-name>
 | `AzureWebJobsStorage` | ✅ Yes | Azure Storage connection string (auto-configured) |
 | `AZURE_FUNCTIONS_ENVIRONMENT` | ✅ Yes | Set to `Production` |
 | `CORS_ALLOWED_ORIGINS` | ⚠️ Optional | Only if NOT using Azure Static Web Apps |
-| `ENCRYPTION_KEY` | ⚠️ Optional | AES-256 key for TOTP secrets (32+ chars, required for TOTP 2FA) |
+| `ENCRYPTION_KEY` | ⚠️ Optional | AES-256 key for TOTP secrets (**exactly 32 chars**, required for TOTP 2FA) |
 | `SMTP_SERVER` | ⚠️ Optional | SMTP server for 2FA emails (required for email 2FA) |
 | `SMTP_PORT` | ⚠️ Optional | SMTP port (required for email 2FA) |
 | `SMTP_USERNAME` | ⚠️ Optional | SMTP username (required for email 2FA) |

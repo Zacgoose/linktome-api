@@ -22,8 +22,14 @@ function Protect-TotpSecret {
             throw "Encryption key not configured"
         }
         
-        # Ensure key is 32 bytes (256 bits) for AES-256
-        $KeyBytes = [System.Text.Encoding]::UTF8.GetBytes($EncryptionKey.PadRight(32).Substring(0, 32))
+        # Validate key length (must be exactly 32 characters for AES-256)
+        if ($EncryptionKey.Length -ne 32) {
+            Write-Error "ENCRYPTION_KEY must be exactly 32 characters (256 bits) for AES-256"
+            throw "Invalid encryption key length: $($EncryptionKey.Length) (expected 32)"
+        }
+        
+        # Convert key to bytes
+        $KeyBytes = [System.Text.Encoding]::UTF8.GetBytes($EncryptionKey)
         
         # Create AES encryption object
         $Aes = [System.Security.Cryptography.Aes]::Create()

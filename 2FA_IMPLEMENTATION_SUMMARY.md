@@ -186,6 +186,13 @@ See `local.settings.json.example` for a complete example.
    - Single-use codes automatically removed after validation
    - Hashed using SHA-256 (same as email codes)
    - Can be used when primary 2FA method is unavailable
+   - 8-character alphanumeric codes (excluding ambiguous characters)
+
+6. **TOTP QR Code Generation**
+   - Helper function to generate otpauth:// URI
+   - Compatible with RFC 6238 standard
+   - Frontend can use this URI to generate QR code images
+   - Supports issuer and account name customization
 
 
 ### Future Enhancements (Not Implemented)
@@ -193,8 +200,9 @@ See `local.settings.json.example` for a complete example.
 The following endpoints were mentioned in the requirements but are not implemented yet:
 
 1. **POST /api/protected/2fatoken?action=setup-totp**
-   - Generate TOTP secret and QR code
+   - Generate TOTP secret and QR code data
    - Return backup codes
+   - **Helper function `New-TotpQRCode` is available for this**
 
 2. **POST /api/protected/2fatoken?action=enable-totp**
    - Verify TOTP setup
@@ -206,7 +214,7 @@ The following endpoints were mentioned in the requirements but are not implement
 4. **POST /api/protected/2fatoken?action=disable**
    - Disable 2FA for user
 
-These can be implemented later as user settings features.
+These can be implemented later as user settings features. The core helper functions are in place.
 
 ## Testing Recommendations
 

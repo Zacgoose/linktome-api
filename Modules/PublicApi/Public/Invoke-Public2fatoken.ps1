@@ -98,7 +98,7 @@ function Invoke-Public2fatoken {
                             }
                         }
                         catch {
-                            Write-Warning "Failed to decrypt TOTP secret: $($_.Exception.Message)"
+                            Write-Information "TOTP verification failed for user $($Session.RowKey)"
                         }
                     }
                 }
