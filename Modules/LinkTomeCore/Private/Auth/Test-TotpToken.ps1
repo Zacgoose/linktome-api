@@ -78,9 +78,9 @@ function Test-TotpToken {
                 # Dynamic truncation
                 $Offset = $Hash[$Hash.Length - 1] -band 0x0F
                 $Code = (($Hash[$Offset] -band 0x7F) -shl 24) -bor `
-                        ($Hash[$Offset + 1] -shl 16) -bor `
-                        ($Hash[$Offset + 2] -shl 8) -bor `
-                        $Hash[$Offset + 3]
+                        (($Hash[$Offset + 1] -band 0xFF) -shl 16) -bor `
+                        (($Hash[$Offset + 2] -band 0xFF) -shl 8) -bor `
+                        ($Hash[$Offset + 3] -band 0xFF)
                 
                 # Generate 6-digit code
                 $Otp = ($Code % 1000000).ToString('D6')
