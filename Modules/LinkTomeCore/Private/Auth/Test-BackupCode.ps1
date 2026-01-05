@@ -49,20 +49,16 @@ function Test-BackupCode {
         
         # Hash the submitted code
         $SubmittedHash = Get-StringHash -InputString $SubmittedCode
-        Write-Information "Submitted code: '$SubmittedCode' -> Hash: '$SubmittedHash'"
-        Write-Information "Number of stored codes: $($StoredCodes.Count)"
-        
+
         # Check if it matches any stored code
         $MatchFound = $false
         $RemainingCodes = @()
         $CodeIndex = 0
         
         foreach ($HashedCode in $StoredCodes) {
-            Write-Information "  Comparing with stored code #$CodeIndex : '$HashedCode'"
             if ($HashedCode -eq $SubmittedHash -and -not $MatchFound) {
                 # Match found - don't add to remaining codes (single-use)
                 $MatchFound = $true
-                Write-Information "Backup code verified for user $UserId (matched code #$CodeIndex)"
                 # Continue to process remaining codes for storage
             }
             else {

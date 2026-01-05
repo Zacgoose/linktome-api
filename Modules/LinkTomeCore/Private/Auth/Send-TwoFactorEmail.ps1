@@ -64,8 +64,6 @@ LinkToMe Team
         }
         
         Send-MailMessage @MailParams
-        
-        Write-Information "2FA email sent to $Email"
         return $true
     }
     catch {

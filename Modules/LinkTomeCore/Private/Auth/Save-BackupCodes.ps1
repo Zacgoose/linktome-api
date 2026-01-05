@@ -51,8 +51,6 @@ function Save-BackupCodes {
         
         # Update user
         Add-LinkToMeAzDataTableEntity @Table -Entity $User -Force | Out-Null
-        
-        Write-Information "Saved $($HashedCodes.Count) backup codes for user $UserId"
         return $true
     }
     catch {

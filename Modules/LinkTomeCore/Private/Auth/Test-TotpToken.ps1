@@ -52,11 +52,6 @@ function Test-TotpToken {
         $UnixTime = [int][double]::Parse((Get-Date -UFormat %s))
         $TimeStep = [Math]::Floor($UnixTime / 30)
 
-        write-Information "Current Unix Time: $UnixTime"
-        
-        # Check current time and ±TimeWindow
-        Write-Information "Testing TOTP: TimeStep=$TimeStep, Window=±$TimeWindow, Token=$Token"
-        
         $Hmac = New-Object System.Security.Cryptography.HMACSHA1
         try {
             $Hmac.Key = $SecretBytes
@@ -85,10 +80,7 @@ function Test-TotpToken {
                 # Generate 6-digit code
                 $Otp = ($Code % 1000000).ToString('D6')
                 
-                Write-Information "  Window $i (counter=$Counter): Generated OTP=$Otp"
-                
                 if ($Otp -eq $Token) {
-                    Write-Information "  Match found at window $i!"
                     return $true
                 }
             }
