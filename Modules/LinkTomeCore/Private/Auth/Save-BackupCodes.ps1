@@ -29,6 +29,14 @@ function Save-BackupCodes {
             return $false
         }
         
+        # Validate input codes
+        foreach ($Code in $PlainTextCodes) {
+            if (-not ($Code -is [string]) -or [string]::IsNullOrWhiteSpace($Code)) {
+                Write-Error "All backup codes must be non-empty strings"
+                return $false
+            }
+        }
+        
         # Hash each code
         $HashedCodes = $PlainTextCodes | ForEach-Object {
             Get-StringHash -InputString $_

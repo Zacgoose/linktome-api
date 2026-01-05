@@ -24,9 +24,9 @@ function New-TotpQRCode {
     )
     
     try {
-        # URL-encode the parameters
-        $EncodedIssuer = [System.Web.HttpUtility]::UrlEncode($Issuer)
-        $EncodedAccount = [System.Web.HttpUtility]::UrlEncode($AccountName)
+        # URL-encode the parameters (using built-in Uri escape)
+        $EncodedIssuer = [System.Uri]::EscapeDataString($Issuer)
+        $EncodedAccount = [System.Uri]::EscapeDataString($AccountName)
         
         # Build TOTP URI according to RFC 6238
         # Format: otpauth://totp/ISSUER:ACCOUNT?secret=SECRET&issuer=ISSUER

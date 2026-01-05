@@ -5,7 +5,7 @@
     "FUNCTIONS_WORKER_RUNTIME_VERSION": "7.4",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "JWT_SECRET": "dev-secret-change-in-production-please-make-this-very-long-and-random-at-least-64-characters-for-testing-2fa-implementation",
-    "ENCRYPTION_KEY": "K7x9Ym2Pq4Wr8Nv5Jz3Lc6Hf0Gb1Dt",
+    "ENCRYPTION_KEY": "GENERATE-NEW-32CHAR-KEY-USE-pwsh",
     "SMTP_SERVER": "smtp.example.com",
     "SMTP_PORT": "587",
     "SMTP_USERNAME": "noreply@linktome.example",

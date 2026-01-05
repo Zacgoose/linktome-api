@@ -105,9 +105,12 @@ function Invoke-Public2fatoken {
 
                 # Check backup code if not already valid
                 if (-not $TokenValid) {
-                    if (Test-BackupCode -UserId $Session.RowKey -SubmittedCode $Body.token) {
-                        $TokenValid = $true
-                        $MethodUsed = "backup"
+                    # Only check backup codes if user has them
+                    if ($User.BackupCodes -and $User.BackupCodes -ne '[]') {
+                        if (Test-BackupCode -UserId $Session.RowKey -SubmittedCode $Body.token) {
+                            $TokenValid = $true
+                            $MethodUsed = "backup"
+                        }
                     }
                 }
 

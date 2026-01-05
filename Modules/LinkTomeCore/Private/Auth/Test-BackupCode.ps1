@@ -34,8 +34,14 @@ function Test-BackupCode {
             return $false
         }
         
-        # Parse stored codes
-        $StoredCodes = $User.BackupCodes | ConvertFrom-Json
+        # Parse stored codes with error handling
+        try {
+            $StoredCodes = $User.BackupCodes | ConvertFrom-Json
+        }
+        catch {
+            Write-Warning "Invalid backup codes JSON for user $UserId"
+            return $false
+        }
         
         if (-not $StoredCodes -or $StoredCodes.Count -eq 0) {
             return $false
