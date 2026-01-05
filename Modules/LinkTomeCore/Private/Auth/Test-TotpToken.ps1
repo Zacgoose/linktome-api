@@ -51,6 +51,8 @@ function Test-TotpToken {
         # Using Get-Date -UFormat %s which returns Unix epoch time correctly
         $UnixTime = [int][double]::Parse((Get-Date -UFormat %s))
         $TimeStep = [Math]::Floor($UnixTime / 30)
+
+        write-Information "Current Unix Time: $UnixTime"
         
         # Check current time and ±TimeWindow
         Write-Information "Testing TOTP: TimeStep=$TimeStep, Window=±$TimeWindow, Token=$Token"

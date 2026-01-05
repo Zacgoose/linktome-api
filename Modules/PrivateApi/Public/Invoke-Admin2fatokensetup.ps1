@@ -164,7 +164,7 @@ function Invoke-Admin2fatokensetup {
                             Write-Information "Token received: '$($Body.token)' (length=$($Body.token.Length))"
                             
                             # Log the current time window for debugging
-                            $UnixTime = [int]((Get-Date).ToUniversalTime() - [datetime]'1970-01-01T00:00:00Z').TotalSeconds
+                            $UnixTime = [int][double]::Parse((Get-Date -UFormat %s))
                             $TimeStep = [Math]::Floor($UnixTime / 30)
                             Write-Information "Current time step: $TimeStep (Unix: $UnixTime)"
                             
