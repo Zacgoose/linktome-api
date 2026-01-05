@@ -95,7 +95,7 @@ Resend email 2FA code (only for email method).
 - 400: Not an email 2FA session
 - 429: Rate limit exceeded (60s cooldown)
 
-#### POST /api/public/2fatoken?action=setup (Requires Authentication)
+#### POST /api/admin/2fatokensetup?action=setup (Requires Authentication)
 Setup 2FA for the authenticated user. Generates TOTP secret, QR code, and backup codes.
 
 **Request:**
@@ -127,7 +127,7 @@ Setup 2FA for the authenticated user. Generates TOTP secret, QR code, and backup
 - 401: Authentication required
 - 500: Setup failed
 
-#### POST /api/public/2fatoken?action=enable (Requires Authentication)
+#### POST /api/admin/2fatokensetup?action=enable (Requires Authentication)
 Enable 2FA after verifying it works. Requires a valid TOTP token for verification.
 
 **Request:**
@@ -153,7 +153,7 @@ Enable 2FA after verifying it works. Requires a valid TOTP token for verificatio
 - 400: Invalid verification code
 - 400: TOTP not set up (need to call setup first)
 
-#### POST /api/public/2fatoken?action=disable (Requires Authentication)
+#### POST /api/admin/2fatokensetup?action=disable (Requires Authentication)
 Disable 2FA for the authenticated user.
 
 **Success Response (200):**
@@ -278,13 +278,13 @@ See `local.settings.json.example` for a complete example.
 
 All core features are now implemented:
 
-✅ **POST /api/public/2fatoken?action=setup** - Generate TOTP secret, QR code, and backup codes
-✅ **POST /api/public/2fatoken?action=enable** - Verify and enable 2FA (email, TOTP, or both)
-✅ **POST /api/public/2fatoken?action=disable** - Disable 2FA for user
+✅ **POST /api/admin/2fatokensetup?action=setup** - Generate TOTP secret, QR code, and backup codes
+✅ **POST /api/admin/2fatokensetup?action=enable** - Verify and enable 2FA (email, TOTP, or both)
+✅ **POST /api/admin/2fatokensetup?action=disable** - Disable 2FA for user
 ✅ **POST /api/public/2fatoken?action=verify** - Verify 2FA code during login
 ✅ **POST /api/public/2fatoken?action=resend** - Resend email 2FA code
 
-All endpoints use the same `/api/public/2fatoken` path with different `action` query parameters.
+The setup/enable/disable actions are in the **admin** endpoint (`/api/admin/2fatokensetup`) while verify/resend are in the **public** endpoint (`/api/public/2fatoken`).
 
 ## Testing Recommendations
 
