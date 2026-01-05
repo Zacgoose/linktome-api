@@ -64,9 +64,10 @@ function Test-TotpToken {
                 
                 # Convert counter to 8-byte array (big-endian)
                 $CounterBytes = [byte[]]::new(8)
+                $CounterValue = $Counter  # Use a copy to avoid modifying $Counter
                 for ($j = 7; $j -ge 0; $j--) {
-                    $CounterBytes[$j] = $Counter -band 0xFF
-                    $Counter = $Counter -shr 8
+                    $CounterBytes[$j] = $CounterValue -band 0xFF
+                    $CounterValue = $CounterValue -shr 8
                 }
                 
                 # HMAC-SHA1
@@ -82,7 +83,7 @@ function Test-TotpToken {
                 # Generate 6-digit code
                 $Otp = ($Code % 1000000).ToString('D6')
                 
-                Write-Information "  Window $i (counter=$($TimeStep + $i)): Generated OTP=$Otp"
+                Write-Information "  Window $i (counter=$Counter): Generated OTP=$Otp"
                 
                 if ($Otp -eq $Token) {
                     Write-Information "  Match found at window $i!"
