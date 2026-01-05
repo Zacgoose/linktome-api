@@ -71,6 +71,11 @@ function Get-UserAuthContext {
     # Get user's subscription tier
     $Tier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { $null }
     
+    # Get 2FA status
+    $TwoFactorEmailEnabled = $User.TwoFactorEmailEnabled -eq $true
+    $TwoFactorTotpEnabled = $User.TwoFactorTotpEnabled -eq $true
+    $TwoFactorEnabled = $TwoFactorEmailEnabled -or $TwoFactorTotpEnabled
+    
     return @{
         UserId = $User.RowKey
         Email = $User.PartitionKey
@@ -80,5 +85,8 @@ function Get-UserAuthContext {
         Permissions = $Permissions
         UserManagements = $UserManagements
         Tier = $Tier
+        TwoFactorEnabled = $TwoFactorEnabled
+        TwoFactorEmailEnabled = $TwoFactorEmailEnabled
+        TwoFactorTotpEnabled = $TwoFactorTotpEnabled
     }
 }
