@@ -48,8 +48,8 @@ function Test-TotpToken {
         $SecretBytes = [byte[]]$Result
         
         # Get current Unix time in 30-second intervals
-        $Epoch = [datetime]::new(1970, 1, 1, 0, 0, 0, [DateTimeKind]::Utc)
-        $UnixTime = [int]((Get-Date).ToUniversalTime() - $Epoch).TotalSeconds
+        # Using Get-Date -UFormat %s which returns Unix epoch time correctly
+        $UnixTime = [int][double]::Parse((Get-Date -UFormat %s))
         $TimeStep = [Math]::Floor($UnixTime / 30)
         
         # Check current time and ±TimeWindow
