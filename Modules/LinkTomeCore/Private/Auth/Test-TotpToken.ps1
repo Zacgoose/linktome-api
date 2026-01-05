@@ -53,11 +53,11 @@ function Test-TotpToken {
         $TimeStep = [Math]::Floor($UnixTime / 30)
         
         # Check current time and ±TimeWindow
+        Write-Information "Testing TOTP: TimeStep=$TimeStep, Window=±$TimeWindow, Token=$Token"
+        
         $Hmac = New-Object System.Security.Cryptography.HMACSHA1
         try {
             $Hmac.Key = $SecretBytes
-            
-            Write-Information "Testing TOTP: TimeStep=$TimeStep, Window=±$TimeWindow, Token=$Token"
             
             for ($i = -$TimeWindow; $i -le $TimeWindow; $i++) {
                 $Counter = $TimeStep + $i
