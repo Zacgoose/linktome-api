@@ -59,6 +59,7 @@ function Test-BackupCode {
                 # Match found - don't add to remaining codes (single-use)
                 $MatchFound = $true
                 Write-Information "Backup code verified for user $UserId"
+                # Continue to process remaining codes for storage
             }
             else {
                 # Not a match - keep in remaining codes

@@ -98,7 +98,7 @@ function Invoke-Public2fatoken {
                             }
                         }
                         catch {
-                            Write-Information "TOTP verification failed for user $($Session.RowKey)"
+                            Write-Warning "TOTP verification failed for user $($Session.RowKey)"
                         }
                     }
                 }

@@ -32,17 +32,15 @@ function New-TotpQRCode {
         # Format: otpauth://totp/ISSUER:ACCOUNT?secret=SECRET&issuer=ISSUER
         $OtpUri = "otpauth://totp/${EncodedIssuer}:${EncodedAccount}?secret=${Secret}&issuer=${EncodedIssuer}"
         
-        # Generate QR code using a simple ASCII art approach for PowerShell
-        # For production, you'd want to use a proper QR code library or generate on frontend
-        # This returns the URI that the frontend can use to generate the QR code
+        # Return URI data that frontend can use to generate QR code
+        # Frontend can use libraries like 'qrcode' (npm) to convert URI to QR image
+        # Example: QRCode.toDataURL(uri) in JavaScript
         
         return @{
             uri = $OtpUri
             secret = $Secret
             issuer = $Issuer
             accountName = $AccountName
-            # Frontend can use libraries like 'qrcode' (npm) to generate the actual QR image
-            # Example: QRCode.toDataURL(uri) in JavaScript
         }
     }
     catch {

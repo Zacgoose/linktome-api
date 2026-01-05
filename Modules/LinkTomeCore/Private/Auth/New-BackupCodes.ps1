@@ -20,6 +20,7 @@ function New-BackupCodes {
         # Alphanumeric characters for codes (excluding ambiguous characters)
         $Chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # Removed I, O, 0, 1 to avoid confusion
         $CharsLength = $Chars.Length
+        $MaxByteValue = 256  # Maximum value for a byte (0-255)
         
         for ($i = 0; $i -lt $Count; $i++) {
             # Generate 8-character code with uniform distribution (rejection sampling)
@@ -27,7 +28,7 @@ function New-BackupCodes {
             
             for ($j = 0; $j -lt 8; $j++) {
                 # Use rejection sampling to avoid modulo bias
-                $MaxValidValue = 256 - (256 % $CharsLength)
+                $MaxValidValue = $MaxByteValue - ($MaxByteValue % $CharsLength)
                 
                 do {
                     $Bytes = New-Object byte[] 1
