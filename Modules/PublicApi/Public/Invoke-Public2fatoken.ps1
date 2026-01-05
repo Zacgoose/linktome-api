@@ -78,7 +78,7 @@ function Invoke-Public2fatoken {
                 # Check email code if available
                 if ($Session.Method -eq 'email' -or $Session.Method -eq 'both') {
                     if ($Session.EmailCodeHash) {
-                        $ProvidedHash = Get-StringHash -Value $Body.token
+                        $ProvidedHash = Get-StringHash -InputString $Body.token
                         if ($ProvidedHash -eq $Session.EmailCodeHash) {
                             $TokenValid = $true
                             $MethodUsed = "email"
@@ -224,7 +224,7 @@ function Invoke-Public2fatoken {
 
                 # Generate new code
                 $NewCode = New-TwoFactorCode
-                $HashedCode = Get-StringHash -Value $NewCode
+                $HashedCode = Get-StringHash -InputString $NewCode
 
                 # Send email
                 $EmailSent = Send-TwoFactorEmail -Email $User.PartitionKey -Code $NewCode

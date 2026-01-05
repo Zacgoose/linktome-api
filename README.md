@@ -166,8 +166,6 @@ All environment variables are configured in `local.settings.json`:
 | `SMTP_USERNAME` | SMTP username | Required for email 2FA |
 | `SMTP_PASSWORD` | SMTP password | Required for email 2FA |
 | `SMTP_FROM` | Sender email address | Required for email 2FA |
-| `JWT_SECRET` | Secret key for JWT signing | Dev secret (64+ chars) |
-| `AZURE_FUNCTIONS_ENVIRONMENT` | Environment indicator | `Development` (implicit) |
 
 ## Testing
 

@@ -10,12 +10,17 @@ function New-TwoFactorCode {
     
     # Generate a random 6-digit code using cryptographically secure random
     $Random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-    $Bytes = New-Object byte[] 4
-    $Random.GetBytes($Bytes)
-    $Number = [System.BitConverter]::ToUInt32($Bytes, 0)
-    
-    # Convert to 6-digit code (000000-999999)
-    $Code = ($Number % 1000000).ToString('D6')
-    
-    return $Code
+    try {
+        $Bytes = New-Object byte[] 4
+        $Random.GetBytes($Bytes)
+        $Number = [System.BitConverter]::ToUInt32($Bytes, 0)
+        
+        # Convert to 6-digit code (000000-999999)
+        $Code = ($Number % 1000000).ToString('D6')
+        
+        return $Code
+    }
+    finally {
+        $Random.Dispose()
+    }
 }

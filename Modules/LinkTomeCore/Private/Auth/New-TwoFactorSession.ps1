@@ -36,7 +36,7 @@ function New-TwoFactorSession {
         # Hash the email code if provided
         $HashedCode = $null
         if ($EmailCode) {
-            $HashedCode = Get-StringHash -Value $EmailCode
+            $HashedCode = Get-StringHash -InputString $EmailCode
         }
         
         # Determine available methods

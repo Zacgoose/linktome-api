@@ -64,21 +64,26 @@ function Test-TotpToken {
             
             # HMAC-SHA1
             $Hmac = New-Object System.Security.Cryptography.HMACSHA1
-            $Hmac.Key = $SecretBytes
-            $Hash = $Hmac.ComputeHash($CounterBytes)
-            
-            # Dynamic truncation
-            $Offset = $Hash[$Hash.Length - 1] -band 0x0F
-            $Code = (($Hash[$Offset] -band 0x7F) -shl 24) -bor `
-                    ($Hash[$Offset + 1] -shl 16) -bor `
-                    ($Hash[$Offset + 2] -shl 8) -bor `
-                    $Hash[$Offset + 3]
-            
-            # Generate 6-digit code
-            $Otp = ($Code % 1000000).ToString('D6')
-            
-            if ($Otp -eq $Token) {
-                return $true
+            try {
+                $Hmac.Key = $SecretBytes
+                $Hash = $Hmac.ComputeHash($CounterBytes)
+                
+                # Dynamic truncation
+                $Offset = $Hash[$Hash.Length - 1] -band 0x0F
+                $Code = (($Hash[$Offset] -band 0x7F) -shl 24) -bor `
+                        ($Hash[$Offset + 1] -shl 16) -bor `
+                        ($Hash[$Offset + 2] -shl 8) -bor `
+                        $Hash[$Offset + 3]
+                
+                # Generate 6-digit code
+                $Otp = ($Code % 1000000).ToString('D6')
+                
+                if ($Otp -eq $Token) {
+                    return $true
+                }
+            }
+            finally {
+                $Hmac.Dispose()
             }
         }
         
