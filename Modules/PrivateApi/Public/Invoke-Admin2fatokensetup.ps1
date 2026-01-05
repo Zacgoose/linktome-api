@@ -171,7 +171,11 @@ function Invoke-Admin2fatokensetup {
                             if (Test-TotpToken -Token $Body.token -Secret $DecryptedSecret) {
                                 Write-Information "TOTP token verified successfully"
                                 $TokenValid = $true
-                                $UserRecord.TwoFactorTotpEnabled = $true
+                                if (-not $UserRecord.PSObject.Properties['TwoFactorTotpEnabled']) {
+                                    $UserRecord | Add-Member -NotePropertyName TwoFactorTotpEnabled -NotePropertyValue $true -Force
+                                } else {
+                                    $UserRecord.TwoFactorTotpEnabled = $true
+                                }
                             }
                             else {
                                 Write-Warning "TOTP token verification failed - token does not match"
@@ -197,12 +201,20 @@ function Invoke-Admin2fatokensetup {
                 # Email doesn't need token verification for enable
                 if ($EnableType -eq "email") {
                     $TokenValid = $true
-                    $UserRecord.TwoFactorEmailEnabled = $true
+                    if (-not $UserRecord.PSObject.Properties['TwoFactorEmailEnabled']) {
+                        $UserRecord | Add-Member -NotePropertyName TwoFactorEmailEnabled -NotePropertyValue $true -Force
+                    } else {
+                        $UserRecord.TwoFactorEmailEnabled = $true
+                    }
                 }
                 
                 # For "both", enable email too if TOTP was verified
                 if ($EnableType -eq "both" -and $TokenValid) {
-                    $UserRecord.TwoFactorEmailEnabled = $true
+                    if (-not $UserRecord.PSObject.Properties['TwoFactorEmailEnabled']) {
+                        $UserRecord | Add-Member -NotePropertyName TwoFactorEmailEnabled -NotePropertyValue $true -Force
+                    } else {
+                        $UserRecord.TwoFactorEmailEnabled = $true
+                    }
                 }
                 
                 if (-not $TokenValid) {
@@ -213,7 +225,7 @@ function Invoke-Admin2fatokensetup {
                 }
                 
                 # Save the enabled status
-                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -Force
+                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -OperationType 'UpsertMerge'
                 
                 Write-SecurityEvent -EventType '2FAEnabled' -UserId $UserId -Email $UserRecord.PartitionKey -Username $UserRecord.Username -IpAddress $ClientIP -Endpoint 'admin/2fatokensetup' -Reason "Type:$EnableType"
                 
@@ -252,14 +264,22 @@ function Invoke-Admin2fatokensetup {
                 }
                 
                 # Disable both methods
-                $UserRecord.TwoFactorEmailEnabled = $false
-                $UserRecord.TwoFactorTotpEnabled = $false
+                if (-not $UserRecord.PSObject.Properties['TwoFactorEmailEnabled']) {
+                    $UserRecord | Add-Member -NotePropertyName TwoFactorEmailEnabled -NotePropertyValue $false -Force
+                } else {
+                    $UserRecord.TwoFactorEmailEnabled = $false
+                }
+                if (-not $UserRecord.PSObject.Properties['TwoFactorTotpEnabled']) {
+                    $UserRecord | Add-Member -NotePropertyName TwoFactorTotpEnabled -NotePropertyValue $false -Force
+                } else {
+                    $UserRecord.TwoFactorTotpEnabled = $false
+                }
                 
                 # Optionally clear TOTP secret and backup codes for security
                 # $UserRecord.TotpSecret = ""
                 # $UserRecord.BackupCodes = "[]"
                 
-                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -Force
+                Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -OperationType 'UpsertMerge'
                 
                 Write-SecurityEvent -EventType '2FADisabled' -UserId $UserId -Email $UserRecord.PartitionKey -Username $UserRecord.Username -IpAddress $ClientIP -Endpoint 'admin/2fatokensetup'
                 
