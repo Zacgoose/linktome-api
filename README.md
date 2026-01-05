@@ -17,8 +17,9 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - **Runtime:** PowerShell 7.4
 - **Platform:** Azure Functions v4
 - **Storage:** Azure Table Storage
-  - `Users` - User accounts and profiles
+  - `Users` - User accounts and profiles (includes 2FA settings)
   - `Links` - User link collections
+  - `TwoFactorSessions` - Temporary 2FA verification sessions
   - `RateLimits` - IP-based rate limiting tracking
   - `SecurityEvents` - Security event audit log
   - `Analytics` - Page views and analytics tracking
@@ -34,6 +35,11 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 ### Authentication & Security
 - ✅ JWT-based authentication with Bearer tokens
 - ✅ Strong password hashing (PBKDF2-SHA256, 100K iterations)
+- ✅ Two-Factor Authentication (2FA) support
+  - ✅ Email-based 2FA with 6-digit codes
+  - ✅ TOTP-based 2FA (compatible with Google Authenticator, Authy, etc.)
+  - ✅ Support for dual 2FA (both email and TOTP enabled)
+  - ✅ Secure session management with expiration
 - ✅ Input validation and sanitization
 - ✅ Protection against NoSQL injection
 - ✅ Rate limiting (5 login attempts/min, 3 signups/hour per IP)
@@ -71,7 +77,9 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 
 #### Public Endpoints (No Authentication Required)
 - `POST /public/signup` - Register new user
-- `POST /public/login` - Authenticate user
+- `POST /public/login` - Authenticate user (returns 2FA session if enabled)
+- `POST /public/2fatoken?action=verify` - Verify 2FA code and complete authentication
+- `POST /public/2fatoken?action=resend` - Resend 2FA email code
 - `GET /public/getUserProfile?username={username}` - Get public profile and links (auto-tracks page view)
 - `POST /public/trackLinkClick` - Track link click analytics (requires username and linkId)
 
@@ -151,6 +159,13 @@ All environment variables are configured in `local.settings.json`:
 | `FUNCTIONS_WORKER_RUNTIME` | Runtime for Azure Functions | `powershell` |
 | `FUNCTIONS_WORKER_RUNTIME_VERSION` | PowerShell version | `7.4` |
 | `AzureWebJobsStorage` | Storage connection string | `UseDevelopmentStorage=true` |
+| `JWT_SECRET` | Secret key for JWT signing | Dev secret (64+ chars) |
+| `AZURE_FUNCTIONS_ENVIRONMENT` | Environment indicator | `Development` (implicit) |
+| `SMTP_SERVER` | SMTP server for 2FA emails | Required for email 2FA |
+| `SMTP_PORT` | SMTP port (usually 587) | Required for email 2FA |
+| `SMTP_USERNAME` | SMTP username | Required for email 2FA |
+| `SMTP_PASSWORD` | SMTP password | Required for email 2FA |
+| `SMTP_FROM` | Sender email address | Required for email 2FA |
 | `JWT_SECRET` | Secret key for JWT signing | Dev secret (64+ chars) |
 | `AZURE_FUNCTIONS_ENVIRONMENT` | Environment indicator | `Development` (implicit) |
 
@@ -272,6 +287,11 @@ func azure functionapp publish <function-app-name>
 | `AzureWebJobsStorage` | ✅ Yes | Azure Storage connection string (auto-configured) |
 | `AZURE_FUNCTIONS_ENVIRONMENT` | ✅ Yes | Set to `Production` |
 | `CORS_ALLOWED_ORIGINS` | ⚠️ Optional | Only if NOT using Azure Static Web Apps |
+| `SMTP_SERVER` | ⚠️ Optional | SMTP server for 2FA emails (required for email 2FA) |
+| `SMTP_PORT` | ⚠️ Optional | SMTP port (required for email 2FA) |
+| `SMTP_USERNAME` | ⚠️ Optional | SMTP username (required for email 2FA) |
+| `SMTP_PASSWORD` | ⚠️ Optional | SMTP password (required for email 2FA) |
+| `SMTP_FROM` | ⚠️ Optional | Sender email address (required for email 2FA) |
 
 ## API Documentation
 
