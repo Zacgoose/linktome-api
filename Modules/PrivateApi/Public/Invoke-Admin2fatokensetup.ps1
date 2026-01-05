@@ -74,7 +74,14 @@ function Invoke-Admin2fatokensetup {
                         $UserRecord.TotpSecret = $EncryptedSecret
                     }
 
-                    Save-BackupCodes -UserId $UserId -PlainTextCodes $BackupCodes
+                    $SaveResult = Save-BackupCodes -UserId $UserId -PlainTextCodes $BackupCodes
+                    if (-not $SaveResult) {
+                        Write-Error "Failed to save backup codes"
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::InternalServerError
+                            Body = @{ error = "Failed to save backup codes" }
+                        }
+                    }
                     
                     # Don't enable yet - user needs to verify it works first
                     # That will happen in a separate "enable" action

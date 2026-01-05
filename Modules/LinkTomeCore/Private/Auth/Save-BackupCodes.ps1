@@ -44,13 +44,13 @@ function Save-BackupCodes {
         
         # Store as JSON array
         if (-not $User.PSObject.Properties['BackupCodes']) {
-            $User | Add-Member -NotePropertyName BackupCodes -NotePropertyValue [string]($HashedCodes | ConvertTo-Json -Compress) -Force
+            $User | Add-Member -NotePropertyName BackupCodes -NotePropertyValue ([string]($HashedCodes | ConvertTo-Json -Compress)) -Force
         } else {
             $User.BackupCodes = [string]($HashedCodes | ConvertTo-Json -Compress)
         }
         
         # Update user
-        Add-LinkToMeAzDataTableEntity @Table -Entity $User -Force
+        Add-LinkToMeAzDataTableEntity @Table -Entity $User -Force | Out-Null
         
         Write-Information "Saved $($HashedCodes.Count) backup codes for user $UserId"
         return $true
