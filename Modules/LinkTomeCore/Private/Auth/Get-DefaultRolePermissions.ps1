@@ -34,7 +34,12 @@ function Get-DefaultRolePermissions {
             'read:apiauth',
             'create:apiauth',
             'update:apiauth',
-            'delete:apiauth'
+            'delete:apiauth',
+            'write:password',
+            'write:email',
+            'write:phone',
+            'read:subscription',
+            'write:subscription'
         )
         'user_manager' = @(
             'read:dashboard',

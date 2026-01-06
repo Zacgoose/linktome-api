@@ -275,9 +275,17 @@ function Invoke-Admin2fatokensetup {
                     $UserRecord.TwoFactorTotpEnabled = $false
                 }
                 
-                # Optionally clear TOTP secret and backup codes for security
-                # $UserRecord.TotpSecret = ""
-                # $UserRecord.BackupCodes = "[]"
+                # Clear TOTP secret and backup codes for security
+                if (-not $UserRecord.PSObject.Properties['TotpSecret']) {
+                    $UserRecord | Add-Member -NotePropertyName TotpSecret -NotePropertyValue '' -Force
+                } else {
+                    $UserRecord.TotpSecret = ''
+                }
+                if (-not $UserRecord.PSObject.Properties['BackupCodes']) {
+                    $UserRecord | Add-Member -NotePropertyName BackupCodes -NotePropertyValue '[]' -Force
+                } else {
+                    $UserRecord.BackupCodes = '[]'
+                }
                 
                 Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserRecord -OperationType 'UpsertMerge'
                 
