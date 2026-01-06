@@ -70,10 +70,12 @@ function Get-UserSubscription {
         $null
     }
     
+    # Default currency constant
+    $DefaultCurrency = 'USD'
     $Currency = if ($User.PSObject.Properties['SubscriptionCurrency'] -and $User.SubscriptionCurrency) {
         $User.SubscriptionCurrency
     } else {
-        'USD'
+        $DefaultCurrency
     }
     
     # Determine if subscription is trial
@@ -90,7 +92,7 @@ function Get-UserSubscription {
         if ($Status -eq 'cancelled') {
             if ($NextBillingDate) {
                 try {
-                    $NextBillingDateTime = [DateTime]::Parse($NextBillingDate)
+                    $NextBillingDateTime = [DateTime]::Parse($NextBillingDate, [System.Globalization.CultureInfo]::InvariantCulture)
                     if ($NextBillingDateTime -gt $Now) {
                         # Still has access until next billing date
                         $AccessUntil = $NextBillingDate
@@ -105,6 +107,7 @@ function Get-UserSubscription {
                     # Invalid date, treat as expired
                     $EffectiveTier = 'free'
                     $HasAccess = $false
+                    Write-Warning "Failed to parse NextBillingDate in subscription data"
                 }
             } else {
                 # No billing date, treat as immediate cancellation
@@ -122,14 +125,14 @@ function Get-UserSubscription {
         # Check if next billing date has passed for active subscriptions
         if ($Status -eq 'active' -and $NextBillingDate) {
             try {
-                $NextBillingDateTime = [DateTime]::Parse($NextBillingDate)
+                $NextBillingDateTime = [DateTime]::Parse($NextBillingDate, [System.Globalization.CultureInfo]::InvariantCulture)
                 if ($NextBillingDateTime -lt $Now) {
                     # Subscription payment may have failed, but don't automatically downgrade
                     # This should be handled by a payment webhook or scheduled job
-                    Write-Warning "User $($User.RowKey) has active subscription but billing date has passed"
+                    Write-Warning "Active subscription has passed billing date - payment processing may be required"
                 }
             } catch {
-                Write-Warning "Failed to parse NextBillingDate for user $($User.RowKey): $NextBillingDate"
+                Write-Warning "Failed to parse NextBillingDate in active subscription"
             }
         }
     }
