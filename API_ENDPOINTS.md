@@ -268,7 +268,7 @@ Authorization: Bearer <jwt-token>
   "currentTier": "premium",
   "billingCycle": "monthly",
   "nextBillingDate": "2024-02-15T00:00:00Z",
-  "amount": 9.99,
+  "amount": 1.99,
   "currency": "USD",
   "status": "active",
   "subscriptionStartedAt": "2024-01-15T00:00:00Z",
