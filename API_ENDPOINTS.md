@@ -360,7 +360,7 @@ Updates the following fields in the Users table:
 
 ---
 
-### 8. Cancel Subscription ⚠️ STUB IMPLEMENTATION
+### 8. Cancel Subscription ✅ IMPLEMENTED
 
 **Endpoint:** `POST /api/admin/cancelSubscription`
 
@@ -377,30 +377,48 @@ Content-Type: application/json
 {}
 ```
 
-**Current Response (200):**
+**Success Response (200):**
 ```json
 {
-  "message": "Subscription cancellation requested",
-  "note": "Payment processing not yet implemented. Contact support to cancel."
+  "message": "Subscription cancelled successfully",
+  "tier": "premium",
+  "status": "cancelled",
+  "cancelledAt": "2024-01-15T10:30:00Z",
+  "accessUntil": "2024-02-15T00:00:00Z",
+  "note": "You can continue using premium features until 2024-02-15T00:00:00Z"
 }
 ```
 
 **Error Responses:**
+- `400` - No active subscription to cancel
+- `400` - Subscription is already cancelled
 - `401` - Unauthorized
-- `404` - No active subscription to cancel
+- `404` - User not found
 - `500` - Internal server error
 
 **Implementation Status:**
-- ⚠️ This is a STUB endpoint
-- Can mark tier as "free" immediately
-- Does NOT handle refunds or prorated charges
-- Does NOT integrate with Stripe
+- ✅ Updates Users table with cancellation status
+- ✅ Sets `SubscriptionStatus` to "cancelled"
+- ✅ Records `CancelledAt` timestamp
+- ✅ Preserves current tier and billing info until `NextBillingDate`
+- ✅ Allows continued access until end of paid period
+- ⚠️ Does NOT integrate with Stripe for refunds
+- ⚠️ Does NOT automatically downgrade to free tier (requires separate scheduled job)
 
-**Full Implementation Would Require:**
-1. Stripe API integration for subscription cancellation
-2. Handle end-of-billing-period logic
-3. Update subscription status to "cancelled" but keep active until billing period ends
-4. Send confirmation email
+**Storage Updates:**
+Updates the following fields in the Users table:
+- `SubscriptionStatus` - Set to "cancelled"
+- `CancelledAt` - Timestamp when subscription was cancelled (ISO 8601 format)
+- Preserves `SubscriptionTier`, `BillingCycle`, and `NextBillingDate` to allow continued access
+
+**Handling Non-Expired Subscriptions:**
+When a user cancels a paid subscription before it expires:
+1. Status is marked as "cancelled" immediately
+2. User retains access to paid tier features until `NextBillingDate`
+3. After `NextBillingDate`, a scheduled job should downgrade them to free tier
+4. `CancelledAt` timestamp records when cancellation was requested
+
+**Note:** Payment processing (Stripe) to be added later. Currently cancels subscription immediately but preserves access until billing period ends.
 
 ---
 
@@ -533,7 +551,7 @@ Status Code: `401 Unauthorized`
 | POST /admin/2fatokensetup?action=disable | ✅ Exists | Use for disabling 2FA |
 | GET /admin/getSubscription | 🆕 Implemented | Returns tier, status, billing info |
 | POST /admin/upgradeSubscription | 🆕 Implemented | Updates subscription in Users table (no payment processing) |
-| POST /admin/cancelSubscription | ⚠️ Stub | Returns message, no actual cancellation |
+| POST /admin/cancelSubscription | 🆕 Implemented | Marks subscription as cancelled, preserves access until billing date |
 
 ---
 
@@ -591,6 +609,14 @@ curl -X POST http://localhost:7071/api/admin/upgradeSubscription \
   -H "Authorization: Bearer <your-jwt-token>" \
   -H "Content-Type: application/json" \
   -d '{"tier":"premium","billingCycle":"monthly"}'
+```
+
+**Cancel Subscription:**
+```bash
+curl -X POST http://localhost:7071/api/admin/cancelSubscription \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -H "Content-Type: application/json" \
+  -d '{}'
 ```
 
 ---

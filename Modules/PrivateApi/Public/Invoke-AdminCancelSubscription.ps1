@@ -34,20 +34,55 @@ function Invoke-AdminCancelSubscription {
             }
         }
         
-        # This is a stub implementation - payment processing not implemented
-        # In a full implementation, this would:
-        # 1. Call Stripe API to cancel subscription
-        # 2. Mark subscription as cancelled but keep active until end of billing period
-        # 3. Send confirmation email
-        # 4. Store cancellation date
+        # Check if already cancelled
+        $CurrentStatus = if ($UserData.PSObject.Properties['SubscriptionStatus']) { $UserData.SubscriptionStatus } else { 'active' }
+        if ($CurrentStatus -eq 'cancelled') {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ error = "Subscription is already cancelled" }
+            }
+        }
+        
+        # Get current timestamp
+        $Now = (Get-Date).ToUniversalTime()
+        $NowString = $Now.ToString('yyyy-MM-ddTHH:mm:ssZ')
+        
+        # Mark subscription as cancelled
+        $UserData.SubscriptionStatus = 'cancelled'
+        
+        # Set cancellation timestamp
+        if (-not $UserData.PSObject.Properties['CancelledAt']) {
+            $UserData | Add-Member -NotePropertyName 'CancelledAt' -NotePropertyValue $NowString -Force
+        } else {
+            $UserData.CancelledAt = $NowString
+        }
+        
+        # Get access until date (next billing date or now if not set)
+        $AccessUntil = if ($UserData.PSObject.Properties['NextBillingDate'] -and $UserData.NextBillingDate) {
+            $UserData.NextBillingDate
+        } else {
+            $NowString
+        }
+        
+        # Save changes
+        Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-SecurityEvent -EventType 'SubscriptionCancellationRequested' -UserId $UserId -IpAddress $ClientIP -Endpoint 'admin/cancelSubscription'
+        Write-SecurityEvent -EventType 'SubscriptionCancelled' -UserId $UserId -IpAddress $ClientIP -Endpoint 'admin/cancelSubscription'
         
         $Results = @{
-            message = "Subscription cancellation requested"
-            note = "Payment processing not yet implemented. Contact support to cancel your subscription."
-            currentTier = $Tier
+            message = "Subscription cancelled successfully"
+            tier = $Tier
+            status = 'cancelled'
+            cancelledAt = $NowString
+            accessUntil = $AccessUntil
+        }
+        
+        # Add note about continued access if there's a future billing date
+        if ($AccessUntil -ne $NowString) {
+            $Results.note = "You can continue using $Tier features until $AccessUntil"
+        } else {
+            $Results.note = "Subscription cancelled immediately. You will be downgraded to free tier."
         }
         
         $StatusCode = [HttpStatusCode]::OK
