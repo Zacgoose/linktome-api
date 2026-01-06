@@ -21,6 +21,7 @@ function Invoke-AdminUserManagerList {
         }
 
         $UserManagersTable = Get-LinkToMeTable -TableName 'UserManagers'
+        $UsersTable = Get-LinkToMeTable -TableName 'Users'
 
         # Users who manage me (RowKey = my UserId)
         $managers = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "RowKey eq '$UserId'"
@@ -28,23 +29,46 @@ function Invoke-AdminUserManagerList {
         # Users I manage (PartitionKey = my UserId)
         $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$UserId'"
 
+        # Helper function to get user details
+        $GetUserDetails = {
+            param($TargetUserId)
+            $SafeUserId = Protect-TableQueryValue -Value $TargetUserId
+            $UserData = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($UserData) {
+                return @{
+                    username = $UserData.Username
+                    email = $UserData.PartitionKey
+                }
+            }
+            return @{
+                username = $null
+                email = $null
+            }
+        }
+
         $Results = @{
             managers = @($managers | ForEach-Object {
+                $userDetails = & $GetUserDetails -TargetUserId $_.PartitionKey
                 [PSCustomObject]@{
-                    UserId  = $_.PartitionKey
-                    role    = $_.Role
-                    state   = $_.State
-                    created = $_.Created
-                    updated = $_.Updated
+                    UserId   = $_.PartitionKey
+                    username = $userDetails.username
+                    email    = $userDetails.email
+                    role     = $_.Role
+                    state    = $_.State
+                    created  = $_.Created
+                    updated  = $_.Updated
                 }
             })
             managees = @($managees | ForEach-Object {
+                $userDetails = & $GetUserDetails -TargetUserId $_.RowKey
                 [PSCustomObject]@{
-                    UserId  = $_.RowKey
-                    role    = $_.Role
-                    state   = $_.State
-                    created = $_.Created
-                    updated = $_.Updated
+                    UserId   = $_.RowKey
+                    username = $userDetails.username
+                    email    = $userDetails.email
+                    role     = $_.Role
+                    state    = $_.State
+                    created  = $_.Created
+                    updated  = $_.Updated
                 }
             })
         }
