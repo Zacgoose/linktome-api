@@ -57,11 +57,19 @@ function Invoke-AdminCancelSubscription {
             $UserData.CancelledAt = $NowString
         }
         
-        # Get access until date (next billing date or now if not set)
-        $AccessUntil = if ($UserData.PSObject.Properties['NextBillingDate'] -and $UserData.NextBillingDate) {
-            $UserData.NextBillingDate
-        } else {
-            $NowString
+        # Get access until date (next billing date or now if not set/expired)
+        $AccessUntil = $NowString
+        if ($UserData.PSObject.Properties['NextBillingDate'] -and $UserData.NextBillingDate) {
+            try {
+                $NextBillingDateTime = [DateTime]::Parse($UserData.NextBillingDate)
+                # Only use NextBillingDate if it's in the future
+                if ($NextBillingDateTime -gt $Now) {
+                    $AccessUntil = $UserData.NextBillingDate
+                }
+            } catch {
+                # If date parsing fails, default to now
+                Write-Warning "Could not parse NextBillingDate: $($UserData.NextBillingDate)"
+            }
         }
         
         # Save changes
