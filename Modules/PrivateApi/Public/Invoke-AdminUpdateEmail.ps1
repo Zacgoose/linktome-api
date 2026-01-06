@@ -54,69 +54,51 @@ function Invoke-AdminUpdateEmail {
             }
         }
 
-        $NewEmailLower = $Body.newEmail.ToLower()
-        $CurrentEmailLower = $UserData.PartitionKey.ToLower()
-        
-        # Check if email is already the same
+        $NewEmailLower = $Body.newEmail.Trim().ToLower()
+        $CurrentEmailLower = $UserData.PartitionKey.Trim().ToLower()
+
+        # Check if email is already the same (trimmed and lowercased)
         if ($NewEmailLower -eq $CurrentEmailLower) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::BadRequest
                 Body = @{ error = "New email is the same as current email" }
             }
         }
-        
+
         # Check if new email is already in use
         $SafeNewEmail = Protect-TableQueryValue -Value $NewEmailLower
         $ExistingEmail = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeNewEmail'" | Select-Object -First 1
         if ($ExistingEmail) {
             $ClientIP = Get-ClientIPAddress -Request $Request
             Write-SecurityEvent -EventType 'EmailChangeFailed' -UserId $UserId -IpAddress $ClientIP -Endpoint 'admin/updateEmail' -Reason 'EmailAlreadyInUse'
-            
+
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Conflict
                 Body = @{ error = "Email address already in use" }
             }
         }
-        
+
         # Create new entity with new PartitionKey (email)
         # Azure Table Storage requires creating a new entity when changing PartitionKey
-        $NewUser = @{
-            PartitionKey = [string]$NewEmailLower
-            RowKey = [string]$UserData.RowKey
-            Username = $UserData.Username
-            DisplayName = $UserData.DisplayName
-            Bio = $UserData.Bio
-            Avatar = $UserData.Avatar
-            PasswordHash = $UserData.PasswordHash
-            PasswordSalt = $UserData.PasswordSalt
-            IsActive = $UserData.IsActive
-            Roles = $UserData.Roles
-            Permissions = $UserData.Permissions
-            SubscriptionTier = $UserData.SubscriptionTier
-            SubscriptionStatus = $UserData.SubscriptionStatus
-            TwoFactorEmailEnabled = $UserData.TwoFactorEmailEnabled
-            TwoFactorTotpEnabled = $UserData.TwoFactorTotpEnabled
-            TotpSecret = $UserData.TotpSecret
-            BackupCodes = $UserData.BackupCodes
-        }
-        
-        # Copy any additional fields that might exist
+        $NewUser = @{}
         foreach ($prop in $UserData.PSObject.Properties) {
-            if ($prop.Name -notin @('PartitionKey', 'RowKey', 'Timestamp', 'ETag', 'Username', 'DisplayName', 'Bio', 'Avatar', 'PasswordHash', 'PasswordSalt', 'IsActive', 'Roles', 'Permissions', 'SubscriptionTier', 'SubscriptionStatus', 'TwoFactorEmailEnabled', 'TwoFactorTotpEnabled', 'TotpSecret', 'BackupCodes')) {
+            if ($prop.Name -eq 'PartitionKey') {
+                $NewUser['PartitionKey'] = [string]$NewEmailLower
+            } elseif ($prop.Name -notin @('Timestamp', 'ETag')) {
                 $NewUser[$prop.Name] = $prop.Value
             }
         }
-        
+
         # Add new entity
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force
-        
+
         # Delete old entity
-        Remove-LinkToMeAzDataTableEntity @Table -Entity $UserData
-        
+        Remove-AzDataTableEntity @Table -Entity $UserData
+
         # Log security event
         $ClientIP = Get-ClientIPAddress -Request $Request
         Write-SecurityEvent -EventType 'EmailChanged' -UserId $UserId -Email $NewEmailLower -IpAddress $ClientIP -Endpoint 'admin/updateEmail'
-        
+
         $Results = @{
             message = "Email updated successfully"
             email = $NewEmailLower
