@@ -20,11 +20,11 @@ function Invoke-AdminUpgradeSubscription {
     }
 
     # Validate tier value
-    $ValidTiers = @('free', 'premium', 'enterprise')
+    $ValidTiers = @('free', 'pro', 'premium', 'enterprise')
     if ($Body.tier -notin $ValidTiers) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ error = "Invalid tier. Valid options are: free, premium, enterprise" }
+            Body = @{ error = "Invalid tier. Valid options are: free, pro, premium, enterprise" }
         }
     }
 
@@ -32,7 +32,7 @@ function Invoke-AdminUpgradeSubscription {
     if ($Body.tier -ne 'free' -and -not $Body.billingCycle) {
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::BadRequest
-            Body = @{ error = "Billing cycle is required for premium and enterprise tiers" }
+            Body = @{ error = "Billing cycle is required for pro, premium and enterprise tiers" }
         }
     }
 
