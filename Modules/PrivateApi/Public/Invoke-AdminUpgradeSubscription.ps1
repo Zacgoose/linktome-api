@@ -61,18 +61,26 @@ function Invoke-AdminUpgradeSubscription {
             }
         }
         
+        # Get current timestamp for consistency
+        $Now = (Get-Date).ToUniversalTime()
+        $NowString = $Now.ToString('yyyy-MM-ddTHH:mm:ssZ')
+        
         # Update subscription tier
         $UserData.SubscriptionTier = $Body.tier
-        $UserData.SubscriptionStatus = 'active'
+        
+        # Update status - set to active when upgrading/changing, preserve if already cancelled
+        $CurrentStatus = if ($UserData.PSObject.Properties['SubscriptionStatus']) { $UserData.SubscriptionStatus } else { 'active' }
+        if ($CurrentStatus -ne 'cancelled') {
+            $UserData.SubscriptionStatus = 'active'
+        }
         
         # Set subscription started date if upgrading from free or changing tier
         $CurrentTier = if ($UserData.PSObject.Properties['SubscriptionTier']) { $UserData.SubscriptionTier } else { 'free' }
         if ($CurrentTier -ne $Body.tier) {
-            $Now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
             if (-not $UserData.PSObject.Properties['SubscriptionStartedAt']) {
-                $UserData | Add-Member -NotePropertyName 'SubscriptionStartedAt' -NotePropertyValue $Now -Force
+                $UserData | Add-Member -NotePropertyName 'SubscriptionStartedAt' -NotePropertyValue $NowString -Force
             } else {
-                $UserData.SubscriptionStartedAt = $Now
+                $UserData.SubscriptionStartedAt = $NowString
             }
         }
         
@@ -84,11 +92,11 @@ function Invoke-AdminUpgradeSubscription {
                 $UserData.BillingCycle = $Body.billingCycle
             }
             
-            # Calculate next billing date based on billing cycle
+            # Calculate next billing date based on billing cycle using same base timestamp
             $NextBillingDate = if ($Body.billingCycle -eq 'annual') {
-                (Get-Date).ToUniversalTime().AddYears(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                $Now.AddYears(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
             } else {
-                (Get-Date).ToUniversalTime().AddMonths(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                $Now.AddMonths(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
             }
             
             if (-not $UserData.PSObject.Properties['NextBillingDate']) {
