@@ -262,7 +262,7 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-**Response Format for Premium/Enterprise:**
+**Response Format for Pro/Premium/Enterprise:**
 ```json
 {
   "currentTier": "premium",
@@ -282,7 +282,7 @@ Authorization: Bearer <jwt-token>
 
 **Storage:**
 - Primary data from Users table:
-  - `SubscriptionTier` (string) - "free", "premium", "enterprise"
+  - `SubscriptionTier` (string) - "free", "pro", "premium", "enterprise"
   - `SubscriptionStatus` (string) - "active", "cancelled", "expired"
 
 **Current Implementation Notes:**
