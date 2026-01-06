@@ -68,10 +68,8 @@ function Invoke-AdminUpgradeSubscription {
         # Update subscription tier
         $UserData.SubscriptionTier = $Body.tier
         
-        # Update status - set to active when upgrading/changing, preserve if already cancelled
-        if ($UserData.SubscriptionStatus -ne 'cancelled') {
-            $UserData.SubscriptionStatus = 'active'
-        }
+        # Update status - set to active when upgrading/changing
+        $UserData.SubscriptionStatus = 'active'
         
         # Set subscription started date if upgrading from free or changing tier
         $CurrentTier = if ($UserData.PSObject.Properties['SubscriptionTier']) { $UserData.SubscriptionTier } else { 'free' }
