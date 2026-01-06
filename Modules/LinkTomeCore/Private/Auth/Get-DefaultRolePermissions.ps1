@@ -39,7 +39,8 @@ function Get-DefaultRolePermissions {
             'write:email',
             'write:phone',
             'read:subscription',
-            'write:subscription'
+            'write:subscription',
+            'read:usersettings'
         )
         'user_manager' = @(
             'read:dashboard',
