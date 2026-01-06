@@ -26,6 +26,14 @@ function Invoke-AdminGetProfile {
             }
         }
 
+        # Get 2FA status
+        $TwoFactorEmailEnabled = $UserData.TwoFactorEmailEnabled -eq $true
+        $TwoFactorTotpEnabled = $UserData.TwoFactorTotpEnabled -eq $true
+        $TwoFactorEnabled = $TwoFactorEmailEnabled -or $TwoFactorTotpEnabled
+        
+        # Get phone number if available
+        $PhoneNumber = if ($UserData.PSObject.Properties['PhoneNumber']) { $UserData.PhoneNumber } else { $null }
+
         $Results = @{
             UserId = $UserData.RowKey
             username = $UserData.Username
@@ -33,6 +41,10 @@ function Invoke-AdminGetProfile {
             displayName = $UserData.DisplayName
             bio = $UserData.Bio
             avatar = $UserData.Avatar
+            phoneNumber = $PhoneNumber
+            twoFactorEnabled = $TwoFactorEnabled
+            twoFactorEmailEnabled = $TwoFactorEmailEnabled
+            twoFactorTotpEnabled = $TwoFactorTotpEnabled
         }
         $StatusCode = [HttpStatusCode]::OK
 

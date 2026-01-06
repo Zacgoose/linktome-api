@@ -34,24 +34,30 @@ Authorization: Bearer <jwt-token>
   "email": "user@example.com",
   "displayName": "John Doe",
   "bio": "Software Developer",
-  "avatar": "https://example.com/avatar.jpg"
+  "avatar": "https://example.com/avatar.jpg",
+  "phoneNumber": "+1 (555) 123-4567",
+  "twoFactorEnabled": true,
+  "twoFactorEmailEnabled": true,
+  "twoFactorTotpEnabled": false
 }
 ```
 
-**Additional 2FA Information:**
-The user object in the `Users` table also contains:
-- `TwoFactorEmailEnabled` (boolean)
-- `TwoFactorTotpEnabled` (boolean)
-
-To get complete 2FA status, you can check the authenticated user context which includes:
-- `twoFactorEnabled` (boolean)
-- `twoFactorEmailEnabled` (boolean)
-- `twoFactorTotpEnabled` (boolean)
+**Fields:**
+- `UserId` - Unique user identifier
+- `username` - User's username
+- `email` - User's email address
+- `displayName` - Display name
+- `bio` - User biography
+- `avatar` - Avatar URL
+- `phoneNumber` - Phone number (null if not set)
+- `twoFactorEnabled` - Whether any 2FA method is enabled
+- `twoFactorEmailEnabled` - Whether email-based 2FA is enabled
+- `twoFactorTotpEnabled` - Whether TOTP-based 2FA is enabled
 
 **Note for Frontend:** 
-- Phone number field is NOT currently stored in the Users table. If needed, this can be added.
-- The existing endpoint provides email and username which are part of the settings page requirements.
-- 2FA status is available through the authentication context returned on login.
+- This endpoint now includes all 2FA configuration details
+- Phone number will be `null` if not set by the user
+- The existing endpoint provides all needed information for the settings page
 
 ---
 
