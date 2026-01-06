@@ -214,7 +214,9 @@ Content-Type: application/json
 
 **Process:**
 1. Disable all 2FA flags in Users table
-2. Log security event
+2. Clear TOTP secret from Users table
+3. Clear backup codes from Users table
+4. Log security event
 
 **Success Response (200):**
 ```json
@@ -234,11 +236,13 @@ Content-Type: application/json
 - Users table fields updated:
   - `TwoFactorEmailEnabled` = false
   - `TwoFactorTotpEnabled` = false
+  - `TotpSecret` = "" (cleared)
+  - `BackupCodes` = "[]" (cleared)
 - Security event logged with type '2FADisabled'
 
 **Note:** 
-- The TOTP secrets and backup codes are kept in the database (commented out in current implementation)
-- If complete removal is needed, the endpoint can be enhanced to clear `TotpSecret` and `BackupCodes` fields
+- This completely removes all 2FA configuration including secrets and backup codes
+- User will need to set up 2FA from scratch if they want to re-enable it
 - User should be notified via email when 2FA is disabled (future enhancement)
 
 ---
@@ -491,11 +495,11 @@ Status Code: `401 Unauthorized`
 | Endpoint | Status | Notes |
 |----------|--------|-------|
 | GET /admin/getProfile | ✅ Exists | Use for settings display |
-| PUT /admin/updatePassword | 🆕 Implemented | Ready to use |
-| PUT /admin/updateEmail | 🆕 Implemented | Simplified version without verification |
-| PUT /admin/updatePhone | 🆕 Implemented | Adds new field to Users table |
-| POST /admin/reset2FA | 🆕 Implemented | Clears all 2FA settings |
-| GET /admin/getSubscription | 🆕 Implemented | Basic tier info only |
+| PUT /admin/updatePassword | 🆕 Implemented | Tested - Ready to use |
+| PUT /admin/updateEmail | 🆕 Implemented | Tested - Simplified version without verification |
+| PUT /admin/updatePhone | 🆕 Implemented | Tested - Adds new field to Users table |
+| POST /admin/2fatokensetup?action=disable | ✅ Exists | Use for disabling 2FA |
+| GET /admin/getSubscription | 🆕 Implemented | Tested - Basic tier info only |
 | POST /admin/upgradeSubscription | ⚠️ Stub | Returns message, no payment processing |
 | POST /admin/cancelSubscription | ⚠️ Stub | Returns message, no payment processing |
 
