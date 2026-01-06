@@ -29,26 +29,33 @@ function Invoke-AdminUserManagerList {
         # Users I manage (PartitionKey = my UserId)
         $managees = Get-LinkToMeAzDataTableEntity @UserManagersTable -Filter "PartitionKey eq '$UserId'"
 
-        # Helper function to get user details
-        $GetUserDetails = {
-            param($TargetUserId)
-            $SafeUserId = Protect-TableQueryValue -Value $TargetUserId
+        # Collect all unique UserIds to fetch user details (avoiding duplicate queries)
+        $allUserIds = @()
+        $allUserIds += $managers | ForEach-Object { $_.PartitionKey }
+        $allUserIds += $managees | ForEach-Object { $_.RowKey }
+        $uniqueUserIds = $allUserIds | Select-Object -Unique
+
+        # Fetch all user details in advance and cache them
+        $userDetailsCache = @{}
+        foreach ($targetUserId in $uniqueUserIds) {
+            $SafeUserId = Protect-TableQueryValue -Value $targetUserId
             $UserData = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($UserData) {
-                return @{
+                $userDetailsCache[$targetUserId] = @{
                     username = $UserData.Username
                     email = $UserData.PartitionKey
                 }
-            }
-            return @{
-                username = $null
-                email = $null
+            } else {
+                $userDetailsCache[$targetUserId] = @{
+                    username = $null
+                    email = $null
+                }
             }
         }
 
         $Results = @{
             managers = @($managers | ForEach-Object {
-                $userDetails = & $GetUserDetails -TargetUserId $_.PartitionKey
+                $userDetails = $userDetailsCache[$_.PartitionKey]
                 [PSCustomObject]@{
                     UserId   = $_.PartitionKey
                     username = $userDetails.username
@@ -60,7 +67,7 @@ function Invoke-AdminUserManagerList {
                 }
             })
             managees = @($managees | ForEach-Object {
-                $userDetails = & $GetUserDetails -TargetUserId $_.RowKey
+                $userDetails = $userDetailsCache[$_.RowKey]
                 [PSCustomObject]@{
                     UserId   = $_.RowKey
                     username = $userDetails.username
