@@ -53,7 +53,7 @@ function Get-UserAuthContext {
             foreach ($um in $managees) {
                 $manageePermissions = Get-DefaultRolePermissions -Role $um.Role
                 $UserManager = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$($um.RowKey)'" | Select-Object -First 1
-                $manageeTier = if ($UserManager.SubscriptionTier) { $UserManager.SubscriptionTier } else { $null }
+                $manageeSubscription = Get-UserSubscription -User $UserManager
                 $UserManagements += @{
                     UserId = $um.RowKey
                     role = $um.Role
@@ -62,14 +62,14 @@ function Get-UserAuthContext {
                     permissions = $manageePermissions
                     DisplayName = $UserManager.DisplayName
                     Email = $UserManager.PartitionKey
-                    tier = $manageeTier
+                    tier = $manageeSubscription.EffectiveTier
                 }
             }
         }
     }
     
-    # Get user's subscription tier
-    $Tier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { $null }
+    # Get user's subscription information using centralized helper
+    $Subscription = Get-UserSubscription -User $User
     
     # Get 2FA status
     $TwoFactorEmailEnabled = $User.TwoFactorEmailEnabled -eq $true
@@ -84,7 +84,7 @@ function Get-UserAuthContext {
         Roles = $Roles
         Permissions = $Permissions
         UserManagements = $UserManagements
-        Tier = $Tier
+        Tier = $Subscription.EffectiveTier
         TwoFactorEnabled = $TwoFactorEnabled
         TwoFactorEmailEnabled = $TwoFactorEmailEnabled
         TwoFactorTotpEnabled = $TwoFactorTotpEnabled

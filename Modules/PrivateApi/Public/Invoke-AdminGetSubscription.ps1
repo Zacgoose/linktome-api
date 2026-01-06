@@ -24,49 +24,47 @@ function Invoke-AdminGetSubscription {
             }
         }
         
-        # Get subscription tier and status
-        $Tier = if ($UserData.PSObject.Properties['SubscriptionTier']) { $UserData.SubscriptionTier } else { 'free' }
-        $Status = if ($UserData.PSObject.Properties['SubscriptionStatus']) { $UserData.SubscriptionStatus } else { 'active' }
+        # Get subscription info using centralized helper
+        $Subscription = Get-UserSubscription -User $UserData
         
-        # Build basic response
+        # Build response with all subscription details
         $Results = @{
-            currentTier = $Tier
-            status = $Status
+            currentTier = $Subscription.Tier
+            effectiveTier = $Subscription.EffectiveTier
+            status = $Subscription.Status
+            isTrial = $Subscription.IsTrial
+            hasAccess = $Subscription.HasAccess
         }
         
-        # Add subscription started date if available
-        if ($UserData.PSObject.Properties['SubscriptionStartedAt']) {
-            $Results.subscriptionStartedAt = $UserData.SubscriptionStartedAt
-        } else {
-            # Use account creation timestamp as fallback
-            if ($UserData.Timestamp) {
-                $Results.subscriptionStartedAt = $UserData.Timestamp.ToString('yyyy-MM-ddTHH:mm:ssZ')
-            }
+        # Add subscription started date
+        if ($Subscription.SubscriptionStartedAt) {
+            $Results.subscriptionStartedAt = $Subscription.SubscriptionStartedAt
         }
         
-        # Add additional billing info if on paid tier and available
-        if ($Tier -ne 'free') {
-            if ($UserData.PSObject.Properties['BillingCycle']) {
-                $Results.billingCycle = $UserData.BillingCycle
-            }
-            
-            if ($UserData.PSObject.Properties['NextBillingDate']) {
-                $Results.nextBillingDate = $UserData.NextBillingDate
-            }
-            
-            if ($UserData.PSObject.Properties['SubscriptionAmount']) {
-                $Results.amount = $UserData.SubscriptionAmount
-            }
-            
-            if ($UserData.PSObject.Properties['SubscriptionCurrency']) {
-                $Results.currency = $UserData.SubscriptionCurrency
-            } else {
-                $Results.currency = 'USD'
-            }
-            
-            if ($UserData.PSObject.Properties['CancelledAt']) {
-                $Results.cancelledAt = $UserData.CancelledAt
-            }
+        # Add billing information for paid tiers
+        if ($Subscription.BillingCycle) {
+            $Results.billingCycle = $Subscription.BillingCycle
+        }
+        
+        if ($Subscription.NextBillingDate) {
+            $Results.nextBillingDate = $Subscription.NextBillingDate
+        }
+        
+        if ($Subscription.Amount) {
+            $Results.amount = $Subscription.Amount
+        }
+        
+        if ($Subscription.Currency) {
+            $Results.currency = $Subscription.Currency
+        }
+        
+        # Add cancellation info if applicable
+        if ($Subscription.CancelledAt) {
+            $Results.cancelledAt = $Subscription.CancelledAt
+        }
+        
+        if ($Subscription.AccessUntil) {
+            $Results.accessUntil = $Subscription.AccessUntil
         }
         
         $StatusCode = [HttpStatusCode]::OK

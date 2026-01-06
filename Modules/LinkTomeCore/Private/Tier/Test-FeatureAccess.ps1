@@ -19,37 +19,11 @@ function Test-FeatureAccess {
         [string]$Feature
     )
     
-    # Get user's effective tier
-    $UserTier = $User.SubscriptionTier
+    # Get subscription info using centralized helper
+    $Subscription = Get-UserSubscription -User $User
     
-    # Validate tier exists
-    $ValidTiers = @('free', 'pro', 'premium', 'enterprise')
-    if (-not ($ValidTiers -contains $UserTier)) {
-        throw "Invalid user tier: $UserTier"
-    }
-    
-    # Check subscription status for paid tiers
-    if ($UserTier -ne 'free') {
-        $SubscriptionStatus = $User.SubscriptionStatus
-        
-        # Check if subscription is active
-        if ($SubscriptionStatus -ne 'active' -and $SubscriptionStatus -ne 'trial') {
-            $UserTier = 'free'
-        }
-        
-        # Check expiration date if present
-        if ($User.SubscriptionExpiresAt) {
-            try {
-                $ExpiresAt = [DateTimeOffset]$User.SubscriptionExpiresAt
-                if ($ExpiresAt -lt [DateTimeOffset]::UtcNow) {
-                    $UserTier = 'free'
-                }
-            } catch {
-                Write-Warning "Failed to parse SubscriptionExpiresAt: $($_.Exception.Message)"
-                $UserTier = 'free'
-            }
-        }
-    }
+    # Use effective tier which accounts for expiration and cancellation
+    $UserTier = $Subscription.EffectiveTier
     
     # Get features for user's tier
     $TierFeatures = Get-TierFeatures -Tier $UserTier

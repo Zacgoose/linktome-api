@@ -22,37 +22,11 @@ function Test-UserTier {
         'enterprise' = 4
     }
     
-    # Get user's subscription tier
-    $UserTier = $User.SubscriptionTier
+    # Get subscription info using centralized helper
+    $Subscription = Get-UserSubscription -User $User
     
-    # Validate tier exists
-    if (-not $TierHierarchy.ContainsKey($UserTier)) {
-        throw "Invalid user tier: $UserTier"
-    }
-    
-    # Check subscription status (if user has a paid tier)
-    if ($UserTier -ne 'free') {
-        $SubscriptionStatus = $User.SubscriptionStatus
-        
-        # Check if subscription is active
-        if ($SubscriptionStatus -ne 'active' -and $SubscriptionStatus -ne 'trial') {
-            # Expired subscription - treat as free tier
-            $UserTier = 'free'
-        }
-        
-        # Check expiration date if present
-        if ($User.SubscriptionExpiresAt) {
-            try {
-                $ExpiresAt = [DateTimeOffset]$User.SubscriptionExpiresAt
-                if ($ExpiresAt -lt [DateTimeOffset]::UtcNow) {
-                    # Subscription expired - treat as free tier
-                    $UserTier = 'free'
-                }
-            } catch {
-                Write-Warning "Failed to parse SubscriptionExpiresAt: $($_.Exception.Message)"
-            }
-        }
-    }
+    # Use effective tier which accounts for expiration and cancellation
+    $UserTier = $Subscription.EffectiveTier
     
     # Compare tier levels
     $UserTierLevel = $TierHierarchy[$UserTier]

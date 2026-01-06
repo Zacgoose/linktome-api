@@ -24,10 +24,11 @@ function Invoke-AdminCancelSubscription {
             }
         }
         
-        # Check if user has an active subscription
-        $Tier = if ($UserData.PSObject.Properties['SubscriptionTier']) { $UserData.SubscriptionTier } else { 'free' }
+        # Get subscription info using centralized helper
+        $Subscription = Get-UserSubscription -User $UserData
         
-        if ($Tier -eq 'free') {
+        # Check if user has a paid subscription
+        if ($Subscription.IsFree) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::BadRequest
                 Body = @{ error = "No active subscription to cancel" }
@@ -35,8 +36,7 @@ function Invoke-AdminCancelSubscription {
         }
         
         # Check if already cancelled
-        $CurrentStatus = if ($UserData.PSObject.Properties['SubscriptionStatus']) { $UserData.SubscriptionStatus } else { 'active' }
-        if ($CurrentStatus -eq 'cancelled') {
+        if ($Subscription.IsCancelled) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::BadRequest
                 Body = @{ error = "Subscription is already cancelled" }
@@ -80,7 +80,7 @@ function Invoke-AdminCancelSubscription {
         
         $Results = @{
             message = "Subscription cancelled successfully"
-            tier = $Tier
+            tier = $Subscription.Tier
             status = 'cancelled'
             cancelledAt = $NowString
             accessUntil = $AccessUntil
@@ -88,7 +88,7 @@ function Invoke-AdminCancelSubscription {
         
         # Add note about continued access if there's a future billing date
         if ($AccessUntil -ne $NowString) {
-            $Results.note = "You can continue using $Tier features until $AccessUntil"
+            $Results.note = "You can continue using $($Subscription.Tier) features until $AccessUntil"
         } else {
             $Results.note = "Subscription cancelled immediately. You will be downgraded to free tier."
         }
