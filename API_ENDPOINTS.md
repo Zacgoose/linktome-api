@@ -294,7 +294,7 @@ Authorization: Bearer <jwt-token>
 
 ---
 
-### 7. Upgrade Subscription ⚠️ STUB IMPLEMENTATION
+### 7. Upgrade Subscription ✅ IMPLEMENTED
 
 **Endpoint:** `POST /api/admin/upgradeSubscription`
 
@@ -314,36 +314,49 @@ Content-Type: application/json
 }
 ```
 
-**Current Response (200):**
+**Request Fields:**
+- `tier` (required) - Subscription tier: "free", "pro", "premium", or "enterprise"
+- `billingCycle` (required for paid tiers) - Billing cycle: "monthly" or "annual"
+
+**Success Response (200):**
 ```json
 {
-  "message": "Subscription upgrade requested",
+  "message": "Subscription updated successfully",
   "tier": "premium",
-  "note": "Payment processing not yet implemented. Contact support to upgrade."
+  "billingCycle": "monthly",
+  "status": "active"
 }
 ```
 
 **Error Responses:**
 - `400` - Invalid tier specified
+- `400` - Billing cycle required for paid tiers
+- `400` - Invalid billing cycle
 - `401` - Unauthorized
+- `404` - User not found
 - `500` - Internal server error
 
 **Implementation Status:**
-- ⚠️ This is a STUB endpoint
-- Does NOT process actual payments
-- Does NOT integrate with Stripe
-- Returns acknowledgment only
+- ✅ Updates Users table with subscription tier and billing cycle
+- ✅ Sets SubscriptionStartedAt when changing tiers
+- ✅ Calculates and stores NextBillingDate based on billing cycle
+- ✅ Clears billing info when downgrading to free tier
+- ⚠️ Does NOT process actual payments (payment integration pending)
+- ⚠️ Does NOT integrate with Stripe
 
-**Full Implementation Would Require:**
-1. Stripe account and API keys
-2. Create Stripe checkout session
-3. Return checkout URL for user
-4. Implement webhook endpoint to handle payment confirmation
-5. Create additional tables:
-   - `Subscriptions` - Detailed subscription records
-   - `PaymentMethods` - Stored payment methods
-   - `PendingSubscriptionChanges` - Track upgrade requests
-   - `SubscriptionHistory` - Audit trail
+**Storage:**
+Updates the following fields in the Users table:
+- `SubscriptionTier` - The selected tier
+- `SubscriptionStatus` - Set to "active"
+- `SubscriptionStartedAt` - Timestamp when subscription started/changed (ISO 8601 format)
+- `BillingCycle` - "monthly" or "annual" (null for free tier)
+- `NextBillingDate` - Calculated renewal date (null for free tier)
+
+**Next Billing Date Calculation:**
+- Monthly: Current date + 1 month
+- Annual: Current date + 1 year
+
+**Note:** Payment processing will be added in a future update. For now, this endpoint immediately updates the subscription without payment verification.
 
 ---
 
@@ -518,9 +531,9 @@ Status Code: `401 Unauthorized`
 | PUT /admin/updateEmail | 🆕 Implemented | Tested - Simplified version without verification |
 | PUT /admin/updatePhone | 🆕 Implemented | Tested - Adds new field to Users table |
 | POST /admin/2fatokensetup?action=disable | ✅ Exists | Use for disabling 2FA |
-| GET /admin/getSubscription | 🆕 Implemented | Tested - Basic tier info only |
-| POST /admin/upgradeSubscription | ⚠️ Stub | Returns message, no payment processing |
-| POST /admin/cancelSubscription | ⚠️ Stub | Returns message, no payment processing |
+| GET /admin/getSubscription | 🆕 Implemented | Returns tier, status, billing info |
+| POST /admin/upgradeSubscription | 🆕 Implemented | Updates subscription in Users table (no payment processing) |
+| POST /admin/cancelSubscription | ⚠️ Stub | Returns message, no actual cancellation |
 
 ---
 
@@ -570,6 +583,14 @@ curl -X POST http://localhost:7071/api/admin/2fatokensetup?action=disable \
 ```bash
 curl http://localhost:7071/api/admin/getSubscription \
   -H "Authorization: Bearer <your-jwt-token>"
+```
+
+**Upgrade Subscription:**
+```bash
+curl -X POST http://localhost:7071/api/admin/upgradeSubscription \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"tier":"premium","billingCycle":"monthly"}'
 ```
 
 ---

@@ -48,20 +48,74 @@ function Invoke-AdminUpgradeSubscription {
     }
 
     try {
-        # This is a stub implementation - payment processing not implemented
-        # In a full implementation, this would:
-        # 1. Create a Stripe checkout session
-        # 2. Return checkout URL
-        # 3. Store pending subscription change
-        # 4. Update subscription when payment confirmed via webhook
+        $Table = Get-LinkToMeTable -TableName 'Users'
+        
+        # Get user record
+        $SafeUserId = Protect-TableQueryValue -Value $UserId
+        $UserData = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+        
+        if (-not $UserData) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::NotFound
+                Body = @{ error = "User not found" }
+            }
+        }
+        
+        # Update subscription tier
+        $UserData.SubscriptionTier = $Body.tier
+        $UserData.SubscriptionStatus = 'active'
+        
+        # Set subscription started date if upgrading from free or changing tier
+        $CurrentTier = if ($UserData.PSObject.Properties['SubscriptionTier']) { $UserData.SubscriptionTier } else { 'free' }
+        if ($CurrentTier -ne $Body.tier) {
+            $Now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+            if (-not $UserData.PSObject.Properties['SubscriptionStartedAt']) {
+                $UserData | Add-Member -NotePropertyName 'SubscriptionStartedAt' -NotePropertyValue $Now -Force
+            } else {
+                $UserData.SubscriptionStartedAt = $Now
+            }
+        }
+        
+        # Update billing cycle for paid tiers
+        if ($Body.tier -ne 'free' -and $Body.billingCycle) {
+            if (-not $UserData.PSObject.Properties['BillingCycle']) {
+                $UserData | Add-Member -NotePropertyName 'BillingCycle' -NotePropertyValue $Body.billingCycle -Force
+            } else {
+                $UserData.BillingCycle = $Body.billingCycle
+            }
+            
+            # Calculate next billing date based on billing cycle
+            $NextBillingDate = if ($Body.billingCycle -eq 'annual') {
+                (Get-Date).ToUniversalTime().AddYears(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
+            } else {
+                (Get-Date).ToUniversalTime().AddMonths(1).ToString('yyyy-MM-ddTHH:mm:ssZ')
+            }
+            
+            if (-not $UserData.PSObject.Properties['NextBillingDate']) {
+                $UserData | Add-Member -NotePropertyName 'NextBillingDate' -NotePropertyValue $NextBillingDate -Force
+            } else {
+                $UserData.NextBillingDate = $NextBillingDate
+            }
+        } else {
+            # Clear billing info for free tier
+            if ($UserData.PSObject.Properties['BillingCycle']) {
+                $UserData.BillingCycle = $null
+            }
+            if ($UserData.PSObject.Properties['NextBillingDate']) {
+                $UserData.NextBillingDate = $null
+            }
+        }
+        
+        # Save changes
+        Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-SecurityEvent -EventType 'SubscriptionUpgradeRequested' -UserId $UserId -IpAddress $ClientIP -Endpoint 'admin/upgradeSubscription'
+        Write-SecurityEvent -EventType 'SubscriptionUpgraded' -UserId $UserId -IpAddress $ClientIP -Endpoint 'admin/upgradeSubscription'
         
         $Results = @{
-            message = "Subscription upgrade requested"
+            message = "Subscription updated successfully"
             tier = $Body.tier
-            note = "Payment processing not yet implemented. Contact support to upgrade your subscription."
+            status = 'active'
         }
         
         if ($Body.billingCycle) {
