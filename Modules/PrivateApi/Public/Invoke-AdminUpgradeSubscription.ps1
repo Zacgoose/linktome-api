@@ -69,8 +69,7 @@ function Invoke-AdminUpgradeSubscription {
         $UserData.SubscriptionTier = $Body.tier
         
         # Update status - set to active when upgrading/changing, preserve if already cancelled
-        $CurrentStatus = if ($UserData.PSObject.Properties['SubscriptionStatus']) { $UserData.SubscriptionStatus } else { 'active' }
-        if ($CurrentStatus -ne 'cancelled') {
+        if ($UserData.SubscriptionStatus -ne 'cancelled') {
             $UserData.SubscriptionStatus = 'active'
         }
         
@@ -123,7 +122,7 @@ function Invoke-AdminUpgradeSubscription {
         $Results = @{
             message = "Subscription updated successfully"
             tier = $Body.tier
-            status = 'active'
+            status = $UserData.SubscriptionStatus
         }
         
         if ($Body.billingCycle) {
