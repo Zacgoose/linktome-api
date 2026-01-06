@@ -34,30 +34,14 @@ Authorization: Bearer <jwt-token>
   "email": "user@example.com",
   "displayName": "John Doe",
   "bio": "Software Developer",
-  "avatar": "https://example.com/avatar.jpg",
-  "phoneNumber": "+1 (555) 123-4567",
-  "twoFactorEnabled": true,
-  "twoFactorEmailEnabled": true,
-  "twoFactorTotpEnabled": false
+  "avatar": "https://example.com/avatar.jpg"
 }
 ```
 
-**Fields:**
-- `UserId` - Unique user identifier
-- `username` - User's username
-- `email` - User's email address
-- `displayName` - Display name
-- `bio` - User biography
-- `avatar` - Avatar URL
-- `phoneNumber` - Phone number (null if not set)
-- `twoFactorEnabled` - Whether any 2FA method is enabled
-- `twoFactorEmailEnabled` - Whether email-based 2FA is enabled
-- `twoFactorTotpEnabled` - Whether TOTP-based 2FA is enabled
-
 **Note for Frontend:** 
-- This endpoint now includes all 2FA configuration details
-- Phone number will be `null` if not set by the user
-- The existing endpoint provides all needed information for the settings page
+- This endpoint provides basic profile information for display/editing
+- For 2FA configuration status, use the auth context returned by `/login`, `/signup`, or `/refreshToken` endpoints
+- For phone number, use the `/admin/updatePhone` endpoint to set/update it (field will be added to this response in future if needed)
 
 ---
 
@@ -426,6 +410,35 @@ Tokens are obtained through:
 - JWT tokens are stored in HTTP-only cookies (secure)
 - Tokens expire after 24 hours
 - Refresh tokens valid for 7 days
+
+**Authentication Context (User Object):**
+
+The `/login`, `/signup`, and `/refreshToken` endpoints return a user object in the auth context that includes 2FA configuration:
+
+```json
+{
+  "user": {
+    "UserId": "user-abc123",
+    "email": "user@example.com",
+    "username": "johndoe",
+    "userRole": "user",
+    "roles": ["user"],
+    "permissions": [...],
+    "userManagements": [],
+    "tier": "free",
+    "twoFactorEnabled": true,
+    "twoFactorEmailEnabled": true,
+    "twoFactorTotpEnabled": false
+  }
+}
+```
+
+**2FA Configuration Fields:**
+- `twoFactorEnabled` - Boolean indicating if ANY 2FA method is enabled
+- `twoFactorEmailEnabled` - Boolean for email-based 2FA status
+- `twoFactorTotpEnabled` - Boolean for TOTP-based 2FA status
+
+**Note:** The 2FA configuration is available in the auth context from login/signup/refresh endpoints, NOT from the `/admin/getProfile` endpoint.
 
 **Error Handling:**
 If authentication fails, endpoints return:
