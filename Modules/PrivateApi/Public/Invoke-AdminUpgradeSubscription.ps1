@@ -28,6 +28,14 @@ function Invoke-AdminUpgradeSubscription {
         }
     }
 
+    # Validate billing cycle is provided for paid tiers
+    if ($Body.tier -ne 'free' -and -not $Body.billingCycle) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::BadRequest
+            Body = @{ error = "Billing cycle is required for premium and enterprise tiers" }
+        }
+    }
+
     # Validate billing cycle if provided
     if ($Body.billingCycle) {
         $ValidCycles = @('monthly', 'annual')

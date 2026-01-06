@@ -102,10 +102,8 @@ function Invoke-AdminUpdateEmail {
         
         # Copy any additional fields that might exist
         foreach ($prop in $UserData.PSObject.Properties) {
-            if ($prop.Name -notin @('PartitionKey', 'RowKey', 'Timestamp', 'ETag')) {
-                if (-not $NewUser.ContainsKey($prop.Name)) {
-                    $NewUser[$prop.Name] = $prop.Value
-                }
+            if ($prop.Name -notin @('PartitionKey', 'RowKey', 'Timestamp', 'ETag', 'Username', 'DisplayName', 'Bio', 'Avatar', 'PasswordHash', 'PasswordSalt', 'IsActive', 'Roles', 'Permissions', 'SubscriptionTier', 'SubscriptionStatus', 'TwoFactorEmailEnabled', 'TwoFactorTotpEnabled', 'TotpSecret', 'BackupCodes')) {
+                $NewUser[$prop.Name] = $prop.Value
             }
         }
         

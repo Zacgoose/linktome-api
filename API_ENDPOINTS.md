@@ -541,7 +541,7 @@ curl -X PUT http://localhost:7071/api/admin/updatePhone \
 
 **Reset 2FA:**
 ```bash
-curl -X POST http://localhost:7071/api/admin/reset2FA \
+curl -X POST http://localhost:7071/api/admin/2fatokensetup?action=disable \
   -H "Authorization: Bearer <your-jwt-token>" \
   -H "Content-Type: application/json" \
   -d '{}'

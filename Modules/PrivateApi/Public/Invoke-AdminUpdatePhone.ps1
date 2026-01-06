@@ -12,7 +12,7 @@ function Invoke-AdminUpdatePhone {
     $Body = $Request.Body
 
     # Validate phone number if provided (can be empty to clear)
-    if ($Body.phoneNumber) {
+    if ($Body.PSObject.Properties['phoneNumber'] -and $Body.phoneNumber -ne '') {
         $LengthCheck = Test-InputLength -Value $Body.phoneNumber -MaxLength 20 -FieldName "Phone number"
         if (-not $LengthCheck.Valid) {
             return [HttpResponseContext]@{
