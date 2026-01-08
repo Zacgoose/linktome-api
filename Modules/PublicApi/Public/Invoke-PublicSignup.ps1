@@ -95,7 +95,7 @@ function Invoke-PublicSignup {
         $PasswordData = New-PasswordHash -Password $Body.password
         $UserId = 'user-' + (New-Guid).ToString()
         
-        # Assign default role and permissions        
+        # Assign default role
         $NewUser = @{
             PartitionKey = [string]$Body.email.ToLower()
             RowKey = [string]$UserId
@@ -107,7 +107,6 @@ function Invoke-PublicSignup {
             PasswordSalt = [string]$PasswordData.Salt
             IsActive = [bool]$true
             Roles = '["user"]'
-            Permissions = ([string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress))
             SubscriptionTier = [string]'free'
             SubscriptionStatus = [string]'active'
             TwoFactorEmailEnabled = [bool]$false

@@ -1,7 +1,7 @@
 function Get-UserAvailablePermissions {
     <#
     .SYNOPSIS
-        Get all permissions available to a user (own + from roles)
+        Get all permissions available to a user based on their roles
     #>
     [CmdletBinding()]
     param(
@@ -15,13 +15,6 @@ function Get-UserAvailablePermissions {
     if (-not $User) { return @() }
     
     $Permissions = @()
-    
-    # User's direct permissions
-    if ($User.Permissions) {
-        try {
-            $Permissions += ($User.Permissions | ConvertFrom-Json)
-        } catch {}
-    }
     
     # Permissions from roles
     if ($User.Roles) {
