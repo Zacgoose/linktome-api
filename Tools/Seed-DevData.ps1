@@ -38,11 +38,6 @@ $CreatedUsers = @()
 foreach ($TestUser in $TestUsers) {
     $PasswordData = New-PasswordHash -Password $TestUser.Password
     $UserId = 'user-' + (New-Guid).ToString()
-    $DefaultPermissions = Get-DefaultRolePermissions -Role $TestUser.Role
-
-    # Convert arrays to JSON strings for Azure Table Storage compatibility
-    $RolesJson = [string](@($TestUser.Role) | ConvertTo-Json -Compress)
-    $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
 
     $User = @{
         PartitionKey = [string]$TestUser.Email
@@ -55,7 +50,6 @@ foreach ($TestUser in $TestUsers) {
         PasswordSalt = [string]$PasswordData.Salt
         IsActive = [bool]$true
         Roles = '["user"]'
-        Permissions = ([string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress))
         SubscriptionTier = [string]'free'
         SubscriptionStatus = [string]'active'
     }

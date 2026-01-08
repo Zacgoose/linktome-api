@@ -110,10 +110,8 @@ function Get-ApiKeyFromRequest {
     }
     
     $UserRoles = @('user')
-    $UserPermissions = @()
     try {
         if ($User.Roles) { $UserRoles = $User.Roles | ConvertFrom-Json }
-        if ($User.Permissions) { $UserPermissions = $User.Permissions | ConvertFrom-Json }
     } catch {}
     
     $Tier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { 'free' }
@@ -124,7 +122,6 @@ function Get-ApiKeyFromRequest {
         UserId          = $KeyRecord.PartitionKey
         KeyPermissions  = $KeyPermissions
         UserRoles       = $UserRoles
-        UserPermissions = $UserPermissions
         UserManagements = $UserManagements
         Tier            = $Tier
         User            = $User
