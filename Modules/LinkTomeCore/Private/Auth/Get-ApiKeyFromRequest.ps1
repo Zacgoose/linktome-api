@@ -116,7 +116,7 @@ function Get-ApiKeyFromRequest {
         if ($User.Permissions) { $UserPermissions = $User.Permissions | ConvertFrom-Json }
     } catch {}
     
-    $Tier = if ($User.AccountTier) { $User.AccountTier } else { 'free' }
+    $Tier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { 'free' }
     
     return @{
         Valid           = $true

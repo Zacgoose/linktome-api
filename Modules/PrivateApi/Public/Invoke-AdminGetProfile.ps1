@@ -33,6 +33,7 @@ function Invoke-AdminGetProfile {
             displayName = $UserData.DisplayName
             bio = $UserData.Bio
             avatar = $UserData.Avatar
+            phoneNumber = $UserData.PhoneNumber
         }
         $StatusCode = [HttpStatusCode]::OK
 

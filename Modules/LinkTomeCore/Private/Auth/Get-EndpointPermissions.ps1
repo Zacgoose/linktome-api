@@ -15,6 +15,9 @@ function Get-EndpointPermissions {
         # Profile endpoints
         'admin/getProfile' = @('read:profile')
         'admin/updateProfile' = @('write:profile')
+
+        # User 2fa endpoints
+        'admin/2fatokensetup' = @('write:2fauth')
         
         # Links endpoints
         'admin/getLinks' = @('read:links')
@@ -39,6 +42,16 @@ function Get-EndpointPermissions {
         'admin/apiKeysCreate' = @('create:apiauth')
         'admin/apiKeysUpdate' = @('update:apiauth')
         'admin/apiKeysDelete' = @('delete:apiauth')
+        
+        # Settings endpoints
+        'admin/updatePassword' = @('write:password')
+        'admin/updateEmail' = @('write:email')
+        'admin/updatePhone' = @('write:phone')
+        
+        # Subscription endpoints
+        'admin/getSubscription' = @('read:subscription')
+        'admin/upgradeSubscription' = @('write:subscription')
+        'admin/cancelSubscription' = @('write:subscription')
     }
     
     return $EndpointPermissions[$Endpoint]

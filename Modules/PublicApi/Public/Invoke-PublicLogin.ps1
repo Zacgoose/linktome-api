@@ -10,7 +10,6 @@ function Invoke-PublicLogin {
 
     $Body = $Request.Body
     $ClientIP = Get-ClientIPAddress -Request $Request
-    Write-Information "DEBUG: Request.Body in the function: $($Request.Body | ConvertTo-Json -Compress -Depth 3)"
 
     # === Validate Required Fields ===
     if (-not $Body.email -or -not $Body.password) {
@@ -73,6 +72,57 @@ function Invoke-PublicLogin {
             }
         }
 
+        # === Check if 2FA is enabled ===
+        $TwoFactorEmailEnabled = $User.TwoFactorEmailEnabled -eq $true
+        $TwoFactorTotpEnabled = $User.TwoFactorTotpEnabled -eq $true
+        
+        if ($TwoFactorEmailEnabled -or $TwoFactorTotpEnabled) {
+            # Determine 2FA method
+            $Method = if ($TwoFactorEmailEnabled -and $TwoFactorTotpEnabled) {
+                'both'
+            } elseif ($TwoFactorTotpEnabled) {
+                'totp'
+            } else {
+                'email'
+            }
+            
+            # Determine available methods for frontend
+            $AvailableMethods = @()
+            if ($TwoFactorEmailEnabled) { $AvailableMethods += 'email' }
+            if ($TwoFactorTotpEnabled) { $AvailableMethods += 'totp' }
+            
+            # Generate email code if email 2FA is enabled
+            $EmailCode = $null
+            if ($TwoFactorEmailEnabled) {
+                $EmailCode = New-TwoFactorCode
+                $EmailSent = Send-TwoFactorEmail -Email $User.PartitionKey -Code $EmailCode
+                
+                if (-not $EmailSent) {
+                    Write-Error "Failed to send 2FA email"
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::InternalServerError
+                        Body = @{ error = "Failed to send verification code" }
+                    }
+                }
+            }
+            
+            # Create 2FA session
+            $SessionResult = New-TwoFactorSession -UserId $User.RowKey -Method $Method -EmailCode $EmailCode
+            
+            Write-SecurityEvent -EventType 'LoginRequires2FA' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
+            
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::OK
+                Body = @{
+                    requiresTwoFactor = $true
+                    sessionId = $SessionResult.SessionId
+                    twoFactorMethod = $Method
+                    availableMethods = $AvailableMethods
+                }
+            }
+        }
+
+        # === No 2FA - Complete login ===
         try {
             $authContext = Get-UserAuthContext -User $User
         } catch {
@@ -97,6 +147,10 @@ function Invoke-PublicLogin {
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
+                tier = $authContext.Tier
+                twoFactorEnabled = $authContext.TwoFactorEnabled
+                twoFactorEmailEnabled = $authContext.TwoFactorEmailEnabled
+                twoFactorTotpEnabled = $authContext.TwoFactorTotpEnabled
             }
         }
 

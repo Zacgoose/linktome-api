@@ -17,6 +17,7 @@ function Get-DefaultRolePermissions {
     $RolePermissions = @{
         'user' = @(
             'read:dashboard',
+            'write:2fauth',
             'read:profile',
             'write:profile',
             'read:links',
@@ -33,7 +34,13 @@ function Get-DefaultRolePermissions {
             'read:apiauth',
             'create:apiauth',
             'update:apiauth',
-            'delete:apiauth'
+            'delete:apiauth',
+            'write:password',
+            'write:email',
+            'write:phone',
+            'read:subscription',
+            'write:subscription',
+            'read:usersettings'
         )
         'user_manager' = @(
             'read:dashboard',

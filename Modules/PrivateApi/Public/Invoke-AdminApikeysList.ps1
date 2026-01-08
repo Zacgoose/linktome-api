@@ -17,12 +17,13 @@ function Invoke-AdminApikeysList {
         # Get user tier
         $UserTable = Get-LinkToMeTable -TableName 'Users'
         $UserRecord = Get-LinkToMeAzDataTableEntity @UserTable -Filter "RowKey eq '$($User.UserId)'" | Select-Object -First 1
-        $Tier = if ($UserRecord -and $UserRecord.AccountTier) { $UserRecord.AccountTier } else { 'free' }
+        $Tier = if ($UserRecord -and $UserRecord.SubscriptionTier) { $UserRecord.SubscriptionTier } else { 'free' }
         
         $TierLimits = @{
-            'free'       = @{ requestsPerMinute = 20; requestsPerDay = 1000 }
-            'pro'        = @{ requestsPerMinute = 100; requestsPerDay = 50000 }
-            'enterprise' = @{ requestsPerMinute = 500; requestsPerDay = 500000 }
+            'free'       = @{ requestsPerMinute = 0; requestsPerDay = 0 }
+            'pro'        = @{ requestsPerMinute = 60; requestsPerDay = 10000 }
+            'premium'    = @{ requestsPerMinute = 120; requestsPerDay = 50000 }
+            'enterprise' = @{ requestsPerMinute = 300; requestsPerDay = -1 }
         }
         
         $Limits = $TierLimits[$Tier] ?? $TierLimits['free']
@@ -67,7 +68,6 @@ function Invoke-AdminApikeysList {
             Body = @{ 
                 keys                 = @($Keys)
                 availablePermissions = @($AvailablePermissions)
-                tier                 = $Tier
                 rateLimits           = $Limits
                 usage                = @{
                 dailyUsed            = $DailyUsed

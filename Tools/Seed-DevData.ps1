@@ -56,6 +56,8 @@ foreach ($TestUser in $TestUsers) {
         IsActive = [bool]$true
         Roles = '["user"]'
         Permissions = ([string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress))
+        SubscriptionTier = [string]'free'
+        SubscriptionStatus = [string]'active'
     }
 
     Write-Host "Creating user: $($User.PartitionKey) (Role: $($TestUser.Role))" -ForegroundColor Yellow

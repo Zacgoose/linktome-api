@@ -19,7 +19,8 @@ function Get-RequestSuspicionScore {
         [string[]]$ExpectedOrigins = @(
             $env:APP_ORIGIN,
             'http://localhost:4280',
-            'http://localhost:3000'
+            'http://localhost:3000',
+            'http://192.168.20.140:3000'
         )
     )
     
@@ -157,7 +158,7 @@ function Get-RequestSuspicionScore {
     return @{
         Score        = $Score
         Flags        = $Flags
-        IsSuspicious = $Score -ge 40
-        IsLikelyBot  = $Score -ge 70
+        IsSuspicious = $Score -ge 200
+        IsLikelyBot  = $Score -ge 200
     }
 }

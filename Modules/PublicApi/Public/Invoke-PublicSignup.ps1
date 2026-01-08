@@ -95,13 +95,7 @@ function Invoke-PublicSignup {
         $PasswordData = New-PasswordHash -Password $Body.password
         $UserId = 'user-' + (New-Guid).ToString()
         
-        # Assign default role and permissions
-        $DefaultRole = 'user'
-        $DefaultPermissions = Get-DefaultRolePermissions -Role $DefaultRole
-        
-        $RolesJson = [string](@($DefaultRole) | ConvertTo-Json -Compress)
-        $PermissionsJson = [string]($DefaultPermissions | ConvertTo-Json -Compress)
-        
+        # Assign default role and permissions        
         $NewUser = @{
             PartitionKey = [string]$Body.email.ToLower()
             RowKey = [string]$UserId
@@ -112,8 +106,14 @@ function Invoke-PublicSignup {
             PasswordHash = [string]$PasswordData.Hash
             PasswordSalt = [string]$PasswordData.Salt
             IsActive = [bool]$true
-            Roles = $RolesJson
-            Permissions = $PermissionsJson
+            Roles = '["user"]'
+            Permissions = ([string](Get-DefaultRolePermissions -Role 'user' | ConvertTo-Json -Compress))
+            SubscriptionTier = [string]'free'
+            SubscriptionStatus = [string]'active'
+            TwoFactorEmailEnabled = [bool]$false
+            TwoFactorTotpEnabled = [bool]$false
+            TotpSecret = [string]''
+            BackupCodes = [string]'[]'
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $NewUser -Force
@@ -147,6 +147,10 @@ function Invoke-PublicSignup {
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
+                tier = $authContext.Tier
+                twoFactorEnabled = $authContext.TwoFactorEnabled
+                twoFactorEmailEnabled = $authContext.TwoFactorEmailEnabled
+                twoFactorTotpEnabled = $authContext.TwoFactorTotpEnabled
             }
         }
         
