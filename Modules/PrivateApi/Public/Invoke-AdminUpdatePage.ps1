@@ -26,9 +26,10 @@ function Invoke-AdminUpdatePage {
         
         $PagesTable = Get-LinkToMeTable -TableName 'Pages'
         $SafeUserId = Protect-TableQueryValue -Value $UserId
+        $SafePageId = Protect-TableQueryValue -Value $Body.id
         
         # Get the page to update
-        $Page = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and RowKey eq '$($Body.id)'" | Select-Object -First 1
+        $Page = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and RowKey eq '$SafePageId'" | Select-Object -First 1
         
         if (-not $Page) {
             return [HttpResponseContext]@{
@@ -51,7 +52,7 @@ function Invoke-AdminUpdatePage {
             
             # Check slug uniqueness
             $ExistingSlug = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and Slug eq '$NewSlug'" | Select-Object -First 1
-            if ($ExistingSlug -and $ExistingSlug.RowKey -ne $Body.id) {
+            if ($ExistingSlug -and $ExistingSlug.RowKey -ne $SafePageId) {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::BadRequest
                     Body = @{ error = "Slug already in use" }
@@ -81,7 +82,7 @@ function Invoke-AdminUpdatePage {
             if ($NewIsDefault -and -not [bool]$Page.IsDefault) {
                 $AllPages = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId'"
                 foreach ($P in $AllPages) {
-                    if ([bool]$P.IsDefault -and $P.RowKey -ne $Body.id) {
+                    if ([bool]$P.IsDefault -and $P.RowKey -ne $SafePageId) {
                         $P.IsDefault = $false
                         Add-LinkToMeAzDataTableEntity @PagesTable -Entity $P -Force
                     }
