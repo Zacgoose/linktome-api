@@ -60,9 +60,17 @@ function Invoke-PublicGetUserProfile {
                     }
                 }
             } else {
-                # Get default page (ensure one exists)
-                $DefaultPage = Ensure-DefaultPage -UserId $User.RowKey
-                $Page = $DefaultPage
+                # Get default page
+                $Page = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and IsDefault eq true" | Select-Object -First 1
+                
+                if (-not $Page) {
+                    $StatusCode = [HttpStatusCode]::NotFound
+                    $Results = @{ error = "No default page found for this user" }
+                    return [HttpResponseContext]@{
+                        StatusCode = $StatusCode
+                        Body = $Results
+                    }
+                }
             }
             
             $PageId = $Page.RowKey

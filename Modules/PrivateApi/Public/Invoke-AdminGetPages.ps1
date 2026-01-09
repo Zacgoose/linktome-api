@@ -16,9 +16,6 @@ function Invoke-AdminGetPages {
     $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
     
     try {
-        # Ensure user has at least a default page
-        Ensure-DefaultPage -UserId $UserId | Out-Null
-        
         $PagesTable = Get-LinkToMeTable -TableName 'Pages'
         $SafeUserId = Protect-TableQueryValue -Value $UserId
         

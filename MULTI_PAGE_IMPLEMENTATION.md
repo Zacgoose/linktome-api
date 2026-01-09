@@ -157,16 +157,14 @@ Now supports optional `slug` query parameter to display a specific page.
 
 ## Migration & Backward Compatibility
 
-### Automatic Migration
-When a user logs in or accesses any page-related endpoint for the first time:
-1. The system checks if the user has any pages
-2. If not, it creates a default page with slug "main" and name "Main Links"
-3. All existing links and groups without a PageId are automatically migrated to this default page
+### Manual Page Creation
+Users must explicitly create pages using the `/admin/createPage` endpoint. When a user first signs up, they will need to create their first page before they can add links.
 
 ### Default Page Behavior
 - If no `pageId` is specified in admin endpoints, the default page is used
 - If no `slug` is specified in public profile, the default page is shown
-- Users always have at least one page (the default page)
+- If a user has no pages, endpoints will return an appropriate error message prompting them to create a page first
+- The seed script (`Tools/Seed-DevData.ps1`) creates default pages for test users
 
 ## Permissions
 

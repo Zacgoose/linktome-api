@@ -16,7 +16,17 @@ function Invoke-AdminGetLinks {
     try {
         # If no pageId specified, get default page
         if (-not $PageId) {
-            $DefaultPage = Ensure-DefaultPage -UserId $UserId
+            $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+            $SafeUserId = Protect-TableQueryValue -Value $UserId
+            $DefaultPage = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and IsDefault eq true" | Select-Object -First 1
+            
+            if (-not $DefaultPage) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::NotFound
+                    Body = @{ error = "No default page found. Please create a page first." }
+                }
+            }
+            
             $PageId = $DefaultPage.RowKey
         }
         
