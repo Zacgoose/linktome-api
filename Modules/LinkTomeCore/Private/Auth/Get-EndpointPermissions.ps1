@@ -23,6 +23,12 @@ function Get-EndpointPermissions {
         'admin/getLinks' = @('read:links')
         'admin/updateLinks' = @('write:links')
         
+        # Page endpoints
+        'admin/getPages' = @('read:pages')
+        'admin/createPage' = @('write:pages')
+        'admin/updatePage' = @('write:pages')
+        'admin/deletePage' = @('write:pages')
+        
         # Appearance endpoints
         'admin/getAppearance' = @('read:appearance')
         'admin/updateAppearance' = @('write:appearance')
