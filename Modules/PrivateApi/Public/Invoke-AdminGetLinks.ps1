@@ -11,15 +11,24 @@ function Invoke-AdminGetLinks {
     param($Request, $TriggerMetadata)
     
     $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
+    $PageId = $Request.Query.pageId
+    
     try {
+        # If no pageId specified, get default page
+        if (-not $PageId) {
+            $DefaultPage = Ensure-DefaultPage -UserId $UserId
+            $PageId = $DefaultPage.RowKey
+        }
+        
         $LinksTable = Get-LinkToMeTable -TableName 'Links'
         $GroupsTable = Get-LinkToMeTable -TableName 'LinkGroups'
         
-        # Sanitize UserId for query
+        # Sanitize UserId and PageId for query
         $SafeUserId = Protect-TableQueryValue -Value $UserId
+        $SafePageId = Protect-TableQueryValue -Value $PageId
         
-        # Get all links
-        $Links = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+        # Get links for specific page
+        $Links = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'"
         
         $LinkResults = @($Links | ForEach-Object {
             $linkObj = @{
@@ -65,8 +74,8 @@ function Invoke-AdminGetLinks {
             $linkObj
         } | Sort-Object order)
         
-        # Get all groups
-        $Groups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$SafeUserId'"
+        # Get all groups for specific page
+        $Groups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'"
         
         $GroupResults = @($Groups | ForEach-Object {
             $groupObj = @{

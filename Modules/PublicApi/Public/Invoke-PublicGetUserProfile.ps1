@@ -12,6 +12,7 @@ function Invoke-PublicGetUserProfile {
     param($Request, $TriggerMetadata)
 
     $Username = $Request.Query.username
+    $Slug = $Request.Query.slug
 
     if (-not $Username) {
         return [HttpResponseContext]@{
@@ -41,13 +42,39 @@ function Invoke-PublicGetUserProfile {
         } else {
             $SafeUserId = Protect-TableQueryValue -Value $User.RowKey
             
-            # Get links
-            $LinksTable = Get-LinkToMeTable -TableName 'Links'
-            $AllLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$($User.RowKey)'"
+            # Get the page to display (by slug or default)
+            $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+            $Page = $null
             
-            # Get groups
+            if ($Slug) {
+                # Get page by slug
+                $SafeSlug = Protect-TableQueryValue -Value $Slug.ToLower()
+                $Page = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and Slug eq '$SafeSlug'" | Select-Object -First 1
+                
+                if (-not $Page) {
+                    $StatusCode = [HttpStatusCode]::NotFound
+                    $Results = @{ error = "Page not found" }
+                    return [HttpResponseContext]@{
+                        StatusCode = $StatusCode
+                        Body = $Results
+                    }
+                }
+            } else {
+                # Get default page (ensure one exists)
+                $DefaultPage = Ensure-DefaultPage -UserId $User.RowKey
+                $Page = $DefaultPage
+            }
+            
+            $PageId = $Page.RowKey
+            $SafePageId = Protect-TableQueryValue -Value $PageId
+            
+            # Get links for this page
+            $LinksTable = Get-LinkToMeTable -TableName 'Links'
+            $AllLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'"
+            
+            # Get groups for this page
             $GroupsTable = Get-LinkToMeTable -TableName 'LinkGroups'
-            $AllGroups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$($User.RowKey)'"
+            $AllGroups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'"
             
             # Get social icons
             $SocialTable = Get-LinkToMeTable -TableName 'SocialIcons'

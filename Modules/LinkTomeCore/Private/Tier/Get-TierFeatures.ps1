@@ -23,6 +23,9 @@ function Get-TierFeatures {
                 'custom_themes'
             )
             limits = @{
+                # Page features
+                maxPages = 1
+                
                 # Link features
                 maxLinks = 10
                 maxLinkGroups = 2
@@ -68,6 +71,9 @@ function Get-TierFeatures {
                 'api_access'
             )
             limits = @{
+                # Page features
+                maxPages = 3
+                
                 # Link features
                 maxLinks = 50
                 maxLinkGroups = 10
@@ -115,6 +121,9 @@ function Get-TierFeatures {
                 'priority_support'
             )
             limits = @{
+                # Page features
+                maxPages = 10
+                
                 # Link features
                 maxLinks = 100
                 maxLinkGroups = 25
@@ -164,6 +173,9 @@ function Get-TierFeatures {
                 'white_label'
             )
             limits = @{
+                # Page features
+                maxPages = -1  # Unlimited
+                
                 # Link features
                 maxLinks = -1  # Unlimited
                 maxLinkGroups = -1  # Unlimited
