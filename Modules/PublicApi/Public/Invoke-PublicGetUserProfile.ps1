@@ -258,7 +258,7 @@ function Invoke-PublicGetUserProfile {
             $UserAgent = $Request.Headers.'User-Agent'
             $Referrer = $Request.Headers.Referer
             
-            Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -UserAgent $UserAgent -Referrer $Referrer
+            Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -UserAgent $UserAgent -Referrer $Referrer -PageId $PageId
         }
         
     } catch {

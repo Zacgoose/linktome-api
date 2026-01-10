@@ -9,17 +9,30 @@ function Invoke-AdminGetDashboardStats {
     param($Request, $TriggerMetadata)
     
     $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
+    $PageId = $Request.Query.pageId
 
     try {
         # Get user's links count
         $LinksTable = Get-LinkToMeTable -TableName 'Links'
         $SafeUserId = Protect-TableQueryValue -Value $UserId
         $Links = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+        
+        # Filter links by page if specified
+        if ($PageId) {
+            $SafePageId = Protect-TableQueryValue -Value $PageId
+            $Links = @($Links | Where-Object { $_.PageId -eq $SafePageId })
+        }
+        
         $ActiveLinks = @($Links | Where-Object { $_.Active -eq $true })
         
         # Get analytics summary
         $AnalyticsTable = Get-LinkToMeTable -TableName 'Analytics'
         $AnalyticsEvents = Get-LinkToMeAzDataTableEntity @AnalyticsTable -Filter "PartitionKey eq '$SafeUserId'"
+        
+        # Filter analytics by page if specified
+        if ($PageId) {
+            $AnalyticsEvents = @($AnalyticsEvents | Where-Object { $_.PageId -eq $SafePageId })
+        }
         
         $PageViews = @($AnalyticsEvents | Where-Object { $_.EventType -eq 'PageView' })
         $LinkClicks = @($AnalyticsEvents | Where-Object { $_.EventType -eq 'LinkClick' })
