@@ -14,7 +14,6 @@ function Get-EndpointPermissions {
     $EndpointPermissions = @{
         # Profile endpoints
         'admin/getProfile' = @('read:profile')
-        'admin/updateProfile' = @('write:profile')
 
         # User 2fa endpoints
         'admin/2fatokensetup' = @('write:2fauth')
@@ -35,7 +34,6 @@ function Get-EndpointPermissions {
         
         # Analytics endpoints
         'admin/getAnalytics' = @('read:analytics')
-        'admin/getDashboardStats' = @('read:dashboard')
 
         # User manager endpoints
         'admin/UserManagerList' = @('list:user_manager')
