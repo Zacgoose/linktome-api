@@ -175,7 +175,7 @@ function Invoke-PublicGetUserProfile {
                 header = @{
                     profileImageLayout = if ($AppearanceData.ProfileImageLayout) { $AppearanceData.ProfileImageLayout } else { 'classic' }
                     titleStyle = if ($AppearanceData.TitleStyle) { $AppearanceData.TitleStyle } else { 'text' }
-                    displayName = if ($User.DisplayName) { $User.DisplayName } else { "@$($User.Username)" }
+                    displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
                 }
                 
                 # Wallpaper/Background
@@ -220,7 +220,7 @@ function Invoke-PublicGetUserProfile {
             
             # Add optional header properties
             if ($AppearanceData.LogoUrl) { $Appearance.header.logoUrl = $AppearanceData.LogoUrl }
-            if ($User.Bio) { $Appearance.header.bio = $User.Bio }
+            if ($AppearanceData.Bio) { $Appearance.header.bio = $AppearanceData.Bio }
             
             # Add optional wallpaper properties
             if ($AppearanceData.WallpaperGradientStart) { $Appearance.wallpaper.gradientStart = $AppearanceData.WallpaperGradientStart }
@@ -247,8 +247,8 @@ function Invoke-PublicGetUserProfile {
             
             $Results = @{
                 username = $User.Username
-                displayName = if ($User.DisplayName) { $User.DisplayName } else { "@$($User.Username)" }
-                bio = $User.Bio
+                displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
+                bio = $AppearanceData.Bio
                 avatar = $User.Avatar
                 appearance = $Appearance
                 socialIcons = $SocialIcons

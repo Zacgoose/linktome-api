@@ -73,8 +73,8 @@ function Invoke-AdminGetAppearance {
             header = @{
                 profileImageLayout = if ($AppearanceData.ProfileImageLayout) { $AppearanceData.ProfileImageLayout } else { 'classic' }
                 titleStyle = if ($AppearanceData.TitleStyle) { $AppearanceData.TitleStyle } else { 'text' }
-                displayName = if ($UserData.DisplayName) { $UserData.DisplayName } else { "@$($UserData.Username)" }
-                bio = $UserData.Bio
+                displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($UserData.Username)" }
+                bio = $AppearanceData.Bio
             }
             profileImageUrl = $UserData.Avatar
             socialIcons = $SocialIcons

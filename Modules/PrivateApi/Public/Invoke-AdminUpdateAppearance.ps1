@@ -235,7 +235,7 @@ function Invoke-AdminUpdateAppearance {
                 Set-EntityProperty -Entity $AppearanceData -PropertyName 'LogoUrl' -Value $Body.header.logoUrl
             }
             
-            # Display name and bio are user-level (not per-page), save to Users table
+            # Display name and bio are per-page, save to Appearance table
             if ($Body.header.displayName) {
                 $NameCheck = Test-InputLength -Value $Body.header.displayName -MaxLength 100 -FieldName "Display name"
                 if (-not $NameCheck.Valid) {
@@ -244,7 +244,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = $NameCheck.Message }
                     }
                 }
-                $UserData.DisplayName = $Body.header.displayName
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'DisplayName' -Value $Body.header.displayName
             }
             
             if ($Body.header.PSObject.Properties.Match('bio').Count -gt 0) {
@@ -257,7 +257,7 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                $UserData.Bio = $Body.header.bio
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'Bio' -Value $Body.header.bio
             }
         }
         
