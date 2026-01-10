@@ -235,6 +235,7 @@ function Invoke-AdminUpdateAppearance {
                 Set-EntityProperty -Entity $AppearanceData -PropertyName 'LogoUrl' -Value $Body.header.logoUrl
             }
             
+            # Display name and bio are user-level (not per-page), save to Users table
             if ($Body.header.displayName) {
                 $NameCheck = Test-InputLength -Value $Body.header.displayName -MaxLength 100 -FieldName "Display name"
                 if (-not $NameCheck.Valid) {
@@ -243,7 +244,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = $NameCheck.Message }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'DisplayName' -Value $Body.header.displayName
+                $UserData.DisplayName = $Body.header.displayName
             }
             
             if ($Body.header.PSObject.Properties.Match('bio').Count -gt 0) {
@@ -256,11 +257,12 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'Bio' -Value $Body.header.bio
+                $UserData.Bio = $Body.header.bio
             }
         }
         
         # === Profile Image URL ===
+        # Avatar is user-level (not per-page), save to Users table
         if ($Body.PSObject.Properties.Match('profileImageUrl').Count -gt 0) {
             if ($Body.profileImageUrl -and $Body.profileImageUrl -notmatch $urlRegex) {
                 return [HttpResponseContext]@{
@@ -268,7 +270,7 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Profile image URL must be a valid http or https URL" }
                 }
             }
-            Set-EntityProperty -Entity $AppearanceData -PropertyName 'Avatar' -Value $Body.profileImageUrl
+            $UserData.Avatar = $Body.profileImageUrl
         }
         
         # === Wallpaper ===
@@ -681,6 +683,9 @@ function Invoke-AdminUpdateAppearance {
                 }
             }
         }
+        
+        # Save updated user data (displayName, bio, avatar are user-level)
+        Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserData -Force
         
         # Save updated appearance data
         $AppearanceData.UpdatedAt = (Get-Date).ToUniversalTime().ToString('o')
