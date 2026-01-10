@@ -262,7 +262,7 @@ function Invoke-AdminUpdateAppearance {
         }
         
         # === Profile Image URL ===
-        # Avatar is user-level (not per-page), save to Users table
+        # Avatar is per-page, save to Appearance table
         if ($Body.PSObject.Properties.Match('profileImageUrl').Count -gt 0) {
             if ($Body.profileImageUrl -and $Body.profileImageUrl -notmatch $urlRegex) {
                 return [HttpResponseContext]@{
@@ -270,7 +270,7 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Profile image URL must be a valid http or https URL" }
                 }
             }
-            $UserData.Avatar = $Body.profileImageUrl
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'Avatar' -Value $Body.profileImageUrl
         }
         
         # === Wallpaper ===
@@ -684,10 +684,7 @@ function Invoke-AdminUpdateAppearance {
             }
         }
         
-        # Save updated user data (displayName, bio, avatar are user-level)
-        Add-LinkToMeAzDataTableEntity @UsersTable -Entity $UserData -Force
-        
-        # Save updated appearance data
+        # Save updated appearance data (includes displayName, bio, avatar - all per-page)
         $AppearanceData.UpdatedAt = (Get-Date).ToUniversalTime().ToString('o')
         Add-LinkToMeAzDataTableEntity @AppearanceTable -Entity $AppearanceData -Force
         

@@ -76,7 +76,7 @@ function Invoke-AdminGetAppearance {
                 displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($UserData.Username)" }
                 bio = $AppearanceData.Bio
             }
-            profileImageUrl = $UserData.Avatar
+            profileImageUrl = $AppearanceData.Avatar
             socialIcons = $SocialIcons
             
             # Wallpaper/Background

@@ -249,7 +249,7 @@ function Invoke-PublicGetUserProfile {
                 username = $User.Username
                 displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
                 bio = $AppearanceData.Bio
-                avatar = $User.Avatar
+                avatar = $AppearanceData.Avatar
                 appearance = $Appearance
                 socialIcons = $SocialIcons
                 links = $FilteredLinks
