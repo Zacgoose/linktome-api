@@ -5,20 +5,37 @@ function Invoke-AdminUpdateAppearance {
     .ROLE
         write:appearance
     .DESCRIPTION
-        Updates the user's appearance settings including theme, header, wallpaper, buttons, text, and social icons.
+        Updates the page appearance settings including theme, header, wallpaper, buttons, text, and social icons.
+        Appearance is now per-page rather than per-user.
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
     
     $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
     $Body = $Request.Body
+    $PageId = $Request.Query.pageId
 
     try {
-        $Table = Get-LinkToMeTable -TableName 'Users'
+        # If no pageId specified, get default page
+        if (-not $PageId) {
+            $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+            $SafeUserId = Protect-TableQueryValue -Value $UserId
+            $DefaultPage = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and IsDefault eq true" | Select-Object -First 1
+            
+            if (-not $DefaultPage) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::NotFound
+                    Body = @{ error = "No default page found. Please create a page first." }
+                }
+            }
+            
+            $PageId = $DefaultPage.RowKey
+        }
         
-        # Get user data
+        # Get user data for tier validation
+        $UsersTable = Get-LinkToMeTable -TableName 'Users'
         $SafeUserId = Protect-TableQueryValue -Value $UserId
-        $UserData = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+        $UserData = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
         
         if (-not $UserData) {
             return [HttpResponseContext]@{
@@ -93,6 +110,21 @@ function Invoke-AdminUpdateAppearance {
             }
         }
         
+        # Get or create appearance record for this page
+        $AppearanceTable = Get-LinkToMeTable -TableName 'Appearance'
+        $SafePageId = Protect-TableQueryValue -Value $PageId
+        $AppearanceData = Get-LinkToMeAzDataTableEntity @AppearanceTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'" | Select-Object -First 1
+        
+        if (-not $AppearanceData) {
+            # Create new appearance record
+            $AppearanceData = @{
+                PartitionKey = $UserId
+                RowKey = 'appearance-' + (New-Guid).ToString()
+                PageId = $PageId
+                CreatedAt = (Get-Date).ToUniversalTime().ToString('o')
+            }
+        }
+        
         # Helper function to safely set property
         function Set-EntityProperty {
             param($Entity, $PropertyName, $Value)
@@ -142,11 +174,11 @@ function Invoke-AdminUpdateAppearance {
                     }
                 }
             }
-            Set-EntityProperty -Entity $UserData -PropertyName 'Theme' -Value $Body.theme
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'Theme' -Value $Body.theme
         }
         
         if ($Body.PSObject.Properties.Match('customTheme').Count -gt 0) {
-            Set-EntityProperty -Entity $UserData -PropertyName 'CustomTheme' -Value ([bool]$Body.customTheme)
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'CustomTheme' -Value ([bool]$Body.customTheme)
         }
         
         # === Header ===
@@ -169,7 +201,7 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ProfileImageLayout' -Value $Body.header.profileImageLayout
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ProfileImageLayout' -Value $Body.header.profileImageLayout
             }
             
             if ($Body.header.titleStyle) {
@@ -190,7 +222,7 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'TitleStyle' -Value $Body.header.titleStyle
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleStyle' -Value $Body.header.titleStyle
             }
             
             if ($Body.header.PSObject.Properties.Match('logoUrl').Count -gt 0) {
@@ -200,7 +232,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Logo URL must be a valid http or https URL" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'LogoUrl' -Value $Body.header.logoUrl
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'LogoUrl' -Value $Body.header.logoUrl
             }
             
             if ($Body.header.displayName) {
@@ -211,7 +243,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = $NameCheck.Message }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'DisplayName' -Value $Body.header.displayName
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'DisplayName' -Value $Body.header.displayName
             }
             
             if ($Body.header.PSObject.Properties.Match('bio').Count -gt 0) {
@@ -224,7 +256,7 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'Bio' -Value $Body.header.bio
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'Bio' -Value $Body.header.bio
             }
         }
         
@@ -236,7 +268,7 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Profile image URL must be a valid http or https URL" }
                 }
             }
-            Set-EntityProperty -Entity $UserData -PropertyName 'Avatar' -Value $Body.profileImageUrl
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'Avatar' -Value $Body.profileImageUrl
         }
         
         # === Wallpaper ===
@@ -248,7 +280,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Wallpaper type must be 'fill', 'gradient', 'blur', 'pattern', 'image', or 'video'" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperType' -Value $Body.wallpaper.type
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperType' -Value $Body.wallpaper.type
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('color').Count -gt 0) {
@@ -258,7 +290,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Wallpaper color must be a valid hex color (e.g., #ffffff)" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperColor' -Value $Body.wallpaper.color
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperColor' -Value $Body.wallpaper.color
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('gradientStart').Count -gt 0) {
@@ -268,7 +300,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Gradient start color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperGradientStart' -Value $Body.wallpaper.gradientStart
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperGradientStart' -Value $Body.wallpaper.gradientStart
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('gradientEnd').Count -gt 0) {
@@ -278,7 +310,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Gradient end color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperGradientEnd' -Value $Body.wallpaper.gradientEnd
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperGradientEnd' -Value $Body.wallpaper.gradientEnd
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('gradientDirection').Count -gt 0) {
@@ -289,7 +321,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Gradient direction must be between 0 and 360" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperGradientDirection' -Value $direction
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperGradientDirection' -Value $direction
             }
             
             if ($Body.wallpaper.patternType) {
@@ -299,7 +331,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Pattern type must be 'grid', 'dots', 'lines', 'waves', 'geometric' or 'honey'" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperPatternType' -Value $Body.wallpaper.patternType
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperPatternType' -Value $Body.wallpaper.patternType
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('patternColor').Count -gt 0) {
@@ -309,7 +341,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Pattern color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperPatternColor' -Value $Body.wallpaper.patternColor
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperPatternColor' -Value $Body.wallpaper.patternColor
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('imageUrl').Count -gt 0) {
@@ -330,7 +362,7 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperImageUrl' -Value $Body.wallpaper.imageUrl
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperImageUrl' -Value $Body.wallpaper.imageUrl
             }
             
             # Check image type wallpaper
@@ -352,7 +384,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Wallpaper video URL must be a valid http or https URL" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperVideoUrl' -Value $Body.wallpaper.videoUrl
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperVideoUrl' -Value $Body.wallpaper.videoUrl
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('blur').Count -gt 0) {
@@ -363,7 +395,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Blur must be between 0 and 100" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperBlur' -Value $blur
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperBlur' -Value $blur
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('opacity').Count -gt 0) {
@@ -374,7 +406,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Opacity must be between 0 and 1" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'WallpaperOpacity' -Value $opacity
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperOpacity' -Value $opacity
             }
         }
         
@@ -387,7 +419,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Button type must be 'solid', 'glass', or 'outline'" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonType' -Value $Body.buttons.type
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonType' -Value $Body.buttons.type
             }
             
             if ($Body.buttons.cornerRadius) {
@@ -397,7 +429,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Corner radius must be 'square', 'rounded', or 'pill'" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonCornerRadius' -Value $Body.buttons.cornerRadius
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonCornerRadius' -Value $Body.buttons.cornerRadius
             }
             
             if ($Body.buttons.shadow) {
@@ -407,7 +439,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Shadow must be 'none', 'subtle', 'strong', or 'hard'" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonShadow' -Value $Body.buttons.shadow
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonShadow' -Value $Body.buttons.shadow
             }
             
             if ($Body.buttons.PSObject.Properties.Match('backgroundColor').Count -gt 0) {
@@ -417,7 +449,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Button background color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonBackgroundColor' -Value $Body.buttons.backgroundColor
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonBackgroundColor' -Value $Body.buttons.backgroundColor
             }
             
             if ($Body.buttons.PSObject.Properties.Match('textColor').Count -gt 0) {
@@ -427,7 +459,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Button text color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonTextColor' -Value $Body.buttons.textColor
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonTextColor' -Value $Body.buttons.textColor
             }
             
             if ($Body.buttons.PSObject.Properties.Match('borderColor').Count -gt 0) {
@@ -437,7 +469,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Button border color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonBorderColor' -Value $Body.buttons.borderColor
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonBorderColor' -Value $Body.buttons.borderColor
             }
             
             if ($Body.buttons.hoverEffect) {
@@ -447,7 +479,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Hover effect must be 'none', 'lift', 'glow', or 'fill'" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'ButtonHoverEffect' -Value $Body.buttons.hoverEffect
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonHoverEffect' -Value $Body.buttons.hoverEffect
             }
         }
         
@@ -460,7 +492,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Invalid title font" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'TitleFont' -Value $Body.text.titleFont
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleFont' -Value $Body.text.titleFont
             }
             
             if ($Body.text.PSObject.Properties.Match('titleColor').Count -gt 0) {
@@ -470,7 +502,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Title color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'TitleColor' -Value $Body.text.titleColor
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleColor' -Value $Body.text.titleColor
             }
             
             if ($Body.text.titleSize) {
@@ -491,7 +523,7 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'TitleSize' -Value $Body.text.titleSize
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleSize' -Value $Body.text.titleSize
             }
             
             if ($Body.text.bodyFont) {
@@ -501,7 +533,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Invalid body font" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'BodyFont' -Value $Body.text.bodyFont
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'BodyFont' -Value $Body.text.bodyFont
             }
             
             if ($Body.text.PSObject.Properties.Match('pageTextColor').Count -gt 0) {
@@ -511,13 +543,13 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Page text color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'PageTextColor' -Value $Body.text.pageTextColor
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'PageTextColor' -Value $Body.text.pageTextColor
             }
         }
         
         # === Footer ===
         if ($Body.PSObject.Properties.Match('hideFooter').Count -gt 0) {
-            Set-EntityProperty -Entity $UserData -PropertyName 'HideFooter' -Value ([bool]$Body.hideFooter)
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'HideFooter' -Value ([bool]$Body.hideFooter)
         }
         
         # === Legacy support ===
@@ -528,7 +560,7 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Button style must be 'rounded', 'square', or 'pill'" }
                 }
             }
-            Set-EntityProperty -Entity $UserData -PropertyName 'ButtonStyle' -Value $Body.buttonStyle
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonStyle' -Value $Body.buttonStyle
         }
         
         if ($Body.fontFamily) {
@@ -538,7 +570,7 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Invalid font family" }
                 }
             }
-            Set-EntityProperty -Entity $UserData -PropertyName 'FontFamily' -Value $Body.fontFamily
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'FontFamily' -Value $Body.fontFamily
         }
         
         if ($Body.layoutStyle) {
@@ -548,7 +580,7 @@ function Invoke-AdminUpdateAppearance {
                     Body = @{ error = "Layout style must be 'centered' or 'card'" }
                 }
             }
-            Set-EntityProperty -Entity $UserData -PropertyName 'LayoutStyle' -Value $Body.layoutStyle
+            Set-EntityProperty -Entity $AppearanceData -PropertyName 'LayoutStyle' -Value $Body.layoutStyle
         }
         
         # Handle legacy colors object
@@ -562,7 +594,7 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                     $propName = "Color" + (Get-Culture).TextInfo.ToTitleCase($colorProp)
-                    Set-EntityProperty -Entity $UserData -PropertyName $propName -Value $Body.colors.$colorProp
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName $propName -Value $Body.colors.$colorProp
                 }
             }
         }
@@ -576,7 +608,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Custom gradient start color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'CustomGradientStart' -Value $Body.customGradient.start
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'CustomGradientStart' -Value $Body.customGradient.start
             }
             
             if ($Body.customGradient.end) {
@@ -586,7 +618,7 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Custom gradient end color must be a valid hex color" }
                     }
                 }
-                Set-EntityProperty -Entity $UserData -PropertyName 'CustomGradientEnd' -Value $Body.customGradient.end
+                Set-EntityProperty -Entity $AppearanceData -PropertyName 'CustomGradientEnd' -Value $Body.customGradient.end
             }
         }
         
@@ -650,11 +682,15 @@ function Invoke-AdminUpdateAppearance {
             }
         }
         
-        # Save updated user data
-        Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
+        # Save updated appearance data
+        $AppearanceData.UpdatedAt = (Get-Date).ToUniversalTime().ToString('o')
+        Add-LinkToMeAzDataTableEntity @AppearanceTable -Entity $AppearanceData -Force
         
         # Return success with current appearance
-        $Results = @{ success = $true }
+        $Results = @{ 
+            success = $true
+            pageId = $PageId
+        }
         $StatusCode = [HttpStatusCode]::OK
         
     } catch {
