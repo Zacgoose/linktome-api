@@ -22,10 +22,12 @@ function Write-AnalyticsEvent {
         Link title for LinkClick events
     .PARAMETER LinkUrl
         Link URL for LinkClick events
+    .PARAMETER PageId
+        Page ID for page-specific tracking
     .EXAMPLE
-        Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP
+        Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -PageId $PageId
     .EXAMPLE
-        Write-AnalyticsEvent -EventType 'LinkClick' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -LinkId $LinkId -LinkTitle $LinkTitle -LinkUrl $LinkUrl
+        Write-AnalyticsEvent -EventType 'LinkClick' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -LinkId $LinkId -LinkTitle $LinkTitle -LinkUrl $LinkUrl -PageId $PageId
     #>
     [CmdletBinding()]
     param(
@@ -45,7 +47,9 @@ function Write-AnalyticsEvent {
         
         [string]$LinkTitle,
         
-        [string]$LinkUrl
+        [string]$LinkUrl,
+        
+        [string]$PageId
     )
     
     try {
@@ -74,6 +78,11 @@ function Write-AnalyticsEvent {
         }
         if ($LinkUrl) {
             $EventRecord.LinkUrl = $LinkUrl
+        }
+        
+        # Add page context if provided
+        if ($PageId) {
+            $EventRecord.PageId = $PageId
         }
         
         Add-LinkToMeAzDataTableEntity @Table -Entity $EventRecord -Force | Out-Null

@@ -12,6 +12,7 @@ function Invoke-PublicGetUserProfile {
     param($Request, $TriggerMetadata)
 
     $Username = $Request.Query.username
+    $Slug = $Request.Query.slug
 
     if (-not $Username) {
         return [HttpResponseContext]@{
@@ -41,13 +42,47 @@ function Invoke-PublicGetUserProfile {
         } else {
             $SafeUserId = Protect-TableQueryValue -Value $User.RowKey
             
-            # Get links
-            $LinksTable = Get-LinkToMeTable -TableName 'Links'
-            $AllLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$($User.RowKey)'"
+            # Get the page to display (by slug or default)
+            $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+            $Page = $null
             
-            # Get groups
+            if ($Slug) {
+                # Get page by slug
+                $SafeSlug = Protect-TableQueryValue -Value $Slug.ToLower()
+                $Page = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and Slug eq '$SafeSlug'" | Select-Object -First 1
+                
+                if (-not $Page) {
+                    $StatusCode = [HttpStatusCode]::NotFound
+                    $Results = @{ error = "Page not found" }
+                    return [HttpResponseContext]@{
+                        StatusCode = $StatusCode
+                        Body = $Results
+                    }
+                }
+            } else {
+                # Get default page
+                $Page = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and IsDefault eq true" | Select-Object -First 1
+                
+                if (-not $Page) {
+                    $StatusCode = [HttpStatusCode]::NotFound
+                    $Results = @{ error = "No default page found for this user" }
+                    return [HttpResponseContext]@{
+                        StatusCode = $StatusCode
+                        Body = $Results
+                    }
+                }
+            }
+            
+            $PageId = $Page.RowKey
+            $SafePageId = Protect-TableQueryValue -Value $PageId
+            
+            # Get links for this page
+            $LinksTable = Get-LinkToMeTable -TableName 'Links'
+            $AllLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'"
+            
+            # Get groups for this page
             $GroupsTable = Get-LinkToMeTable -TableName 'LinkGroups'
-            $AllGroups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$($User.RowKey)'"
+            $AllGroups = Get-LinkToMeAzDataTableEntity @GroupsTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'"
             
             # Get social icons
             $SocialTable = Get-LinkToMeTable -TableName 'SocialIcons'
@@ -126,90 +161,95 @@ function Invoke-PublicGetUserProfile {
                 $groupObj
             } | Sort-Object order)
             
+            # Get appearance for this page from Appearance table
+            $AppearanceTable = Get-LinkToMeTable -TableName 'Appearance'
+            $AppearanceData = Get-LinkToMeAzDataTableEntity @AppearanceTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'" | Select-Object -First 1
+            
             # Build appearance object with new structure
+            # Use AppearanceData if exists, otherwise use defaults
             $Appearance = @{
                 # Theme
-                theme = if ($User.Theme) { $User.Theme } else { 'custom' }
+                theme = if ($AppearanceData.Theme) { $AppearanceData.Theme } else { 'custom' }
                 
                 # Header
                 header = @{
-                    profileImageLayout = if ($User.ProfileImageLayout) { $User.ProfileImageLayout } else { 'classic' }
-                    titleStyle = if ($User.TitleStyle) { $User.TitleStyle } else { 'text' }
-                    displayName = if ($User.DisplayName) { $User.DisplayName } else { "@$($User.Username)" }
+                    profileImageLayout = if ($AppearanceData.ProfileImageLayout) { $AppearanceData.ProfileImageLayout } else { 'classic' }
+                    titleStyle = if ($AppearanceData.TitleStyle) { $AppearanceData.TitleStyle } else { 'text' }
+                    displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
                 }
                 
                 # Wallpaper/Background
                 wallpaper = @{
-                    type = if ($User.WallpaperType) { $User.WallpaperType } else { 'fill' }
-                    color = if ($User.WallpaperColor) { $User.WallpaperColor } else { '#ffffff' }
+                    type = if ($AppearanceData.WallpaperType) { $AppearanceData.WallpaperType } else { 'fill' }
+                    color = if ($AppearanceData.WallpaperColor) { $AppearanceData.WallpaperColor } else { '#ffffff' }
                 }
                 
                 # Buttons
                 buttons = @{
-                    type = if ($User.ButtonType) { $User.ButtonType } else { 'solid' }
-                    cornerRadius = if ($User.ButtonCornerRadius) { $User.ButtonCornerRadius } else { 'rounded' }
-                    shadow = if ($User.ButtonShadow) { $User.ButtonShadow } else { 'none' }
-                    backgroundColor = if ($User.ButtonBackgroundColor) { $User.ButtonBackgroundColor } else { '#e4e5e6' }
-                    textColor = if ($User.ButtonTextColor) { $User.ButtonTextColor } else { '#010101' }
+                    type = if ($AppearanceData.ButtonType) { $AppearanceData.ButtonType } else { 'solid' }
+                    cornerRadius = if ($AppearanceData.ButtonCornerRadius) { $AppearanceData.ButtonCornerRadius } else { 'rounded' }
+                    shadow = if ($AppearanceData.ButtonShadow) { $AppearanceData.ButtonShadow } else { 'none' }
+                    backgroundColor = if ($AppearanceData.ButtonBackgroundColor) { $AppearanceData.ButtonBackgroundColor } else { '#e4e5e6' }
+                    textColor = if ($AppearanceData.ButtonTextColor) { $AppearanceData.ButtonTextColor } else { '#010101' }
                 }
                 
                 # Text/Fonts
                 text = @{
-                    titleFont = if ($User.TitleFont) { $User.TitleFont } else { 'inter' }
-                    titleColor = if ($User.TitleColor) { $User.TitleColor } else { '#010101' }
-                    titleSize = if ($User.TitleSize) { $User.TitleSize } else { 'small' }
-                    bodyFont = if ($User.BodyFont) { $User.BodyFont } else { 'inter' }
-                    pageTextColor = if ($User.PageTextColor) { $User.PageTextColor } else { '#010101' }
+                    titleFont = if ($AppearanceData.TitleFont) { $AppearanceData.TitleFont } else { 'inter' }
+                    titleColor = if ($AppearanceData.TitleColor) { $AppearanceData.TitleColor } else { '#010101' }
+                    titleSize = if ($AppearanceData.TitleSize) { $AppearanceData.TitleSize } else { 'small' }
+                    bodyFont = if ($AppearanceData.BodyFont) { $AppearanceData.BodyFont } else { 'inter' }
+                    pageTextColor = if ($AppearanceData.PageTextColor) { $AppearanceData.PageTextColor } else { '#010101' }
                 }
                 
                 # Footer
-                hideFooter = [bool]$User.HideFooter
+                hideFooter = if ($AppearanceData) { [bool]$AppearanceData.HideFooter } else { $false }
                 
                 # Legacy support
-                buttonStyle = if ($User.ButtonStyle) { $User.ButtonStyle } else { 'rounded' }
-                fontFamily = if ($User.FontFamily) { $User.FontFamily } else { 'default' }
-                layoutStyle = if ($User.LayoutStyle) { $User.LayoutStyle } else { 'centered' }
+                buttonStyle = if ($AppearanceData.ButtonStyle) { $AppearanceData.ButtonStyle } else { 'rounded' }
+                fontFamily = if ($AppearanceData.FontFamily) { $AppearanceData.FontFamily } else { 'default' }
+                layoutStyle = if ($AppearanceData.LayoutStyle) { $AppearanceData.LayoutStyle } else { 'centered' }
                 colors = @{
-                    primary = if ($User.ColorPrimary) { $User.ColorPrimary } else { '#000000' }
-                    secondary = if ($User.ColorSecondary) { $User.ColorSecondary } else { '#666666' }
-                    background = if ($User.ColorBackground) { $User.ColorBackground } else { '#ffffff' }
-                    buttonBackground = if ($User.ColorButtonBackground) { $User.ColorButtonBackground } else { '#000000' }
-                    buttonText = if ($User.ColorButtonText) { $User.ColorButtonText } else { '#ffffff' }
+                    primary = if ($AppearanceData.ColorPrimary) { $AppearanceData.ColorPrimary } else { '#000000' }
+                    secondary = if ($AppearanceData.ColorSecondary) { $AppearanceData.ColorSecondary } else { '#666666' }
+                    background = if ($AppearanceData.ColorBackground) { $AppearanceData.ColorBackground } else { '#ffffff' }
+                    buttonBackground = if ($AppearanceData.ColorButtonBackground) { $AppearanceData.ColorButtonBackground } else { '#000000' }
+                    buttonText = if ($AppearanceData.ColorButtonText) { $AppearanceData.ColorButtonText } else { '#ffffff' }
                 }
             }
             
             # Add optional header properties
-            if ($User.LogoUrl) { $Appearance.header.logoUrl = $User.LogoUrl }
-            if ($User.Bio) { $Appearance.header.bio = $User.Bio }
+            if ($AppearanceData.LogoUrl) { $Appearance.header.logoUrl = $AppearanceData.LogoUrl }
+            if ($AppearanceData.Bio) { $Appearance.header.bio = $AppearanceData.Bio }
             
             # Add optional wallpaper properties
-            if ($User.WallpaperGradientStart) { $Appearance.wallpaper.gradientStart = $User.WallpaperGradientStart }
-            if ($User.WallpaperGradientEnd) { $Appearance.wallpaper.gradientEnd = $User.WallpaperGradientEnd }
-            if ($User.WallpaperGradientDirection) { $Appearance.wallpaper.gradientDirection = [int]$User.WallpaperGradientDirection }
-            if ($User.WallpaperPatternType) { $Appearance.wallpaper.patternType = $User.WallpaperPatternType }
-            if ($User.WallpaperPatternColor) { $Appearance.wallpaper.patternColor = $User.WallpaperPatternColor }
-            if ($User.WallpaperImageUrl) { $Appearance.wallpaper.imageUrl = $User.WallpaperImageUrl }
-            if ($User.WallpaperVideoUrl) { $Appearance.wallpaper.videoUrl = $User.WallpaperVideoUrl }
-            if ($User.WallpaperBlur) { $Appearance.wallpaper.blur = [int]$User.WallpaperBlur }
-            if ($User.WallpaperOpacity) { $Appearance.wallpaper.opacity = [double]$User.WallpaperOpacity }
+            if ($AppearanceData.WallpaperGradientStart) { $Appearance.wallpaper.gradientStart = $AppearanceData.WallpaperGradientStart }
+            if ($AppearanceData.WallpaperGradientEnd) { $Appearance.wallpaper.gradientEnd = $AppearanceData.WallpaperGradientEnd }
+            if ($AppearanceData.WallpaperGradientDirection) { $Appearance.wallpaper.gradientDirection = [int]$AppearanceData.WallpaperGradientDirection }
+            if ($AppearanceData.WallpaperPatternType) { $Appearance.wallpaper.patternType = $AppearanceData.WallpaperPatternType }
+            if ($AppearanceData.WallpaperPatternColor) { $Appearance.wallpaper.patternColor = $AppearanceData.WallpaperPatternColor }
+            if ($AppearanceData.WallpaperImageUrl) { $Appearance.wallpaper.imageUrl = $AppearanceData.WallpaperImageUrl }
+            if ($AppearanceData.WallpaperVideoUrl) { $Appearance.wallpaper.videoUrl = $AppearanceData.WallpaperVideoUrl }
+            if ($AppearanceData.WallpaperBlur) { $Appearance.wallpaper.blur = [int]$AppearanceData.WallpaperBlur }
+            if ($AppearanceData.WallpaperOpacity) { $Appearance.wallpaper.opacity = [double]$AppearanceData.WallpaperOpacity }
             
             # Add optional button properties
-            if ($User.ButtonBorderColor) { $Appearance.buttons.borderColor = $User.ButtonBorderColor }
-            if ($User.ButtonHoverEffect) { $Appearance.buttons.hoverEffect = $User.ButtonHoverEffect }
+            if ($AppearanceData.ButtonBorderColor) { $Appearance.buttons.borderColor = $AppearanceData.ButtonBorderColor }
+            if ($AppearanceData.ButtonHoverEffect) { $Appearance.buttons.hoverEffect = $AppearanceData.ButtonHoverEffect }
             
             # Add legacy customGradient if it exists
-            if ($User.CustomGradientStart -and $User.CustomGradientEnd) {
+            if ($AppearanceData.CustomGradientStart -and $AppearanceData.CustomGradientEnd) {
                 $Appearance.customGradient = @{
-                    start = $User.CustomGradientStart
-                    end = $User.CustomGradientEnd
+                    start = $AppearanceData.CustomGradientStart
+                    end = $AppearanceData.CustomGradientEnd
                 }
             }
             
             $Results = @{
                 username = $User.Username
-                displayName = if ($User.DisplayName) { $User.DisplayName } else { "@$($User.Username)" }
-                bio = $User.Bio
-                avatar = $User.Avatar
+                displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
+                bio = $AppearanceData.Bio
+                avatar = $AppearanceData.Avatar
                 appearance = $Appearance
                 socialIcons = $SocialIcons
                 links = $FilteredLinks
@@ -223,7 +263,7 @@ function Invoke-PublicGetUserProfile {
             $UserAgent = $Request.Headers.'User-Agent'
             $Referrer = $Request.Headers.Referer
             
-            Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -UserAgent $UserAgent -Referrer $Referrer
+            Write-AnalyticsEvent -EventType 'PageView' -UserId $User.RowKey -Username $User.Username -IpAddress $ClientIP -UserAgent $UserAgent -Referrer $Referrer -PageId $PageId
         }
         
     } catch {

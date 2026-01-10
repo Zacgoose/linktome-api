@@ -22,6 +22,8 @@ function Get-DefaultRolePermissions {
             'write:profile',
             'read:links',
             'write:links',
+            'read:pages',
+            'write:pages',
             'read:appearance',
             'write:appearance',
             'read:analytics',
@@ -48,6 +50,8 @@ function Get-DefaultRolePermissions {
             'write:profile',
             'read:links',
             'write:links',
+            'read:pages',
+            'write:pages',
             'read:appearance',
             'write:appearance',
             'read:analytics'

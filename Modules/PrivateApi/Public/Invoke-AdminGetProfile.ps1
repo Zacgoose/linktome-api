@@ -4,6 +4,9 @@ function Invoke-AdminGetProfile {
         Entrypoint
     .ROLE
         read:profile
+    .DESCRIPTION
+        DEPRECATED: This endpoint is deprecated. Display name and bio should be managed through UpdateAppearance.
+        Kept for backward compatibility with Dashboard.
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)

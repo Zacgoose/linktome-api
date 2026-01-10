@@ -22,13 +22,31 @@ function Invoke-AdminUpdateLinks {
 
     $UserId = if ($Request.ContextUserId) { $Request.ContextUserId } else { $Request.AuthenticatedUser.UserId }
     $Body = $Request.Body
+    $PageId = $Request.Query.pageId
 
     try {
+        # If no pageId specified, get default page
+        if (-not $PageId) {
+            $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+            $SafeUserIdTemp = Protect-TableQueryValue -Value $UserId
+            $DefaultPage = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserIdTemp' and IsDefault eq true" | Select-Object -First 1
+            
+            if (-not $DefaultPage) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::NotFound
+                    Body = @{ error = "No default page found. Please create a page first." }
+                }
+            }
+            
+            $PageId = $DefaultPage.RowKey
+        }
+        
         $LinksTable = Get-LinkToMeTable -TableName 'Links'
         $GroupsTable = Get-LinkToMeTable -TableName 'LinkGroups'
         
-        # Sanitize UserId for query
+        # Sanitize UserId and PageId for query
         $SafeUserId = Protect-TableQueryValue -Value $UserId
+        $SafePageId = Protect-TableQueryValue -Value $PageId
         
         # Valid enum values for validation
         $validThumbnailTypes = @('icon', 'image', 'emoji')
@@ -190,6 +208,7 @@ function Invoke-AdminUpdateLinks {
                         $NewLink = @{
                             PartitionKey = $UserId
                             RowKey = 'link-' + (New-Guid).ToString()
+                            PageId = $PageId
                             Title = $Link.title
                             Url = $Link.url
                             Order = if ($null -ne $Link.order) { [int]$Link.order } else { 0 }
@@ -472,6 +491,7 @@ function Invoke-AdminUpdateLinks {
                         $NewGroup = @{
                             PartitionKey = $UserId
                             RowKey = 'group-' + (New-Guid).ToString()
+                            PageId = $PageId
                             Title = $Group.title
                             Order = if ($null -ne $Group.order) { [int]$Group.order } else { 0 }
                             Active = if ($null -ne $Group.active) { [bool]$Group.active } else { $true }

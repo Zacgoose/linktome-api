@@ -58,6 +58,9 @@ function Invoke-PublicTrackLinkClick {
             }
         }
 
+        # Get PageId from link or from request body
+        $PageId = if ($Link.PageId) { $Link.PageId } elseif ($Body.pageId) { $Body.pageId } else { $null }
+
         # Track link click analytics
         $ClientIP = Get-ClientIPAddress -Request $Request
         $UserAgent = $Request.Headers.'User-Agent'
@@ -72,7 +75,8 @@ function Invoke-PublicTrackLinkClick {
             -Referrer $Referrer `
             -LinkId $Link.RowKey `
             -LinkTitle $Link.Title `
-            -LinkUrl $Link.Url
+            -LinkUrl $Link.Url `
+            -PageId $PageId
         
         $StatusCode = [HttpStatusCode]::OK
         

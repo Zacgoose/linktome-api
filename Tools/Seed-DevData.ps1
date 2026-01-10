@@ -69,6 +69,57 @@ foreach ($TestUser in $TestUsers) {
 $LinksTable = Get-LinkToMeTable -TableName 'Links'
 $DemoUser = $CreatedUsers | Where-Object { $_.Username -eq 'demo' }
 
+# Create pages for demo user
+$PagesTable = Get-LinkToMeTable -TableName 'Pages'
+
+Write-Host "`nCreating pages for demo user..." -ForegroundColor Yellow
+
+# Create main page (default)
+$MainPageId = 'page-' + (New-Guid).ToString()
+$MainPage = @{
+    PartitionKey = $DemoUser.UserId
+    RowKey = $MainPageId
+    Slug = 'main'
+    Name = 'Main Links'
+    IsDefault = $true
+    CreatedAt = (Get-Date).ToUniversalTime().ToString('o')
+    UpdatedAt = (Get-Date).ToUniversalTime().ToString('o')
+}
+Add-LinkToMeAzDataTableEntity @PagesTable -Entity $MainPage -Force
+Write-Host "  ✓ Created default page: main" -ForegroundColor Green
+
+# Create additional page for demo
+$SocialPageId = 'page-' + (New-Guid).ToString()
+$SocialPage = @{
+    PartitionKey = $DemoUser.UserId
+    RowKey = $SocialPageId
+    Slug = 'social'
+    Name = 'Social Media'
+    IsDefault = $false
+    CreatedAt = (Get-Date).ToUniversalTime().ToString('o')
+    UpdatedAt = (Get-Date).ToUniversalTime().ToString('o')
+}
+Add-LinkToMeAzDataTableEntity @PagesTable -Entity $SocialPage -Force
+Write-Host "  ✓ Created page: social" -ForegroundColor Green
+
+# Create pages for test user
+$TestUser = $CreatedUsers | Where-Object { $_.Username -eq 'test' }
+
+Write-Host "`nCreating pages for test user..." -ForegroundColor Yellow
+
+$TestMainPageId = 'page-' + (New-Guid).ToString()
+$TestMainPage = @{
+    PartitionKey = $TestUser.UserId
+    RowKey = $TestMainPageId
+    Slug = 'main'
+    Name = 'Main Links'
+    IsDefault = $true
+    CreatedAt = (Get-Date).ToUniversalTime().ToString('o')
+    UpdatedAt = (Get-Date).ToUniversalTime().ToString('o')
+}
+Add-LinkToMeAzDataTableEntity @PagesTable -Entity $TestMainPage -Force
+Write-Host "  ✓ Created default page: main" -ForegroundColor Green
+
 $Links = @(
     @{ Title = 'GitHub'; Url = 'https://github.com'; Order = 1; Active = $true }
     @{ Title = 'Twitter'; Url = 'https://twitter.com'; Order = 2; Active = $true }
@@ -82,6 +133,28 @@ foreach ($Link in $Links) {
     $Entity = @{
         PartitionKey = $DemoUser.UserId
         RowKey = 'link-' + (New-Guid).ToString()
+        PageId = $MainPageId
+        Title = $Link.Title
+        Url = $Link.Url
+        Order = $Link.Order
+        Active = $Link.Active
+    }
+    Add-LinkToMeAzDataTableEntity @LinksTable -Entity $Entity -Force
+}
+
+# Create some links for the social page
+$SocialLinks = @(
+    @{ Title = 'Instagram'; Url = 'https://instagram.com'; Order = 1; Active = $true }
+    @{ Title = 'Facebook'; Url = 'https://facebook.com'; Order = 2; Active = $true }
+    @{ Title = 'TikTok'; Url = 'https://tiktok.com'; Order = 3; Active = $true }
+)
+
+Write-Host "Creating $($SocialLinks.Count) links for demo user's social page..." -ForegroundColor Yellow
+foreach ($Link in $SocialLinks) {
+    $Entity = @{
+        PartitionKey = $DemoUser.UserId
+        RowKey = 'link-' + (New-Guid).ToString()
+        PageId = $SocialPageId
         Title = $Link.Title
         Url = $Link.Url
         Order = $Link.Order
@@ -91,6 +164,9 @@ foreach ($Link in $Links) {
 }
 
 Write-Host "`n✅ Test users created successfully!" -ForegroundColor Green
+Write-Host "`n✅ Test pages created: 3 total (demo: 2 pages, test: 1 page)" -ForegroundColor Green
+Write-Host "`n✅ Test links created: $($Links.Count + $SocialLinks.Count) total (demo main: $($Links.Count), demo social: $($SocialLinks.Count))" -ForegroundColor Green
+
 Write-Host "`n📋 User Accounts:" -ForegroundColor White
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Gray
 
@@ -100,17 +176,19 @@ Write-Host "   Email:    demo@example.com" -ForegroundColor White
 Write-Host "   Password: password123" -ForegroundColor White
 Write-Host "   Username: demo" -ForegroundColor White
 Write-Host "   Role:     user" -ForegroundColor Yellow
+Write-Host "   Pages:    main (default), social" -ForegroundColor Gray
 
 Write-Host "`n2️⃣  Test User Account:" -ForegroundColor Cyan
 Write-Host "   Email:    test@example.com" -ForegroundColor White
 Write-Host "   Password: test123" -ForegroundColor White
 Write-Host "   Username: test" -ForegroundColor White
 Write-Host "   Role:     user" -ForegroundColor Yellow
-
-Write-Host "`n✅ Test links created: $($Links.Count) (for demo user)" -ForegroundColor Green
+Write-Host "   Pages:    main (default)" -ForegroundColor Gray
 
 Write-Host "`n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Gray
 Write-Host "`n🚀 You can now:" -ForegroundColor White
 Write-Host "1. Start the API: func start" -ForegroundColor Gray
 Write-Host "2. Test login: POST /api/public/login" -ForegroundColor Gray
-Write-Host "3. View public profile: GET /api/public/getUserProfile?username=demo" -ForegroundColor Gray
+Write-Host "3. View public profile (main): GET /api/public/getUserProfile?username=demo" -ForegroundColor Gray
+Write-Host "4. View public profile (social): GET /api/public/getUserProfile?username=demo&slug=social" -ForegroundColor Gray
+Write-Host "5. List pages: GET /api/admin/getPages (requires auth)" -ForegroundColor Gray
