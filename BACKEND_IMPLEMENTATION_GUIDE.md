@@ -907,6 +907,47 @@ if ($Request.AuthenticatedUser.IsSubAccountContext) {
 
 ## Permission System Updates (Simplified)
 
+### Understanding Existing Permission System
+
+The codebase uses `.ROLE` annotations in each endpoint to specify required permissions. For example:
+
+```powershell
+function Invoke-AdminApikeysCreate {
+    <#
+    .ROLE
+        create:apiauth
+    #>
+    # ...
+}
+```
+
+The system checks these permissions via the existing `Get-DefaultRolePermissions.ps1` function.
+
+### Current Permission Mapping
+
+**Existing permissions fall into categories:**
+
+**Auth Management** (should be restricted for sub-accounts):
+- `write:2fauth` - Manage 2FA setup
+- `read:apiauth`, `create:apiauth`, `update:apiauth`, `delete:apiauth` - Manage API keys
+- `write:password`, `write:email`, `write:phone` - Change credentials
+
+**Billing Management** (should be restricted for sub-accounts):
+- `read:subscription`, `write:subscription` - View/manage subscription
+
+**User Management** (should be restricted for sub-accounts):
+- `manage:users` - Manage users
+- `invite:user_manager`, `list:user_manager`, `remove:user_manager`, `respond:user_manager` - User manager operations
+
+**Content Management** (should be allowed for sub-accounts):
+- `read:dashboard` - View dashboard
+- `read:profile`, `write:profile` - Manage profile
+- `read:links`, `write:links` - Manage links
+- `read:pages`, `write:pages` - Manage pages
+- `read:appearance`, `write:appearance` - Manage appearance
+- `read:analytics` - View analytics
+- `read:shortlinks`, `write:shortlinks` - Manage short links
+
 ### Add New Role Type with Limited Permissions
 
 Update `Get-DefaultRolePermissions.ps1` to add new role:
@@ -915,13 +956,13 @@ Update `Get-DefaultRolePermissions.ps1` to add new role:
 function Get-DefaultRolePermissions {
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('user', 'user_manager', 'sub_account_user')]
+        [ValidateSet('user', 'user_manager', 'sub_account_user')]  # Add sub_account_user
         [string]$Role
     )
     
     $RolePermissions = @{
         'user' = @(
-            # All existing permissions...
+            # All existing permissions (unchanged)
             'read:dashboard',
             'write:2fauth',
             'read:profile',
@@ -933,16 +974,28 @@ function Get-DefaultRolePermissions {
             'read:appearance',
             'write:appearance',
             'read:analytics',
-            'manage:auth',      # NEW: Auth management
-            'manage:billing',   # NEW: Billing management
-            'manage:users',     # NEW: User management
-            'create:subaccounts',
-            'manage:subaccounts',
-            # ... etc
+            'read:users',
+            'manage:users',
+            'invite:user_manager',
+            'list:user_manager',
+            'remove:user_manager',
+            'respond:user_manager',
+            'read:apiauth',
+            'create:apiauth',
+            'update:apiauth',
+            'delete:apiauth',
+            'write:password',
+            'write:email',
+            'write:phone',
+            'read:subscription',
+            'write:subscription',
+            'read:usersettings',
+            'read:shortlinks',
+            'write:shortlinks'
         )
         
-        'sub_account_user' = @(
-            # Content management only (NO management features)
+        'user_manager' = @(
+            # Existing limited permissions (unchanged)
             'read:dashboard',
             'read:profile',
             'write:profile',
@@ -955,11 +1008,29 @@ function Get-DefaultRolePermissions {
             'read:analytics',
             'read:shortlinks',
             'write:shortlinks'
-            # Excluded: manage:auth, manage:billing, manage:users, create:subaccounts
         )
         
-        'user_manager' = @(
-            # Existing limited permissions...
+        'sub_account_user' = @(
+            # Content management ONLY (same as user_manager but for sub-accounts)
+            'read:dashboard',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'read:shortlinks',
+            'write:shortlinks'
+            
+            # EXCLUDED permissions (sub-accounts cannot):
+            # - write:2fauth (manage 2FA)
+            # - read/create/update/delete:apiauth (manage API keys)
+            # - write:password, write:email, write:phone (change credentials)
+            # - read/write:subscription (manage subscription)
+            # - manage:users, invite/list/remove/respond:user_manager (user management)
         )
     }
     
@@ -967,35 +1038,33 @@ function Get-DefaultRolePermissions {
 }
 ```
 
-### Update Restricted Endpoints
+### Endpoints Automatically Restricted for Sub-Accounts
 
-Add permission checks to management endpoints:
+Because `sub_account_user` role lacks these permissions, these endpoints will automatically be blocked by existing permission validation:
 
-```powershell
-# In endpoints like Invoke-AdminApikeysCreate.ps1
-function Invoke-AdminApikeysCreate {
-    param($Request, $TriggerMetadata)
-    
-    # Check permission
-    if (-not (Test-Permission -User $Request.AuthenticatedUser -Permission 'manage:auth')) {
-        return [HttpResponseContext]@{
-            StatusCode = [HttpStatusCode]::Forbidden
-            Body = @{ error = "Insufficient permissions" }
-        }
-    }
-    
-    # ... rest of implementation
-}
-```
+**Auth Management Endpoints** (require permissions sub-accounts don't have):
+- `/admin/2fatokensetup` - Requires `write:2fauth`
+- `/admin/apikeys/*` - Require `read/create/update/delete:apiauth`
+- `/admin/updatePassword` - Requires `write:password`
+- `/admin/updateEmail` - Requires `write:email`
+- `/admin/updatePhone` - Requires `write:phone`
 
-**Apply to**:
-- All 2FA endpoints (require `manage:auth`)
-- API key endpoints (require `manage:auth`)
-- Password/email/phone change (require `manage:auth`)
-- Subscription endpoints (require `manage:billing`)
-- User manager endpoints (require `manage:users`)
+**Billing Management Endpoints** (require permissions sub-accounts don't have):
+- `/admin/getSubscription` - Requires `read:subscription`
+- `/admin/upgradeSubscription` - Requires `write:subscription`
+- `/admin/cancelSubscription` - Requires `write:subscription`
 
-**Key Point**: Use existing permission system. Just check for new permission types.
+**User Management Endpoints** (require permissions sub-accounts don't have):
+- `/admin/userManagerInvite` - Requires `invite:user_manager`
+- `/admin/userManagerList` - Requires `list:user_manager`
+- `/admin/userManagerRemove` - Requires `remove:user_manager`
+- `/admin/userManagerRespond` - Requires `respond:user_manager`
+
+### No Code Changes to Endpoints Needed
+
+**Key Point**: The existing permission validation system automatically blocks sub-accounts from restricted endpoints. No changes to individual endpoint code needed - just add the new role to `Get-DefaultRolePermissions.ps1`.
+
+The system already validates permissions before executing endpoint logic, so sub-accounts will receive 403 Forbidden responses when attempting to access restricted endpoints.
 
 **Location**: `Modules/LinkTomeCore/Private/Auth/Test-SubAccountContextPermission.ps1`
 

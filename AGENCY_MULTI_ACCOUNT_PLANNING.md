@@ -393,6 +393,44 @@ Restricted operations:
 
 ## Permission System Updates (Ultra-Simplified)
 
+### Understanding the Existing System
+
+The codebase uses `.ROLE` annotations in endpoint files to specify required permissions:
+
+```powershell
+function Invoke-AdminApikeysCreate {
+    <#
+    .ROLE
+        create:apiauth
+    #>
+    # Endpoint logic...
+}
+```
+
+Permissions are defined in `Get-DefaultRolePermissions.ps1` and validated automatically before endpoint execution.
+
+### Current Permission Categories
+
+**Auth Management** (will be excluded from sub-accounts):
+- `write:2fauth` - 2FA management
+- `read:apiauth`, `create:apiauth`, `update:apiauth`, `delete:apiauth` - API key management
+- `write:password`, `write:email`, `write:phone` - Credential changes
+
+**Billing Management** (will be excluded from sub-accounts):
+- `read:subscription`, `write:subscription` - Subscription management
+
+**User Management** (will be excluded from sub-accounts):
+- `manage:users` - User operations
+- `invite:user_manager`, `list:user_manager`, `remove:user_manager`, `respond:user_manager` - User manager operations
+
+**Content Management** (will be included for sub-accounts):
+- `read:dashboard`, `read:profile`, `write:profile` - Profile management
+- `read:links`, `write:links` - Link management
+- `read:pages`, `write:pages` - Page management
+- `read:appearance`, `write:appearance` - Appearance customization
+- `read:analytics` - Analytics viewing
+- `read:shortlinks`, `write:shortlinks` - Short link management
+
 ### New Permission Types
 
 Add permission categories for restricted operations:
@@ -412,33 +450,89 @@ Add permission categories for restricted operations:
 ### Permission Assignment
 
 **Regular Users** (including parent accounts):
-- All existing permissions
-- Plus: `manage:auth`, `manage:billing`, `manage:users`
+- All existing permissions (unchanged)
 - Plus: `create:subaccounts`, `manage:subaccounts`, `delete:subaccounts` (if has user pack)
 
-**Sub-Accounts**:
-- All content management permissions (links, pages, appearance, analytics)
-- **Exclude**: `manage:auth`, `manage:billing`, `manage:users`
-- **Exclude**: Any sub-account creation/management permissions
+**Sub-Accounts** (`sub_account_user` role):
+- Content management permissions only
+- **Excludes**: All auth management permissions (`write:2fauth`, `*:apiauth`, `write:password/email/phone`)
+- **Excludes**: All billing management permissions (`read/write:subscription`)
+- **Excludes**: All user management permissions (`manage:users`, `*:user_manager`)
 
-**Implementation**: Just set roles appropriately when creating sub-account user.
+**Implementation**: Update `Get-DefaultRolePermissions.ps1`:
 
 ```powershell
-# When creating sub-account
-$SubAccountUser = @{
-    # ... normal user fields ...
-    IsSubAccount = $true
-    AuthDisabled = $true
-    Roles = '["sub_account_user"]'  # New role type with limited permissions
+function Get-DefaultRolePermissions {
+    param(
+        [Parameter(Mandatory)]
+        [ValidateSet('user', 'user_manager', 'sub_account_user')]  # Add sub_account_user
+        [string]$Role
+    )
+    
+    $RolePermissions = @{
+        'user' = @(
+            # All existing permissions (no changes)
+            'read:dashboard',
+            'write:2fauth',
+            'read:profile',
+            'write:profile',
+            # ... all existing permissions ...
+        )
+        
+        'user_manager' = @(
+            # Existing permissions (no changes)
+            'read:dashboard',
+            'read:profile',
+            # ... existing permissions ...
+        )
+        
+        'sub_account_user' = @(
+            # Content management only
+            'read:dashboard',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'read:shortlinks',
+            'write:shortlinks'
+        )
+    }
+    
+    return $RolePermissions[$Role]
 }
 ```
+
+### Automatic Endpoint Restrictions
+
+**No changes to endpoint code needed**. The existing permission system automatically blocks sub-accounts from:
+
+**Auth Management Endpoints**:
+- `/admin/2fatokensetup` (requires `write:2fauth`)
+- `/admin/apikeys/*` (require `*:apiauth` permissions)
+- `/admin/updatePassword` (requires `write:password`)
+- `/admin/updateEmail` (requires `write:email`)
+- `/admin/updatePhone` (requires `write:phone`)
+
+**Billing Management Endpoints**:
+- `/admin/getSubscription` (requires `read:subscription`)
+- `/admin/upgradeSubscription` (requires `write:subscription`)
+- `/admin/cancelSubscription` (requires `write:subscription`)
+
+**User Management Endpoints**:
+- `/admin/userManager*` (require `*:user_manager` permissions)
 
 ### Leveraging Existing System
 
 **No special context logic needed**:
 - Parent switches to sub-account using existing user context mechanism
-- Permission checks already exist in endpoints
-- Just add new permission types to existing validation
+- Permission checks already exist in endpoints via `.ROLE` annotations
+- Just add new role type with limited permissions
+- Existing validation automatically enforces restrictions
 
 Update `Test-ContextAwarePermission.ps1` to:
 1. Check if in sub-account context
