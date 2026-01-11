@@ -229,10 +229,12 @@ function Get-UserPackLimit {
 
 ### New Admin Endpoints
 
-#### 1. **GET /admin/getSubAccounts**
+#### 1. **GET /admin/GetSubAccounts**
 List all sub-accounts owned by the authenticated user.
 
 **Authentication**: JWT (parent account only)
+
+**Authorization**: Requires `manage:subaccounts` permission
 
 **Response**:
 ```json
@@ -240,7 +242,7 @@ List all sub-accounts owned by the authenticated user.
   "subAccounts": [
     {
       "userId": "user-abc123",
-      "username": "client-brand1",
+      "username": "clientbrand1",
       "displayName": "Brand One",
       "email": "brand1@parent.com",
       "type": "agency_client",
@@ -251,19 +253,26 @@ List all sub-accounts owned by the authenticated user.
     }
   ],
   "total": 1,
-  "limit": 10
+  "limits": {
+    "maxSubAccounts": 10,
+    "usedSubAccounts": 1,
+    "remainingSubAccounts": 9,
+    "userPackType": "business"
+  }
 }
 ```
 
-#### 2. **POST /admin/createSubAccount**
+#### 2. **POST /admin/CreateSubAccount**
 Create a new sub-account under the authenticated parent account.
 
 **Authentication**: JWT (parent account only)
 
+**Authorization**: Requires `manage:subaccounts` permission
+
 **Request Body**:
 ```json
 {
-  "username": "client-brand1",
+  "username": "clientbrand1",
   "email": "brand1@parent.com",
   "displayName": "Brand One",
   "bio": "Official Brand One page",
@@ -308,30 +317,24 @@ Update sub-account details (profile only, not credentials).
 }
 ```
 
-#### 4. **DELETE /admin/deleteSubAccount**
+#### 3. **DELETE /admin/DeleteSubAccount**
 Delete a sub-account and all associated data (pages, links, analytics).
 
 **Authentication**: JWT (parent account only)
 
-**Query Parameters**:
-- `userId` (required): Sub-account user ID
-
-**Response**:
-```json
-{
-  "message": "Sub-account deleted successfully"
-}
-```
-
-#### 5. **POST /admin/switchContext**
-Switch management context to a sub-account.
-
-**Authentication**: JWT (parent account only)
+**Authorization**: Requires `manage:subaccounts` permission
 
 **Request Body**:
 ```json
 {
   "userId": "user-abc123"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Sub-account deleted successfully"
 }
 ```
 
@@ -431,33 +434,27 @@ Permissions are defined in `Get-DefaultRolePermissions.ps1` and validated automa
 - `read:analytics` - Analytics viewing
 - `read:shortlinks`, `write:shortlinks` - Short link management
 
-### New Permission Types
+### New Permission for Sub-Account Management
 
-Add permission categories for restricted operations:
+Add single permission for sub-account operations:
 
 ```powershell
-# Management permissions (not granted to sub-accounts)
-'manage:auth'         # Manage authentication (2FA, API keys, password)
-'manage:billing'      # Manage subscription and billing
-'manage:users'        # Manage user relationships and sub-accounts
-
 # Sub-account management (only for parent accounts with user pack)
-'create:subaccounts'
-'manage:subaccounts'
-'delete:subaccounts'
+'manage:subaccounts'  # Grants create, read, and delete sub-accounts
 ```
 
 ### Permission Assignment
 
 **Regular Users** (including parent accounts):
 - All existing permissions (unchanged)
-- Plus: `create:subaccounts`, `manage:subaccounts`, `delete:subaccounts` (if has user pack)
+- Plus: `manage:subaccounts` (if has user pack)
 
 **Sub-Accounts** (`sub_account_user` role):
 - Content management permissions only
 - **Excludes**: All auth management permissions (`write:2fauth`, `*:apiauth`, `write:password/email/phone`)
 - **Excludes**: All billing management permissions (`read/write:subscription`)
 - **Excludes**: All user management permissions (`manage:users`, `*:user_manager`)
+- **Excludes**: Sub-account management (`manage:subaccounts`)
 
 **Implementation**: Update `Get-DefaultRolePermissions.ps1`:
 
@@ -559,6 +556,27 @@ if ($User.AuthDisabled -eq $true) {
 
 **One check blocks**: Login, API keys, password reset, etc.
 
+### Auth Response Updates
+
+Include optional sub-account fields in JWT/auth responses for frontend display:
+
+```powershell
+# In JWT generation or auth response builder
+$AuthResponse = @{
+    UserId = $User.RowKey
+    email = $User.PartitionKey
+    username = $User.Username
+    permissions = $UserPermissions
+    tier = $Subscription.EffectiveTier
+    
+    # Optional fields for display (frontend uses for UI only)
+    IsSubAccount = if ($User.IsSubAccount) { $true } else { $false }
+    AuthDisabled = if ($User.AuthDisabled) { $true } else { $false }
+}
+```
+
+**Note**: Frontend primarily uses `permissions` array for access control, not these flags.
+
 ### Context Switching Flow (Using Existing Mechanism)
 
 The codebase already has user context switching via `Get-UserAuthContext.ps1`. We simply leverage it:
@@ -593,7 +611,46 @@ The codebase already has user context switching via `Get-UserAuthContext.ps1`. W
 
 ### Subscription Tier Inheritance
 
-Sub-accounts inherit parent's tier for:
+Sub-accounts inherit parent's tier via `Get-UserSubscription.ps1`. Update this function to detect sub-accounts and return parent's subscription:
+
+```powershell
+function Get-UserSubscription {
+    param([Parameter(Mandatory)][object]$User)
+    
+    # Check if this is a sub-account
+    if ($User.IsSubAccount -eq $true) {
+        # Get parent from SubAccounts table
+        $SubAccountsTable = Get-LinkToMeTable -TableName 'SubAccounts'
+        $SafeSubId = Protect-TableQueryValue -Value $User.RowKey
+        $Relationship = Get-LinkToMeAzDataTableEntity @SubAccountsTable -Filter "RowKey eq '$SafeSubId'" | Select-Object -First 1
+        
+        if ($Relationship) {
+            $ParentUserId = $Relationship.ParentAccountId
+            
+            # Get parent user
+            $UsersTable = Get-LinkToMeTable -TableName 'Users'
+            $SafeParentId = Protect-TableQueryValue -Value $ParentUserId
+            $ParentUser = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeParentId'" | Select-Object -First 1
+            
+            if ($ParentUser) {
+                # Get parent's subscription (recursive in case parent is also a sub-account)
+                $ParentSubscription = Get-UserSubscription -User $ParentUser
+                
+                # Mark as inherited for display purposes
+                $ParentSubscription | Add-Member -NotePropertyName 'IsInherited' -NotePropertyValue $true -Force
+                $ParentSubscription | Add-Member -NotePropertyName 'InheritedFromUserId' -NotePropertyValue $ParentUserId -Force
+                
+                return $ParentSubscription
+            }
+        }
+    }
+    
+    # Normal subscription logic for regular users
+    # ... existing code ...
+}
+```
+
+**Inherited Features:**
 - Link limits (maxLinks)
 - Page limits (maxPages)
 - Short link limits
