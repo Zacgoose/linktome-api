@@ -30,7 +30,7 @@ function New-ShortLinkSlug {
             return $Slug
         }
         
-        Write-Information "Slug collision detected: $Slug (attempt $attempt/$MaxRetries)"
+        Write-Debug "Slug collision detected: $Slug (attempt $attempt/$MaxRetries)"
     }
     
     # If we couldn't find a unique slug after max retries, throw error
