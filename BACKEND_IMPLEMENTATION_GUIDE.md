@@ -1,14 +1,21 @@
-# Backend Implementation Guide: Agency/Multi-Account Profiles
+# Backend Implementation Guide: Agency/Multi-Account Profiles (Ultra-Simplified)
 
 ## Overview
 
-This document provides detailed technical specifications for backend developers implementing the agency/multi-account profiles feature. It covers database schema, new endpoints, authentication changes, and security requirements.
+This document provides detailed technical specifications for backend developers implementing the agency/multi-account profiles feature. 
+
+**Key Simplification**: Sub-accounts are regular users in the Users table with `AuthDisabled = true` and `IsSubAccount = true`. They use existing tier, permission, and context systems. No special handling needed beyond:
+1. Block auth for accounts with `AuthDisabled = true`
+2. Create new role type with limited permissions
+3. Track parent-child relationship in SubAccounts table
 
 ---
 
-## Database Schema Changes
+## Database Schema Changes (Ultra-Simplified)
 
 ### Option A: SubAccounts Table (Recommended)
+
+**Purpose**: Only for tracking parent-child relationships. Sub-accounts are normal users otherwise.
 
 Create a new table to track sub-account relationships:
 
@@ -19,32 +26,34 @@ RowKey: SubAccountId (sub-account user's UserId)
 
 Fields:
 - ParentAccountId (string) - Parent user ID
-- SubAccountId (string) - Sub-account user ID
+- SubAccountId (string) - Sub-account user ID  
 - SubAccountType (string) - 'agency_client', 'brand', 'project', 'other'
 - Status (string) - 'active', 'suspended', 'deleted'
 - CreatedAt (datetime) - ISO 8601 format
 - CreatedByUserId (string) - Who created this (for audit)
-- Notes (string, optional) - Additional notes
 ```
 
 **Rationale**: 
-- Clean separation of concerns
-- Easy to query all sub-accounts for a parent: Filter by PartitionKey
-- Easy to find parent for a sub-account: Filter by RowKey
+- Clean separation - relationship tracking only
+- Sub-accounts are full users with all normal fields
+- Easy to query relationships both ways
 - Doesn't clutter Users table
-- Easier to add metadata specific to sub-account relationships
 
 ### Update Users Table
 
-Add minimal marker fields to Users table:
+Add minimal flags to Users table:
 
 ```powershell
 Users Table (additions):
 - IsSubAccount (boolean, default: false)
-- SubAccountCanLogin (boolean, default: false) - Future proofing
+  - Marks this as a sub-account
+  
+- AuthDisabled (boolean, default: false)
+  - When true, blocks ALL authentication
+  - Enforced in login endpoint and API key validation
 ```
 
-**Note**: `ParentAccountId` is stored in SubAccounts table, not Users table.
+**Note**: Sub-accounts have their own tier, features, pages, links, etc. They're normal users.
 
 ### Query Patterns
 
@@ -379,66 +388,56 @@ if ($User.IsSubAccount -eq $true) {
 
 ---
 
-## Update Authentication System
+## Update Authentication System (Simplified)
 
-### 1. Update New-LinkToMeJWT.ps1
+### 1. Block Authentication for AuthDisabled Accounts
 
-Modify JWT generation to support context:
+Simple check in login and API key validation:
 
 ```powershell
-# In Modules/LinkTomeCore/Private/Auth/New-LinkToMeJWT.ps1
+# In Modules/PublicApi/Public/Invoke-PublicLogin.ps1
 
-function New-LinkToMeJWT {
-    param(
-        [Parameter(Mandatory)]
-        [object]$User,
-        
-        [Parameter()]
-        [string]$ContextUserId = $null,
-        
-        [Parameter()]
-        [string]$ContextUsername = $null
-    )
-    
-    # ... existing code ...
-    
-    # Build payload
-    $Payload = @{
-        userId = $User.RowKey
-        email = $User.PartitionKey
-        username = $User.Username
-        tier = $Subscription.EffectiveTier
-        exp = $ExpirationTime
+# After fetching user but before password validation:
+
+if ($UserData.AuthDisabled -eq $true) {
+    return [HttpResponseContext]@{
+        StatusCode = [HttpStatusCode]::Forbidden
+        Body = @{
+            error = "Authentication is disabled for this account"
+            code = "AUTH_DISABLED"
+        }
     }
-    
-    # Add context information if provided
-    if ($ContextUserId -and $ContextUsername) {
-        $Payload.contextUserId = $ContextUserId
-        $Payload.contextUsername = $ContextUsername
-        $Payload.isSubAccountContext = $true
-    } else {
-        $Payload.isSubAccountContext = $false
-    }
-    
-    # ... rest of JWT generation ...
 }
 ```
 
-### 2. Update Get-UserFromRequest.ps1
-
-Modify to extract context from JWT:
-
 ```powershell
-# In Modules/LinkTomeCore/Private/Auth/Get-UserFromRequest.ps1
+# In API key validation (Get-ApiKeyFromRequest.ps1 or similar)
 
-# After JWT validation, extract claims:
+# After fetching user by API key:
 
-$Claims = $JwtPayload
+if ($User.AuthDisabled -eq $true) {
+    return @{
+        IsValid = $false
+        Error = "Authentication is disabled for this account"
+    }
+}
+```
 
-# Standard fields
-$UserId = $Claims.userId
-$Email = $Claims.email
-$Username = $Claims.username
+**That's it**: One check blocks all auth methods (login, API keys, password reset, etc.)
+
+### 2. Use Existing Context Mechanism
+
+**No changes needed** to JWT or context switching. The codebase already has:
+- `Get-UserAuthContext.ps1` - Gets user context
+- Context switching between users
+- Permission validation per user
+
+**Just leverage it**:
+1. Parent switches to sub-account user (existing mechanism)
+2. Sub-account user has limited permissions (new role type)
+3. Sub-account cannot auth directly (`AuthDisabled = true`)
+
+---
 
 # Context fields
 $IsSubAccountContext = $Claims.isSubAccountContext -eq $true
@@ -651,7 +650,7 @@ function Invoke-AdminCreateSubAccount {
             throw "Username already taken"
         }
         
-        # Create sub-account user
+        # Create sub-account user (as a normal user with flags)
         $SubAccountId = 'user-' + (New-Guid).ToString()
         $EmailLower = $Email.ToLower()
         
@@ -663,10 +662,17 @@ function Invoke-AdminCreateSubAccount {
             Bio = if ($Bio) { $Bio } else { '' }
             Avatar = "https://ui-avatars.com/api/?name=$([uri]::EscapeDataString($DisplayName))&size=200"
             IsActive = $true
+            
+            # Sub-account specific flags
             IsSubAccount = $true
-            SubAccountCanLogin = $false
-            Roles = '["user"]'  # Sub-accounts get user role for permissions but can't login
-            # No password fields - cannot login
+            AuthDisabled = $true
+            
+            # Normal user fields (sub-account has its own tier, features, etc.)
+            Roles = '["sub_account_user"]'  # New role with limited permissions
+            SubscriptionTier = 'free'       # Or inherit from parent
+            SubscriptionStatus = 'active'
+            
+            # No password fields - auth is disabled
         }
         
         Add-LinkToMeAzDataTableEntity @UsersTable -Entity $SubAccountUser
@@ -899,25 +905,97 @@ if ($Request.AuthenticatedUser.IsSubAccountContext) {
 
 ---
 
-## Permission System Updates
+## Permission System Updates (Simplified)
 
-### Update Get-DefaultRolePermissions.ps1
+### Add New Role Type with Limited Permissions
 
-Add new permissions:
+Update `Get-DefaultRolePermissions.ps1` to add new role:
 
 ```powershell
-'user' = @(
-    # ... existing permissions ...
-    'read:subaccounts',
-    'write:subaccounts',
-    'delete:subaccounts',
-    'switch:subaccounts'
-)
-
-# user_manager role should NOT have sub-account permissions
+function Get-DefaultRolePermissions {
+    param(
+        [Parameter(Mandatory)]
+        [ValidateSet('user', 'user_manager', 'sub_account_user')]
+        [string]$Role
+    )
+    
+    $RolePermissions = @{
+        'user' = @(
+            # All existing permissions...
+            'read:dashboard',
+            'write:2fauth',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'manage:auth',      # NEW: Auth management
+            'manage:billing',   # NEW: Billing management
+            'manage:users',     # NEW: User management
+            'create:subaccounts',
+            'manage:subaccounts',
+            # ... etc
+        )
+        
+        'sub_account_user' = @(
+            # Content management only (NO management features)
+            'read:dashboard',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'read:shortlinks',
+            'write:shortlinks'
+            # Excluded: manage:auth, manage:billing, manage:users, create:subaccounts
+        )
+        
+        'user_manager' = @(
+            # Existing limited permissions...
+        )
+    }
+    
+    return $RolePermissions[$Role]
+}
 ```
 
-### New Permission Check Function
+### Update Restricted Endpoints
+
+Add permission checks to management endpoints:
+
+```powershell
+# In endpoints like Invoke-AdminApikeysCreate.ps1
+function Invoke-AdminApikeysCreate {
+    param($Request, $TriggerMetadata)
+    
+    # Check permission
+    if (-not (Test-Permission -User $Request.AuthenticatedUser -Permission 'manage:auth')) {
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{ error = "Insufficient permissions" }
+        }
+    }
+    
+    # ... rest of implementation
+}
+```
+
+**Apply to**:
+- All 2FA endpoints (require `manage:auth`)
+- API key endpoints (require `manage:auth`)
+- Password/email/phone change (require `manage:auth`)
+- Subscription endpoints (require `manage:billing`)
+- User manager endpoints (require `manage:users`)
+
+**Key Point**: Use existing permission system. Just check for new permission types.
 
 **Location**: `Modules/LinkTomeCore/Private/Auth/Test-SubAccountContextPermission.ps1`
 

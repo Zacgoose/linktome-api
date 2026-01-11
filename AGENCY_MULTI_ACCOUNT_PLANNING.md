@@ -59,84 +59,92 @@ The codebase already has foundational pieces that can be leveraged:
 
 ---
 
-## Proposed Solution: Sub-Account System
+## Proposed Solution: Sub-Account System (Simplified)
 
-### Core Concept
+### Core Concept - Maximum Simplification
 
-**Sub-Accounts** are lightweight user profiles that:
-1. Are created and owned by a **Parent Account**
-2. Cannot login independently (no credentials)
-3. Inherit subscription tier from parent
-4. Have their own public presence (username, pages, links, appearance)
-5. Can only be managed through the parent account
+**Sub-Accounts** are regular user accounts with special flags:
+1. Stored in **Users table** like any other account
+2. Flagged with `IsSubAccount = true` and `AuthDisabled = true`
+3. Cannot login (auth disabled at the authentication layer)
+4. Have their own tier, features, pages, links, and appearance
+5. Managed through parent account using **existing user context mechanism**
 
 **Parent Accounts** are regular user accounts that:
-1. Purchase base subscription (Free, Pro, Premium, Enterprise)
+1. Have base subscription (Free, Pro, Premium, Enterprise)
 2. Optionally purchase user packs to create sub-accounts
 3. Can create multiple sub-accounts (based on purchased user pack)
-4. Manage all aspects of their sub-accounts
+4. Manage sub-accounts by switching context (using existing mechanism)
 5. Pay for base subscription + user pack (consolidated billing)
-6. Can switch context to manage any of their sub-accounts
+
+**Key Simplification**: Sub-accounts are just users with `AuthDisabled = true` and `IsSubAccount = true`. Everything else uses existing tier and permission systems.
 
 ---
 
-## Database Schema Changes
+## Database Schema Changes (Ultra-Simplified)
 
-### 1. Users Table - New Fields
+### 1. Users Table - Minimal New Fields
 
-Add to existing `Users` table:
+Add to existing `Users` table (just 2 flags):
 
 ```plaintext
 - IsSubAccount (boolean, default: false)
-  - Marks this as a sub-account that cannot login
+  - Marks this as a sub-account
   
-- ParentAccountId (string, nullable)
-  - References the RowKey of the parent account
-  - NULL for regular accounts
-  - Required for sub-accounts
-  
-- SubAccountType (string, nullable)
-  - Type classification: 'agency_client', 'brand', 'project', etc.
-  - For future extensibility and filtering
-  
-- CreatedByUserId (string, nullable)
-  - Tracks which user created this sub-account
-  - Useful for audit trail
+- AuthDisabled (boolean, default: false)
+  - When true, prevents any authentication (login, API keys, etc.)
+  - Enforced at authentication layer
 ```
 
-### 2. New Table: SubAccounts (Optional Alternative)
+**Note**: Sub-accounts are otherwise normal users with their own tier, features, etc.
 
-Instead of modifying Users table, could create a separate linking table:
+### 2. SubAccounts Table - Simple Relationship Tracking
+
+Separate table to track parent-child relationships:
 
 ```plaintext
 Table: SubAccounts
 PartitionKey: ParentAccountId (parent's UserId)
 RowKey: SubAccountId (sub-account's UserId)
+
 Fields:
-  - SubAccountType (string)
-  - CreatedAt (datetime)
-  - CreatedByUserId (string)
-  - Status (string: 'active', 'suspended', 'deleted')
-  - Notes (string, optional)
+  - ParentAccountId (string) - Parent user ID
+  - SubAccountId (string) - Sub-account user ID
+  - SubAccountType (string) - 'agency_client', 'brand', 'project', 'other'
+  - Status (string) - 'active', 'suspended', 'deleted'
+  - CreatedAt (datetime) - ISO 8601 format
+  - CreatedByUserId (string) - Who created this (audit trail)
 ```
 
-**Recommendation**: Use the SubAccounts table approach for cleaner separation.
+**Purpose**: Only for relationship tracking. Sub-account is a full user otherwise.
 
-### 3. Subscription Inheritance Logic
+### 3. User Pack Fields (in Users Table)
 
-Modify `Get-UserSubscription.ps1` to:
-1. Check if user is a sub-account
-2. If yes, recursively look up parent's subscription
-3. Return parent's effective tier for feature gating
+For managing sub-account limits:
+
+```plaintext
+- UserPackType (string, nullable)
+  - Values: null, 'starter', 'business', 'enterprise'
+  
+- UserPackLimit (integer, default: 0)
+  - Max sub-accounts: 0 (none), 3 (starter), 10 (business), -1 (enterprise)
+  
+- UserPackExpiresAt (datetime, nullable)
+  - Expiration date for the user pack
+```
+
+### 4. Authentication Layer Changes
+
+Update authentication to check `AuthDisabled`:
 
 ```powershell
-if ($User.IsSubAccount -and $User.ParentAccountId) {
-    # Get parent user
-    $ParentUser = Get-User -UserId $User.ParentAccountId
-    # Return parent's subscription
-    return Get-UserSubscription -User $ParentUser
+# In login endpoint and API key validation
+if ($User.AuthDisabled -eq $true) {
+    return "Authentication disabled for this account"
 }
 ```
+
+**Simple and Clean**: One check blocks all auth methods.
 
 ---
 
@@ -346,19 +354,20 @@ Returns a new JWT or session token that includes:
 
 #### Authentication Endpoints
 - **POST /public/login**
-  - Add validation to reject login attempts for sub-accounts
-  - Return clear error: "This account cannot login directly"
-
-- **POST /public/signup**
-  - No changes needed (sub-accounts created via createSubAccount)
+  - Check `AuthDisabled` flag in user record
+  - If true, reject with error: "Authentication is disabled for this account"
+  
+- **API Key Validation**
+  - Check `AuthDisabled` flag before allowing API key usage
+  - Consistent enforcement across all auth methods
 
 #### Profile & Link Management
-All existing admin endpoints should:
-1. Check if request has `contextUserId` (from switchContext)
-2. Use `contextUserId` for operations instead of authenticated user ID
-3. Verify parent owns the sub-account
+All existing admin endpoints work normally:
+1. Use **existing user context mechanism** (already in codebase)
+2. When parent switches to sub-account, operations use sub-account's user ID
+3. No special handling needed - sub-accounts are regular users
 
-Affected endpoints:
+Affected endpoints work as-is:
 - GET/PUT /admin/getProfile, /admin/updateProfile
 - GET/PUT /admin/getLinks, /admin/updateLinks
 - GET/POST/PUT/DELETE /admin/getPages, /admin/createPage, /admin/updatePage, /admin/deletePage
@@ -366,49 +375,70 @@ Affected endpoints:
 - GET /admin/getAnalytics
 
 #### Restricted Endpoints for Sub-Accounts
-These endpoints should return 403 Forbidden when used in sub-account context:
-- All 2FA endpoints (`/admin/2fatokensetup`)
-- API key endpoints (`/admin/apikeys*`)
-- Subscription endpoints (`/admin/getSubscription`, `/admin/upgradeSubscription`, `/admin/cancelSubscription`)
-- Password/email/phone change endpoints
-- User manager endpoints (`/admin/userManager*`)
+Use **permission system** to block certain operations:
+- Create new permission types: `manage:auth`, `manage:billing`, `manage:users`
+- Sub-accounts don't get these permissions
+- Existing permission checking blocks them automatically
+
+Restricted operations:
+- All 2FA endpoints (require `manage:auth` permission)
+- API key endpoints (require `manage:auth` permission)
+- Subscription endpoints (require `manage:billing` permission)
+- Password/email/phone change (require `manage:auth` permission)
+- User manager endpoints (require `manage:users` permission)
+
+**Key Simplification**: Use existing permission system, no special sub-account context logic needed.
 
 ---
 
-## Permission System Updates
+## Permission System Updates (Ultra-Simplified)
 
-### New Permissions
-Add to role permissions system:
+### New Permission Types
+
+Add permission categories for restricted operations:
 
 ```powershell
-# Parent account permissions
-'read:subaccounts'
-'write:subaccounts'
-'delete:subaccounts'
-'switch:subaccounts'
+# Management permissions (not granted to sub-accounts)
+'manage:auth'         # Manage authentication (2FA, API keys, password)
+'manage:billing'      # Manage subscription and billing
+'manage:users'        # Manage user relationships and sub-accounts
 
-# Context-aware restrictions
-'restricted:apikeys'      # Cannot manage API keys in sub-account context
-'restricted:2fa'          # Cannot manage 2FA in sub-account context
-'restricted:subscription' # Cannot manage subscription in sub-account context
+# Sub-account management (only for parent accounts with user pack)
+'create:subaccounts'
+'manage:subaccounts'
+'delete:subaccounts'
 ```
 
-### Context-Aware Permission Checking
+### Permission Assignment
 
-Update `Get-UserAuthContext.ps1` to include:
+**Regular Users** (including parent accounts):
+- All existing permissions
+- Plus: `manage:auth`, `manage:billing`, `manage:users`
+- Plus: `create:subaccounts`, `manage:subaccounts`, `delete:subaccounts` (if has user pack)
+
+**Sub-Accounts**:
+- All content management permissions (links, pages, appearance, analytics)
+- **Exclude**: `manage:auth`, `manage:billing`, `manage:users`
+- **Exclude**: Any sub-account creation/management permissions
+
+**Implementation**: Just set roles appropriately when creating sub-account user.
+
 ```powershell
-@{
-    UserId = $User.RowKey
-    IsSubAccountContext = $false
-    ParentUserId = $null
-    ContextUserId = $User.RowKey
-    
-    # If in sub-account context:
-    # IsSubAccountContext = $true
-    # ParentUserId = "user-parent123"
-    # ContextUserId = "user-subaccount123"
+# When creating sub-account
+$SubAccountUser = @{
+    # ... normal user fields ...
+    IsSubAccount = $true
+    AuthDisabled = $true
+    Roles = '["sub_account_user"]'  # New role type with limited permissions
 }
 ```
+
+### Leveraging Existing System
+
+**No special context logic needed**:
+- Parent switches to sub-account using existing user context mechanism
+- Permission checks already exist in endpoints
+- Just add new permission types to existing validation
 
 Update `Test-ContextAwarePermission.ps1` to:
 1. Check if in sub-account context
@@ -417,40 +447,51 @@ Update `Test-ContextAwarePermission.ps1` to:
 
 ---
 
-## Authentication & Session Management
+## Authentication & Session Management (Ultra-Simplified)
 
-### JWT Token Enhancement
+### Authentication Blocking
 
-When switching context, the JWT should include:
+Simple check in authentication layer:
 
-```json
-{
-  "userId": "user-parent123",        // Parent account (for auth)
-  "contextUserId": "user-abc123",    // Sub-account (for operations)
-  "isSubAccountContext": true,
-  "exp": 1234567890
+```powershell
+# In Invoke-PublicLogin.ps1 and API key validation
+if ($User.AuthDisabled -eq $true) {
+    return [HttpResponseContext]@{
+        StatusCode = [HttpStatusCode]::Forbidden
+        Body = @{ error = "Authentication is disabled for this account" }
+    }
 }
 ```
 
-### Context Switching Flow
+**One check blocks**: Login, API keys, password reset, etc.
 
-1. Parent logs in normally → Gets standard JWT
-2. Parent calls `/admin/switchContext?userId=user-abc123`
-3. Backend validates:
-   - Parent owns the sub-account
-   - Sub-account is active
-4. Return new JWT with context info
-5. Frontend stores and uses context JWT
-6. All API calls use context JWT
-7. Backend routes operations to `contextUserId`
+### Context Switching Flow (Using Existing Mechanism)
+
+The codebase already has user context switching via `Get-UserAuthContext.ps1`. We simply leverage it:
+
+1. Parent logs in normally → Gets standard JWT for parent user
+2. Parent calls existing API to switch user context to sub-account
+3. Backend validates parent owns sub-account (check SubAccounts table)
+4. Returns JWT with sub-account as the active user
+5. All API calls now operate as the sub-account (existing behavior)
+6. Sub-account's permissions are checked (which exclude management features)
+7. Return to parent by switching context back
+
+**Key Point**: Use existing context mechanism. Sub-accounts are just users with `AuthDisabled = true` and limited permissions.
+
+**No Special Logic Needed**: 
+- Context switching already exists
+- Permission checking already exists
+- Just add `AuthDisabled` check to login/auth
+- Just define new role (`sub_account_user`) with limited permissions
 
 ### Security Considerations
 
-1. **Ownership Validation**: Always verify parent owns sub-account
-2. **Context Validation**: Validate contextUserId exists in every request
-3. **Permission Isolation**: Block restricted operations in context
-4. **Audit Logging**: Log all context switches and sub-account operations
-5. **Rate Limiting**: Apply parent's rate limits across all sub-accounts
+1. **Authentication Blocking**: Check `AuthDisabled` flag in all auth flows
+2. **Ownership Validation**: Verify parent owns sub-account when switching context
+3. **Permission Enforcement**: Use existing permission system with new types
+4. **Audit Logging**: Log sub-account operations (reuse existing audit system)
+5. **Rate Limiting**: Apply to parent account (existing rate limit system)
 
 ---
 
