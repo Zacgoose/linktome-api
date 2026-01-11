@@ -19,10 +19,11 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - **Storage:** Azure Table Storage
   - `Users` - User accounts and profiles (includes 2FA settings)
   - `Links` - User link collections
+  - `ShortLinks` - URL shortener service (slug-based short links)
   - `TwoFactorSessions` - Temporary 2FA verification sessions
   - `RateLimits` - IP-based rate limiting tracking
   - `SecurityEvents` - Security event audit log
-  - `Analytics` - Page views and analytics tracking
+  - `Analytics` - Page views, link clicks, and short link redirect tracking
   - `FeatureUsage` - Feature access tracking for tier validation
 - **Authentication:** JWT with PBKDF2-SHA256 password hashing
 - **Frontend Integration:** Azure Static Web Apps (handles CORS and security headers)
@@ -53,17 +54,28 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 ### Analytics
 - ✅ Automatic page view tracking on profile loads
 - ✅ Link click tracking via public endpoint
+- ✅ Short link redirect tracking with detailed analytics
 - ✅ Server-side analytics storage
 - ✅ Tracks IP address, user agent, and referrer
 - ✅ Analytics dashboard data via admin endpoint (views, clicks, popular links)
 - ✅ Dashboard statistics (total links, views, clicks, unique visitors)
 - ✅ Time-series data (views and clicks by day)
-- ✅ **Advanced analytics restricted to Premium/Enterprise tiers**
+- ✅ **Advanced analytics restricted to Pro/Premium/Enterprise tiers**
+
+### URL Shortener
+- ✅ Create custom short links with memorable slugs
+- ✅ Tier-based limits (Free: none, Pro: 50, Premium: 200, Enterprise: unlimited)
+- ✅ Click tracking and analytics
+- ✅ Active/inactive toggle for links
+- ✅ Public redirect endpoint
+- ✅ Detailed analytics (Pro+ tiers)
 
 ### Subscription Tiers & Feature Gating
-- ✅ Three-tier system: Free, Premium, Enterprise
+- ✅ Four-tier system: Free, Pro, Premium, Enterprise
 - ✅ Tier-based feature access control
-- ✅ Link limits by tier (Free: 5, Premium: 25, Enterprise: 100)
+- ✅ Link limits by tier (Free: 10, Pro: 50, Premium: 100, Enterprise: unlimited)
+- ✅ Short link limits by tier (Free: none, Pro: 50, Premium: 200, Enterprise: unlimited)
+- ✅ Advanced analytics for Pro/Premium/Enterprise users only
 - ✅ Advanced analytics for Premium/Enterprise users only
 - ✅ Feature usage tracking and analytics
 - ✅ Automatic subscription expiration handling
@@ -85,12 +97,16 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - `POST /public/2fatoken?action=resend` - Resend 2FA email code
 - `GET /public/getUserProfile?username={username}` - Get public profile and links (auto-tracks page view)
 - `POST /public/trackLinkClick` - Track link click analytics (requires username and linkId)
+- `GET /public/l?slug={slug}` - Redirect short link to target URL (auto-tracks redirect analytics)
 
 #### Admin Endpoints (Requires JWT Authentication)
 - `GET /admin/getProfile` - Get authenticated user's profile
 - `PUT /admin/updateProfile` - Update profile (displayName, bio, avatar)
 - `GET /admin/getLinks` - Get user's links
 - `PUT /admin/updateLinks` - Create, update, or delete links
+- `GET /admin/getShortLinks` - Get user's short links with usage statistics
+- `PUT /admin/updateShortLinks` - Create, update, or delete short links
+- `GET /admin/getShortLinkAnalytics?slug={slug}` - Get detailed analytics for short links (Pro+ tiers)
 - `GET /admin/getAnalytics` - Get analytics data (page views, link clicks, unique visitors, views/clicks by day, most popular links)
 - `GET /admin/getDashboardStats` - Get dashboard statistics (total links, views, visitors)
 - `GET /admin/getAppearance` - Get appearance settings (theme, colors, button style)
@@ -360,8 +376,8 @@ Authorization: Bearer <jwt-token>
    Authorization: Bearer eyJhbGciOi...
    {
      "links": [
-       {"title": "GitHub", "url": "https://github.com/johndoe", "order": 1, "active": true},
-       {"title": "Twitter", "url": "https://twitter.com/johndoe", "order": 2, "active": true}
+       {"operation": "add", "title": "GitHub", "url": "https://github.com/johndoe", "order": 1, "active": true},
+       {"operation": "add", "title": "Twitter", "url": "https://twitter.com/johndoe", "order": 2, "active": true}
      ]
    }
    ```
@@ -383,6 +399,152 @@ Authorization: Bearer <jwt-token>
      ]
    }
    ```
+
+### Example: URL Shortener Flow
+
+1. **Create Short Link** (Pro tier required)
+   ```bash
+   PUT /admin/updateShortLinks
+   Authorization: Bearer eyJhbGciOi...
+   {
+     "shortLinks": [
+       {
+         "operation": "add",
+         "slug": "github",
+         "targetUrl": "https://github.com/johndoe/awesome-project",
+         "title": "My Awesome Project",
+         "active": true
+       }
+     ]
+   }
+   ```
+   Response:
+   ```json
+   {
+     "success": true
+   }
+   ```
+
+2. **List Short Links**
+   ```bash
+   GET /admin/getShortLinks
+   Authorization: Bearer eyJhbGciOi...
+   ```
+   Response:
+   ```json
+   {
+     "shortLinks": [
+       {
+         "slug": "github",
+         "targetUrl": "https://github.com/johndoe/awesome-project",
+         "title": "My Awesome Project",
+         "active": true,
+         "clicks": 42,
+         "createdAt": "2024-01-15T10:30:00Z",
+         "lastClickedAt": "2024-01-20T14:25:00Z"
+       }
+     ],
+     "total": 1
+   }
+   ```
+
+3. **Public Redirect** (Anyone can access)
+   ```bash
+   GET /public/l?slug=github
+   ```
+   Response: HTTP 301 Redirect to target URL
+   ```
+   Location: https://github.com/johndoe/awesome-project
+   ```
+
+4. **Get Analytics** (Pro+ tiers only)
+   ```bash
+   GET /admin/getShortLinkAnalytics?slug=github
+   Authorization: Bearer eyJhbGciOi...
+   ```
+   Response:
+   ```json
+   {
+     "summary": {
+       "totalRedirects": 42,
+       "uniqueVisitors": 28
+     },
+     "hasAdvancedAnalytics": true,
+     "topShortLinks": [
+       {
+         "slug": "github",
+         "targetUrl": "https://github.com/johndoe/awesome-project",
+         "clicks": 42
+       }
+     ],
+     "redirectsByDay": [
+       {"date": "2024-01-15", "clicks": 5},
+       {"date": "2024-01-16", "clicks": 12},
+       {"date": "2024-01-17", "clicks": 25}
+     ],
+     "topReferrers": [
+       {"referrer": "https://twitter.com", "count": 18},
+       {"referrer": "https://reddit.com", "count": 10}
+     ]
+   }
+   ```
+
+### Short Link Request/Response Formats
+
+#### Create/Update Short Link
+**Request:**
+```json
+{
+  "shortLinks": [
+    {
+      "operation": "add",        // or "update", "remove"
+      "slug": "my-link",         // 3-30 chars, lowercase, numbers, hyphens
+      "targetUrl": "https://example.com/very/long/url",
+      "title": "Optional title",
+      "active": true
+    }
+  ]
+}
+```
+
+**Validation Rules:**
+- `slug`: 3-30 characters, lowercase letters, numbers, hyphens only
+- Cannot start/end with hyphen
+- Cannot contain consecutive hyphens
+- Cannot use reserved words (admin, api, public, login, signup, settings, v1)
+- Must be globally unique across all users
+- `targetUrl`: Valid http/https URL, max 2048 characters
+- `title`: Optional, max 100 characters
+
+**Tier Limits:**
+- Free: 0 short links (upgrade required)
+- Pro: 50 short links
+- Premium: 200 short links
+- Enterprise: Unlimited short links
+
+**Error Responses:**
+```json
+{
+  "error": "Short links are not available on the Free plan. Upgrade to Pro or higher to create short links.",
+  "upgradeRequired": true,
+  "currentTier": "free",
+  "feature": "shortLinks"
+}
+```
+
+```json
+{
+  "error": "This slug is already in use. Please choose a different slug."
+}
+```
+
+```json
+{
+  "error": "Short link limit exceeded. Your Pro plan allows up to 50 short links. You currently have 50 short links.",
+  "currentCount": 50,
+  "limit": 50
+}
+```
 
 ## Troubleshooting
 
