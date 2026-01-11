@@ -12,13 +12,18 @@ This feature allows a parent account to create and manage multiple sub-accounts 
 
 ## Quick Facts
 
-### Tier Limits
-| Tier | Sub-Accounts | Status |
-|------|--------------|--------|
-| Free | 0 | Not available |
-| Pro | 3 | Available |
-| Premium | 10 | Available |
-| Enterprise | Unlimited | Available |
+### User Pack System
+| Pack Type | Sub-Accounts | Monthly Cost |
+|-----------|--------------|--------------|
+| No Pack | 0 | $0 |
+| Starter Pack | 3 | $x |
+| Business Pack | 10 | $y |
+| Enterprise Pack | Custom | Custom |
+
+**Billing Model**: Base subscription + User pack (separate add-on)
+- Parent gets their tier's features (Free, Pro, Premium, Enterprise)
+- Purchase user pack separately to enable sub-accounts
+- Sub-accounts inherit parent's tier features
 
 ### What Sub-Accounts CAN Do
 ✅ Have their own public profile (username, display name, bio, avatar)  
@@ -29,13 +34,14 @@ This feature allows a parent account to create and manage multiple sub-accounts 
 ✅ Create short links (based on parent's tier)  
 
 ### What Sub-Accounts CANNOT Do
-❌ Login independently (no credentials)  
+❌ Login independently or via API (no credentials)  
 ❌ Manage API keys  
 ❌ Enable/disable 2FA  
 ❌ Change subscription settings  
 ❌ Change password/email/phone  
 ❌ Invite user managers  
-❌ Create their own sub-accounts  
+❌ Create their own sub-accounts
+❌ Access user management features  
 
 ## New API Endpoints
 

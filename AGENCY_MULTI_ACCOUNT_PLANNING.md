@@ -3,13 +3,23 @@
 ## Overview
 
 This document outlines the comprehensive plan for implementing agency/multi-account profiles in LinkToMe. The feature enables a parent account to create and manage multiple sub-accounts (child profiles) that:
-- Do **NOT** have independent login credentials
+- Do **NOT** have independent login credentials (cannot login directly or via API)
 - Do **NOT** have access to management features (API keys, MFA, user management, subscription settings)
 - **DO** inherit the parent account's subscription tier and features
 - **DO** maintain their own public profiles, links, pages, and appearance
 - **DO** have analytics tracked separately
+- **DO** operate like any other account (within feature limits)
 
 This is designed for agencies or users who manage multiple brands/clients and want to consolidate billing and management under one account.
+
+### Business Model
+
+**User Pack Purchase System:**
+- Parent accounts purchase their base subscription (Free, Pro, Premium, Enterprise)
+- Additional sub-accounts are purchased in **user packs** separately
+- User pack options: 3 users ($x), 10 users ($y), custom enterprise packs
+- Features scale based on parent's plan and the user pack purchased
+- All sub-accounts covered under parent's billing
 
 ---
 
@@ -61,10 +71,12 @@ The codebase already has foundational pieces that can be leveraged:
 5. Can only be managed through the parent account
 
 **Parent Accounts** are regular user accounts that:
-1. Can create multiple sub-accounts (based on tier limits)
-2. Manage all aspects of their sub-accounts
-3. Pay for one subscription that covers all sub-accounts
-4. Can switch context to manage any of their sub-accounts
+1. Purchase base subscription (Free, Pro, Premium, Enterprise)
+2. Optionally purchase user packs to create sub-accounts
+3. Can create multiple sub-accounts (based on purchased user pack)
+4. Manage all aspects of their sub-accounts
+5. Pay for base subscription + user pack (consolidated billing)
+6. Can switch context to manage any of their sub-accounts
 
 ---
 
@@ -128,16 +140,80 @@ if ($User.IsSubAccount -and $User.ParentAccountId) {
 
 ---
 
-## Tier Limits for Sub-Accounts
+## User Pack System for Sub-Accounts
 
-Update `Get-TierFeatures.ps1` to include sub-account limits:
+### Subscription Model
 
-| Tier | Max Sub-Accounts | Notes |
-|------|------------------|-------|
-| Free | 0 | Feature not available |
-| Pro | 3 | Good for small agencies |
-| Premium | 10 | Mid-size agencies |
-| Enterprise | -1 (Unlimited) | Large agencies |
+Instead of tier-based sub-account limits, sub-accounts are purchased separately as **user packs**:
+
+**Base Subscription:**
+- Free: Base features for parent account only
+- Pro: Enhanced features for parent account
+- Premium: Premium features for parent account
+- Enterprise: Enterprise features for parent account
+
+**User Pack Add-Ons** (purchased separately):
+- **Starter Pack**: 3 sub-accounts ($x/month)
+- **Business Pack**: 10 sub-accounts ($y/month)
+- **Enterprise Pack**: Custom number of sub-accounts (custom pricing)
+
+### User Pack Features
+
+| Pack Type | Sub-Accounts | Monthly Cost | Notes |
+|-----------|--------------|--------------|-------|
+| No Pack | 0 | $0 | Default (no sub-accounts) |
+| Starter Pack | 3 | $x | Small agencies/creators |
+| Business Pack | 10 | $y | Mid-size agencies |
+| Enterprise Pack | Custom | Custom | Large agencies, negotiated |
+
+**Important**: 
+- User packs are **add-ons** to base subscription
+- Total cost = Base subscription + User pack
+- Example: Pro ($15) + Business Pack ($30) = $45/month
+- Sub-accounts inherit parent's tier features
+- All sub-accounts share parent's billing
+
+### Database Storage
+
+Add to Users table or use separate Subscription table:
+
+```plaintext
+- UserPackType (string, nullable)
+  - Values: null, 'starter', 'business', 'enterprise'
+  - NULL = no pack purchased
+  
+- UserPackLimit (integer, default: 0)
+  - Maximum sub-accounts allowed based on purchased pack
+  - 0 = no pack, 3 = starter, 10 = business, -1 = enterprise unlimited
+  
+- UserPackPurchasedAt (datetime, nullable)
+  - When the user pack was first purchased
+  
+- UserPackExpiresAt (datetime, nullable)
+  - Expiration date for the user pack
+  - Typically monthly or annual billing cycle
+```
+
+### Update `Get-TierFeatures.ps1`
+
+Instead of embedding limits in tier features, check user pack separately:
+
+```powershell
+function Get-UserPackLimit {
+    param([Parameter(Mandatory)][object]$User)
+    
+    $UserPackType = if ($User.UserPackType) { $User.UserPackType } else { $null }
+    
+    $PackLimits = @{
+        $null = 0
+        'starter' = 3
+        'business' = 10
+        'enterprise' = -1  # Unlimited
+    }
+    
+    return $PackLimits[$UserPackType]
+}
+```
 
 ---
 
@@ -190,8 +266,9 @@ Create a new sub-account under the authenticated parent account.
 **Validation**:
 - Username must be unique across entire system
 - Email can be shared within parent's sub-accounts
-- Parent must be within tier limit for sub-accounts
-- Parent must have Pro+ tier
+- Parent must have purchased a user pack (Starter, Business, or Enterprise)
+- Parent must be within their user pack limit for sub-accounts
+- Verify user pack is not expired
 
 **Response**:
 ```json

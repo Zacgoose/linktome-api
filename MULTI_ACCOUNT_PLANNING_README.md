@@ -101,13 +101,15 @@ Agency/multi-account profiles allow a parent account to create and manage multip
 
 ## 📊 Quick Stats
 
-### Tier Limits
-| Tier | Sub-Accounts | Monthly Price |
-|------|--------------|---------------|
-| Free | 0 | $0 |
-| Pro | 3 | TBD |
-| Premium | 10 | TBD |
-| Enterprise | Unlimited | TBD |
+### User Pack System
+| Pack Type | Sub-Accounts | Add-on Cost |
+|-----------|--------------|-------------|
+| No Pack | 0 | $0 |
+| Starter Pack | 3 | $x/month |
+| Business Pack | 10 | $y/month |
+| Enterprise Pack | Custom | Custom |
+
+**Note**: User packs are purchased separately from base subscription tiers. Any tier can purchase a user pack.
 
 ### Implementation Effort
 - **Backend**: 4-5 weeks (3 phases)

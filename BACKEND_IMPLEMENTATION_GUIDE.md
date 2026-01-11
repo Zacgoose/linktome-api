@@ -256,82 +256,84 @@ function Get-SubAccountList {
 }
 ```
 
-### 4. Get-SubAccountLimit.ps1
+### 4. Get-UserPackLimit.ps1
 
-**Location**: `Modules/LinkTomeCore/Private/SubAccount/Get-SubAccountLimit.ps1`
+**Location**: `Modules/LinkTomeCore/Private/SubAccount/Get-UserPackLimit.ps1`
 
 ```powershell
-function Get-SubAccountLimit {
+function Get-UserPackLimit {
     <#
     .SYNOPSIS
-        Get sub-account limit for a user's tier
+        Get sub-account limit based on user's purchased user pack
     .DESCRIPTION
-        Returns the maximum number of sub-accounts allowed for a given tier
-    .PARAMETER Tier
-        The subscription tier
+        Returns the maximum number of sub-accounts allowed based on the user's purchased user pack.
+        This is separate from tier features and must be purchased as an add-on.
+    .PARAMETER User
+        The user object
     .OUTPUTS
         Integer - Max sub-accounts allowed (-1 for unlimited)
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('free', 'pro', 'premium', 'enterprise')]
-        [string]$Tier
+        [object]$User
     )
     
-    $Limits = @{
-        'free' = 0
-        'pro' = 3
-        'premium' = 10
-        'enterprise' = -1  # Unlimited
+    # Get user pack type from user object
+    $UserPackType = if ($User.PSObject.Properties['UserPackType'] -and $User.UserPackType) { 
+        $User.UserPackType 
+    } else { 
+        $null 
     }
     
-    return $Limits[$Tier]
+    # Check if user pack is expired
+    if ($User.PSObject.Properties['UserPackExpiresAt'] -and $User.UserPackExpiresAt) {
+        $ExpiryDate = [DateTime]::Parse($User.UserPackExpiresAt, [System.Globalization.CultureInfo]::InvariantCulture)
+        $Now = (Get-Date).ToUniversalTime()
+        if ($ExpiryDate -lt $Now) {
+            Write-Warning "User pack expired for user: $($User.RowKey)"
+            return 0
+        }
+    }
+    
+    # Define pack limits
+    $PackLimits = @{
+        $null = 0           # No pack purchased
+        'starter' = 3       # Starter pack: 3 sub-accounts
+        'business' = 10     # Business pack: 10 sub-accounts
+        'enterprise' = -1   # Enterprise pack: Unlimited
+    }
+    
+    return $PackLimits[$UserPackType]
 }
 ```
 
 ---
 
-## Update Get-TierFeatures.ps1
+## Update Users Table for User Packs
 
-Add sub-account limits to tier features:
+Add user pack fields to Users table:
 
 ```powershell
-# In Modules/LinkTomeCore/Private/Tier/Get-TierFeatures.ps1
+# In Users table schema
+Users Table (additional fields):
+- UserPackType (string, nullable)
+  - Values: null, 'starter', 'business', 'enterprise'
+  - NULL = no pack purchased, cannot create sub-accounts
 
-# Add to each tier's limits hash:
-'free' = @{
-    # ... existing fields ...
-    
-    # Sub-account features
-    maxSubAccounts = 0
-    subAccountManagement = $false
-}
+- UserPackLimit (integer, default: 0)
+  - Maximum sub-accounts based on pack: 0, 3, 10, -1 (unlimited)
+  - Redundant but useful for quick checks
 
-'pro' = @{
-    # ... existing fields ...
-    
-    # Sub-account features
-    maxSubAccounts = 3
-    subAccountManagement = $true
-}
+- UserPackPurchasedAt (datetime, nullable)
+  - When the user pack was first purchased
 
-'premium' = @{
-    # ... existing fields ...
-    
-    # Sub-account features
-    maxSubAccounts = 10
-    subAccountManagement = $true
-}
-
-'enterprise' = @{
-    # ... existing fields ...
-    
-    # Sub-account features
-    maxSubAccounts = -1  # Unlimited
-    subAccountManagement = $true
-}
+- UserPackExpiresAt (datetime, nullable)
+  - Expiration date for the user pack (monthly/annual billing)
+  - Check this before allowing sub-account creation
 ```
+
+**Note**: User packs are independent of base subscription tiers. A Free tier user can purchase a user pack to create sub-accounts.
 
 ---
 
@@ -605,33 +607,40 @@ function Invoke-AdminCreateSubAccount {
             throw "Parent user not found"
         }
         
-        # Check tier and limits
-        $Subscription = Get-UserSubscription -User $ParentUser
-        $TierFeatures = Get-TierFeatures -Tier $Subscription.EffectiveTier
+        # Check user pack and limits
+        $UserPackLimit = Get-UserPackLimit -User $ParentUser
         
-        if ($TierFeatures.limits.maxSubAccounts -eq 0) {
+        if ($UserPackLimit -eq 0) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Forbidden
                 Body = @{
-                    error = "Sub-accounts are not available on your current plan. Upgrade to Pro or higher."
+                    error = "You need to purchase a user pack to create sub-accounts. Available packs: Starter (3 users), Business (10 users), Enterprise (custom)."
                     upgradeRequired = $true
-                    currentTier = $Subscription.EffectiveTier
                     feature = "subAccounts"
+                    userPackRequired = $true
                 }
             }
         }
         
-        # Check current count
+        # Check current count against pack limit
         $SubAccountsTable = Get-LinkToMeTable -TableName 'SubAccounts'
         $CurrentSubAccounts = Get-LinkToMeAzDataTableEntity @SubAccountsTable -Filter "PartitionKey eq '$SafeParentId' and Status eq 'active'"
         
-        if ($TierFeatures.limits.maxSubAccounts -ne -1 -and $CurrentSubAccounts.Count -ge $TierFeatures.limits.maxSubAccounts) {
+        if ($UserPackLimit -ne -1 -and $CurrentSubAccounts.Count ->= $UserPackLimit) {
+            $PackName = switch ($ParentUser.UserPackType) {
+                'starter' { 'Starter' }
+                'business' { 'Business' }
+                'enterprise' { 'Enterprise' }
+                default { 'current' }
+            }
+            
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Forbidden
                 Body = @{
-                    error = "Sub-account limit reached. Your $($Subscription.EffectiveTier) plan allows up to $($TierFeatures.limits.maxSubAccounts) sub-accounts."
+                    error = "Sub-account limit reached. Your $PackName pack allows up to $UserPackLimit sub-accounts."
                     currentCount = $CurrentSubAccounts.Count
-                    limit = $TierFeatures.limits.maxSubAccounts
+                    limit = $UserPackLimit
+                    userPack = $ParentUser.UserPackType
                 }
             }
         }

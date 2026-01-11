@@ -46,54 +46,43 @@ Currently using:
 
 ## 2. Feature Usage & Limits
 
-### 2.1 Limit Enforcement Strategy
-**Question**: How should feature limits work across sub-accounts?
+### 2.1 User Pack Pricing ✅ SIMPLIFIED
+**Question**: How should user packs be priced?
 
-**Option A - Individual Limits (Recommended)**
-- Each sub-account has full tier limits independently
-- Pro parent: 50 links, each sub-account: 50 links
-- Pros: Simple, generous, clear
-- Cons: Could be seen as gaming the system
+**New Simplified Approach** (per @Zacgoose feedback):
+- User packs are **separate add-ons** to base subscription
+- Available packs:
+  - **Starter Pack**: 3 sub-accounts ($x/month)
+  - **Business Pack**: 10 sub-accounts ($y/month)
+  - **Enterprise Pack**: Custom sub-accounts (custom pricing)
+- Any tier can purchase a user pack (even Free tier)
+- Sub-accounts inherit parent's tier features
+- Features scale based on parent plan
 
-**Option B - Aggregated Limits**
-- Combined limits across all sub-accounts
-- Pro parent + 3 subs share 50 links total
-- Pros: Fair, prevents abuse
-- Cons: Confusing, may frustrate users
+**Benefits**:
+- Simpler to understand and communicate
+- More flexible (Free tier users can still use sub-accounts)
+- Scales naturally with user needs
+- Clear separation between base features and multi-account add-on
 
-**Option C - Multiplied Limits**
-- Limits scale with sub-account count
-- Pro tier: 50 links × (1 parent + 3 subs) = 200 links
-- Pros: Scales well, generous
-- Cons: Devalues higher tiers, complex
-
-**Current Recommendation**: Option A for MVP
-
-**Discussion Points**:
-- What feels fair to users?
-- What prevents abuse?
-- What's easiest to explain?
-- Impact on tier pricing?
-
-**Decision Needed**: [ ] Choose option A, B, or C
+**Decision**: ✅ APPROVED - Use user pack add-on model
 
 ---
 
-### 2.2 Sub-Account Creation Limits
-**Question**: Should we allow sub-accounts on Free tier?
+### 2.2 User Pack Availability
+**Question**: Should Free tier users be able to purchase user packs?
 
-**Current Plan**:
-- Free: 0 sub-accounts
-- Pro: 3 sub-accounts  
-- Premium: 10 sub-accounts
-- Enterprise: Unlimited
+**Current Recommendation**: YES
+- Free tier gets base features for parent account
+- Can purchase Starter/Business pack to add sub-accounts
+- Sub-accounts get Free tier features (inherited from parent)
+- Makes entry barrier lower for agencies testing the platform
 
-**Alternative**: Free tier gets 1 sub-account to try the feature
+**Alternative**: Require at least Pro tier to purchase user packs
+- Pro: More revenue from base subscriptions
+- Con: Higher barrier to entry, may lose potential agency customers
 
-**Pros**: Lower barrier to entry, trial experience
-**Cons**: Devalues Pro tier, potential abuse
-
-**Decision Needed**: [ ] Stick with current plan or allow 1 on Free?
+**Decision Needed**: [ ] Allow Free tier to buy user packs OR [ ] Require Pro+ tier
 
 ---
 
@@ -267,31 +256,32 @@ Cons: Can't bookmark/share links to specific context
 
 ## 5. Business & Pricing
 
-### 5.1 Pricing Model
+### 5.1 Pricing Model ✅ SIMPLIFIED
 **Question**: Should sub-accounts be included in tier price or an add-on?
 
-**Current Plan - Included in Tier**:
-- Pro: 3 sub-accounts included
-- Premium: 10 sub-accounts included
-- Enterprise: Unlimited included
+**New Simplified Approach** (per @Zacgoose feedback): ✅ APPROVED
+- **User Pack Add-On Model**
+- Base subscription (Free, Pro, Premium, Enterprise) covers parent account
+- User packs purchased separately:
+  - Starter Pack: 3 sub-accounts ($x/month)
+  - Business Pack: 10 sub-accounts ($y/month)
+  - Enterprise Pack: Custom (custom pricing)
+- Total billing = Base subscription + User pack
+- Example: Free ($0) + Starter Pack ($15) = $15/month
 
-**Alternative - Add-On Model**:
-- Base tier + $X per sub-account
-- Or: Separate "Agency" tier
+**Benefits**:
+- Simple and clear pricing
+- Users only pay for what they need
+- Flexible (any tier can add sub-accounts)
+- Scales naturally
+- Lower entry point for agencies
 
-**Pros of Current Plan**:
-- Simple pricing
-- Better value proposition
-- Encourages tier upgrades
+**Decision**: ✅ APPROVED - Use user pack add-on model
 
-**Pros of Add-On**:
-- More revenue potential
-- Users only pay for what they use
-- Flexible for different use cases
-
-**Current Recommendation**: Stick with included-in-tier for MVP
-
-**Decision Needed**: [ ] Confirm pricing approach
+**Remaining Questions**:
+- [ ] Set pricing for Starter Pack ($x)
+- [ ] Set pricing for Business Pack ($y)
+- [ ] Define Enterprise Pack custom pricing structure
 
 ---
 
