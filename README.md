@@ -409,7 +409,6 @@ Authorization: Bearer <jwt-token>
      "shortLinks": [
        {
          "operation": "add",
-         "slug": "github",
          "targetUrl": "https://github.com/johndoe/awesome-project",
          "title": "My Awesome Project",
          "active": true
@@ -417,10 +416,17 @@ Authorization: Bearer <jwt-token>
      ]
    }
    ```
-   Response:
+   Response (includes auto-generated slug):
    ```json
    {
-     "success": true
+     "success": true,
+     "created": [
+       {
+         "slug": "a3x9k2",
+         "targetUrl": "https://github.com/johndoe/awesome-project",
+         "title": "My Awesome Project"
+       }
+     ]
    }
    ```
 
@@ -434,7 +440,7 @@ Authorization: Bearer <jwt-token>
    {
      "shortLinks": [
        {
-         "slug": "github",
+         "slug": "a3x9k2",
          "targetUrl": "https://github.com/johndoe/awesome-project",
          "title": "My Awesome Project",
          "active": true,
@@ -449,7 +455,7 @@ Authorization: Bearer <jwt-token>
 
 3. **Public Redirect** (Anyone can access)
    ```bash
-   GET /public/l?slug=github
+   GET /public/l?slug=a3x9k2
    ```
    Response: HTTP 301 Redirect to target URL
    ```
@@ -458,7 +464,7 @@ Authorization: Bearer <jwt-token>
 
 4. **Get Analytics** (Pro+ tiers only)
    ```bash
-   GET /admin/getShortLinkAnalytics?slug=github
+   GET /admin/getShortLinkAnalytics?slug=a3x9k2
    Authorization: Bearer eyJhbGciOi...
    ```
    Response:
@@ -471,7 +477,7 @@ Authorization: Bearer <jwt-token>
      "hasAdvancedAnalytics": true,
      "topShortLinks": [
        {
-         "slug": "github",
+         "slug": "a3x9k2",
          "targetUrl": "https://github.com/johndoe/awesome-project",
          "clicks": 42
        }
@@ -491,13 +497,12 @@ Authorization: Bearer <jwt-token>
 ### Short Link Request/Response Formats
 
 #### Create/Update Short Link
-**Request:**
+**Request (Add Operation):**
 ```json
 {
   "shortLinks": [
     {
-      "operation": "add",        // or "update", "remove"
-      "slug": "my-link",         // 3-30 chars, lowercase, numbers, hyphens
+      "operation": "add",
       "targetUrl": "https://example.com/very/long/url",
       "title": "Optional title",
       "active": true
@@ -506,12 +511,38 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
+**Response (Add Operation):**
+```json
+{
+  "success": true,
+  "created": [
+    {
+      "slug": "a3x9k2",
+      "targetUrl": "https://example.com/very/long/url",
+      "title": "Optional title"
+    }
+  ]
+}
+```
+
+**Request (Update/Remove Operations):**
+```json
+{
+  "shortLinks": [
+    {
+      "operation": "update",        // or "remove"
+      "slug": "a3x9k2",             // Required: 6-char auto-generated slug
+      "targetUrl": "https://...",   // Optional for update
+      "title": "Updated title",     // Optional for update
+      "active": false               // Optional for update
+    }
+  ]
+}
+```
+
 **Validation Rules:**
-- `slug`: 3-30 characters, lowercase letters, numbers, hyphens only
-- Cannot start/end with hyphen
-- Cannot contain consecutive hyphens
-- Cannot use reserved words (admin, api, public, login, signup, settings, v1)
-- Must be globally unique across all users
+- `slug`: Auto-generated 6-character string (lowercase letters and numbers)
+- 2.18 billion possible combinations (36^6)
 - `targetUrl`: Valid http/https URL, max 2048 characters
 - `title`: Optional, max 100 characters
 
@@ -528,12 +559,6 @@ Authorization: Bearer <jwt-token>
   "upgradeRequired": true,
   "currentTier": "free",
   "feature": "shortLinks"
-}
-```
-
-```json
-{
-  "error": "This slug is already in use. Please choose a different slug."
 }
 ```
 

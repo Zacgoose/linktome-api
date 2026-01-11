@@ -102,40 +102,19 @@ function Invoke-AdminUpdateShortLinks {
             }
         }
 
+        # Track created short links to return in response
+        $CreatedShortLinks = @()
+
         foreach ($ShortLink in $Body.shortLinks) {
             $op = ($ShortLink.operation ?? '').ToLower()
             
             switch ($op) {
                 'add' {
                     # Validate required fields
-                    if (-not $ShortLink.slug) {
-                        return [HttpResponseContext]@{
-                            StatusCode = [HttpStatusCode]::BadRequest
-                            Body = @{ error = "Slug is required for add operation" }
-                        }
-                    }
                     if (-not $ShortLink.targetUrl) {
                         return [HttpResponseContext]@{
                             StatusCode = [HttpStatusCode]::BadRequest
                             Body = @{ error = "Target URL is required for add operation" }
-                        }
-                    }
-                    
-                    # Validate slug format
-                    if (-not (Test-SlugFormat -Slug $ShortLink.slug)) {
-                        return [HttpResponseContext]@{
-                            StatusCode = [HttpStatusCode]::BadRequest
-                            Body = @{ error = "Invalid slug format. Slug must be 3-30 characters, lowercase letters, numbers, and hyphens only. Cannot start/end with hyphen or use reserved words." }
-                        }
-                    }
-                    
-                    # Validate slug uniqueness (globally unique, not just per user)
-                    $SafeSlug = Protect-TableQueryValue -Value $ShortLink.slug.ToLower()
-                    $ExistingSlug = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeSlug'" | Select-Object -First 1
-                    if ($ExistingSlug) {
-                        return [HttpResponseContext]@{
-                            StatusCode = [HttpStatusCode]::Conflict
-                            Body = @{ error = "This slug is already in use. Please choose a different slug." }
                         }
                     }
                     
@@ -165,9 +144,19 @@ function Invoke-AdminUpdateShortLinks {
                         }
                     }
                     
+                    # Generate unique slug automatically
+                    try {
+                        $GeneratedSlug = New-ShortLinkSlug
+                    } catch {
+                        return [HttpResponseContext]@{
+                            StatusCode = [HttpStatusCode]::InternalServerError
+                            Body = @{ error = "Failed to generate unique short link. Please try again." }
+                        }
+                    }
+                    
                     $NewLink = @{
                         PartitionKey = $UserId
-                        RowKey = $ShortLink.slug.ToLower()
+                        RowKey = $GeneratedSlug
                         TargetUrl = $ShortLink.targetUrl
                         Username = $User.Username
                         Title = if ($ShortLink.title) { $ShortLink.title } else { '' }
@@ -178,6 +167,13 @@ function Invoke-AdminUpdateShortLinks {
                     }
                     
                     Add-LinkToMeAzDataTableEntity @Table -Entity $NewLink -Force
+                    
+                    # Track the created short link with its generated slug
+                    $CreatedShortLinks += @{
+                        slug = $GeneratedSlug
+                        targetUrl = $ShortLink.targetUrl
+                        title = if ($ShortLink.title) { $ShortLink.title } else { '' }
+                    }
                 }
                 
                 'update' {
@@ -261,7 +257,10 @@ function Invoke-AdminUpdateShortLinks {
             }
         }
 
-        $Results = @{ success = $true }
+        $Results = @{ 
+            success = $true
+            created = $CreatedShortLinks
+        }
         $StatusCode = [HttpStatusCode]::OK
 
     } catch {
