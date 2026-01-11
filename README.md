@@ -76,7 +76,6 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Link limits by tier (Free: 10, Pro: 50, Premium: 100, Enterprise: unlimited)
 - ✅ Short link limits by tier (Free: none, Pro: 50, Premium: 200, Enterprise: unlimited)
 - ✅ Advanced analytics for Pro/Premium/Enterprise users only
-- ✅ Advanced analytics for Premium/Enterprise users only
 - ✅ Feature usage tracking and analytics
 - ✅ Automatic subscription expiration handling
 - ✅ Graceful degradation for expired subscriptions
