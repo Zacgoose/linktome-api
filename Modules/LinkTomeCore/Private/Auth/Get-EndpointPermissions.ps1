@@ -34,6 +34,11 @@ function Get-EndpointPermissions {
         
         # Analytics endpoints
         'admin/getAnalytics' = @('read:analytics')
+        
+        # Short link endpoints
+        'admin/getShortLinks' = @('read:shortlinks')
+        'admin/updateShortLinks' = @('write:shortlinks')
+        'admin/getShortLinkAnalytics' = @('read:analytics')
 
         # User manager endpoints
         'admin/UserManagerList' = @('list:user_manager')
