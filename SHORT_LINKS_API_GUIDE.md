@@ -5,15 +5,16 @@ This document describes the API endpoints for the URL shortener feature and how 
 ## Overview
 
 The URL shortener service allows users to create short links with **auto-generated 6-character slugs** (e.g., `yoursite.com/l?slug=a3x9k2`) that redirect to longer URLs. This feature is tier-based:
-- **Free tier**: Not available (0 short links)
-- **Pro tier**: 50 short links
-- **Premium tier**: 200 short links
+- **Free tier**: Not available (upgrade to Pro required)
+- **Pro tier**: 5 short links
+- **Premium tier**: 20 short links
 - **Enterprise tier**: Unlimited short links
 
 **Slug Generation:**
 - Slugs are automatically generated on the backend using 6 lowercase letters and numbers (a-z, 0-9)
 - 2.18 billion possible combinations (36^6)
 - No user-provided slugs required - system handles uniqueness automatically
+- **Slugs cannot be modified** after creation - only targetUrl, title, and active status can be updated
 
 ## API Endpoints
 
@@ -149,12 +150,14 @@ Content-Type: application/json
 ```json
 {
   "operation": "update",
-  "slug": "a3x9k2",              // Required: The auto-generated slug to update
+  "slug": "a3x9k2",              // Required: The auto-generated slug to identify which link to update
   "targetUrl": "https://...",    // Optional: New target URL
   "title": "Updated title",      // Optional: New title (or empty string to clear)
   "active": false                // Optional: Toggle active status
 }
 ```
+
+**Important:** The slug itself cannot be changed. You can only update the targetUrl, title, or active status. To change the destination, create a new short link and delete the old one.
 
 #### Remove Operation
 ```json
@@ -199,9 +202,9 @@ Content-Type: application/json
 - **403 Forbidden - Limit exceeded:**
   ```json
   {
-    "error": "Short link limit exceeded. Your Pro plan allows up to 50 short links. You currently have 50 short links.",
-    "currentCount": 50,
-    "limit": 50
+    "error": "Short link limit exceeded. Your Pro plan allows up to 5 short links. You currently have 5 short links.",
+    "currentCount": 5,
+    "limit": 5
   }
   ```
   **Frontend Action:** Show limit message with upgrade option

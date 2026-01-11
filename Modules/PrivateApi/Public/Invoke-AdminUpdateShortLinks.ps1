@@ -51,8 +51,8 @@ function Invoke-AdminUpdateShortLinks {
         # Define short link limits per tier
         $ShortLinkLimits = @{
             'free' = 0          # Free tier: no short links
-            'pro' = 50          # Pro tier: 50 short links
-            'premium' = 200     # Premium tier: 200 short links
+            'pro' = 5           # Pro tier: 5 short links
+            'premium' = 20      # Premium tier: 20 short links
             'enterprise' = -1   # Enterprise: unlimited
         }
         
@@ -185,7 +185,8 @@ function Invoke-AdminUpdateShortLinks {
                     }
                     
                     $SafeSlug = Protect-TableQueryValue -Value $ShortLink.slug.ToLower()
-                    $ExistingLink = $ExistingLinks | Where-Object { $_.RowKey -eq $ShortLink.slug.ToLower() } | Select-Object -First 1
+                    # Security: Ensure the link belongs to this user by checking PartitionKey
+                    $ExistingLink = $ExistingLinks | Where-Object { $_.RowKey -eq $ShortLink.slug.ToLower() -and $_.PartitionKey -eq $UserId } | Select-Object -First 1
                     
                     if (-not $ExistingLink) {
                         return [HttpResponseContext]@{
@@ -242,7 +243,8 @@ function Invoke-AdminUpdateShortLinks {
                         }
                     }
                     
-                    $ExistingLink = $ExistingLinks | Where-Object { $_.RowKey -eq $ShortLink.slug.ToLower() } | Select-Object -First 1
+                    # Security: Ensure the link belongs to this user by checking PartitionKey
+                    $ExistingLink = $ExistingLinks | Where-Object { $_.RowKey -eq $ShortLink.slug.ToLower() -and $_.PartitionKey -eq $UserId } | Select-Object -First 1
                     if ($ExistingLink) {
                         Remove-AzDataTableEntity -Entity $ExistingLink -Context $Table.Context
                     }

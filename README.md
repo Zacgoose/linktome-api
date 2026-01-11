@@ -63,8 +63,8 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ **Advanced analytics restricted to Pro/Premium/Enterprise tiers**
 
 ### URL Shortener
-- ✅ Create custom short links with memorable slugs
-- ✅ Tier-based limits (Free: none, Pro: 50, Premium: 200, Enterprise: unlimited)
+- ✅ Create short links with auto-generated slugs
+- ✅ Tier-based limits (Free: not available, Pro: 5, Premium: 20, Enterprise: unlimited)
 - ✅ Click tracking and analytics
 - ✅ Active/inactive toggle for links
 - ✅ Public redirect endpoint
@@ -74,7 +74,7 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Four-tier system: Free, Pro, Premium, Enterprise
 - ✅ Tier-based feature access control
 - ✅ Link limits by tier (Free: 10, Pro: 50, Premium: 100, Enterprise: unlimited)
-- ✅ Short link limits by tier (Free: none, Pro: 50, Premium: 200, Enterprise: unlimited)
+- ✅ Short link limits by tier (Free: not available, Pro: 5, Premium: 20, Enterprise: unlimited)
 - ✅ Advanced analytics for Pro/Premium/Enterprise users only
 - ✅ Feature usage tracking and analytics
 - ✅ Automatic subscription expiration handling
@@ -547,9 +547,9 @@ Authorization: Bearer <jwt-token>
 - `title`: Optional, max 100 characters
 
 **Tier Limits:**
-- Free: 0 short links (upgrade required)
-- Pro: 50 short links
-- Premium: 200 short links
+- Free: Not available (upgrade to Pro required)
+- Pro: 5 short links
+- Premium: 20 short links
 - Enterprise: Unlimited short links
 
 **Error Responses:**
@@ -564,9 +564,9 @@ Authorization: Bearer <jwt-token>
 
 ```json
 {
-  "error": "Short link limit exceeded. Your Pro plan allows up to 50 short links. You currently have 50 short links.",
-  "currentCount": 50,
-  "limit": 50
+  "error": "Short link limit exceeded. Your Pro plan allows up to 5 short links. You currently have 5 short links.",
+  "currentCount": 5,
+  "limit": 5
 }
 ```
 
