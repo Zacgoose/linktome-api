@@ -67,17 +67,20 @@ function Invoke-PublicL {
         # Increment click count
         try {
             $ShortLink.Clicks = if ($ShortLink.Clicks) { [int]$ShortLink.Clicks + 1 } else { 1 }
-            $ShortLink.LastClickedAt = [DateTimeOffset]::UtcNow
-            Add-LinkToMeAzDataTableEntity @Table -Entity $ShortLink -Force | Out-Null
+            if (-not $ShortLink.PSObject.Properties['LastClickedAt']) {
+                $ShortLink | Add-Member -NotePropertyName LastClickedAt -NotePropertyValue ([DateTimeOffset]::UtcNow) -Force
+            } else {
+                $ShortLink.LastClickedAt = [DateTimeOffset]::UtcNow
+            }
+            Add-LinkToMeAzDataTableEntity @Table -Entity $ShortLink -OperationType 'UpsertMerge' | Out-Null
         } catch {
             Write-Warning "Failed to update click count: $($_.Exception.Message)"
         }
         
-        # Return redirect response
+        # Return JSON response for CSR redirect
         return [HttpResponseContext]@{
-            StatusCode = [HttpStatusCode]::MovedPermanently
+            StatusCode = [HttpStatusCode]::OK
             Headers = @{
-                'Location' = $ShortLink.TargetUrl
                 'Cache-Control' = 'no-cache, no-store, must-revalidate'
             }
             Body = @{
