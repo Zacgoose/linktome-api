@@ -1,0 +1,513 @@
+# Short Link API Integration Guide for Frontend
+
+This document describes the API endpoints for the URL shortener feature and how the frontend should interact with them.
+
+## Overview
+
+The URL shortener service allows users to create custom short links (e.g., `yoursite.com/l?slug=github`) that redirect to longer URLs. This feature is tier-based:
+- **Free tier**: Not available (0 short links)
+- **Pro tier**: 50 short links
+- **Premium tier**: 200 short links
+- **Enterprise tier**: Unlimited short links
+
+## API Endpoints
+
+### 1. Public Redirect Endpoint (No Auth Required)
+
+**Endpoint:** `GET /public/l?slug={slug}`
+
+**Purpose:** Redirects the short link to its target URL and tracks analytics
+
+**Request:**
+```http
+GET /api/public/l?slug=github
+```
+
+**Success Response (301 Moved Permanently):**
+```http
+HTTP/1.1 301 Moved Permanently
+Location: https://github.com/johndoe/awesome-project
+Cache-Control: no-cache, no-store, must-revalidate
+
+{
+  "redirectTo": "https://github.com/johndoe/awesome-project"
+}
+```
+
+**Error Responses:**
+- **404 Not Found:** Slug doesn't exist
+  ```json
+  {
+    "error": "Short link not found"
+  }
+  ```
+- **410 Gone:** Link is inactive
+  ```json
+  {
+    "error": "This short link is no longer active"
+  }
+  ```
+- **400 Bad Request:** Invalid slug format
+  ```json
+  {
+    "error": "Invalid slug format"
+  }
+  ```
+
+---
+
+### 2. List Short Links (Auth Required)
+
+**Endpoint:** `GET /admin/getShortLinks`
+
+**Purpose:** Get all short links for the authenticated user with usage statistics
+
+**Request:**
+```http
+GET /api/admin/getShortLinks
+Authorization: Bearer {jwt-token}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "shortLinks": [
+    {
+      "slug": "github",
+      "targetUrl": "https://github.com/johndoe/awesome-project",
+      "title": "My Awesome Project",
+      "active": true,
+      "clicks": 42,
+      "createdAt": "2024-01-15T10:30:00Z",
+      "lastClickedAt": "2024-01-20T14:25:00Z"
+    },
+    {
+      "slug": "blog",
+      "targetUrl": "https://myblog.com/latest-post",
+      "title": "",
+      "active": true,
+      "clicks": 15,
+      "createdAt": "2024-01-18T09:15:00Z",
+      "lastClickedAt": "2024-01-19T11:30:00Z"
+    }
+  ],
+  "total": 2
+}
+```
+
+**Notes:**
+- Links are sorted by click count (descending)
+- `title` can be empty string
+- `lastClickedAt` is null if never clicked
+
+---
+
+### 3. Create/Update/Delete Short Links (Auth Required)
+
+**Endpoint:** `PUT /admin/updateShortLinks`
+
+**Purpose:** Bulk operations for creating, updating, or deleting short links
+
+**Request:**
+```http
+PUT /api/admin/updateShortLinks
+Authorization: Bearer {jwt-token}
+Content-Type: application/json
+
+{
+  "shortLinks": [
+    {
+      "operation": "add",
+      "slug": "github",
+      "targetUrl": "https://github.com/johndoe/awesome-project",
+      "title": "My Awesome Project",
+      "active": true
+    }
+  ]
+}
+```
+
+**Operations:**
+
+#### Add Operation
+```json
+{
+  "operation": "add",
+  "slug": "github",              // Required: 3-30 chars, lowercase, numbers, hyphens
+  "targetUrl": "https://...",    // Required: Valid http/https URL
+  "title": "Optional title",     // Optional: Max 100 characters
+  "active": true                 // Optional: Default true
+}
+```
+
+#### Update Operation
+```json
+{
+  "operation": "update",
+  "slug": "github",              // Required: Identifies which link to update
+  "targetUrl": "https://...",    // Optional: New target URL
+  "title": "Updated title",      // Optional: New title (or empty string to clear)
+  "active": false                // Optional: Toggle active status
+}
+```
+
+#### Remove Operation
+```json
+{
+  "operation": "remove",
+  "slug": "github"               // Required: Identifies which link to delete
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "success": true
+}
+```
+
+**Error Responses:**
+
+- **403 Forbidden - Free tier:**
+  ```json
+  {
+    "error": "Short links are not available on the Free plan. Upgrade to Pro or higher to create short links.",
+    "upgradeRequired": true,
+    "currentTier": "free",
+    "feature": "shortLinks"
+  }
+  ```
+  **Frontend Action:** Show upgrade modal/banner
+
+- **403 Forbidden - Limit exceeded:**
+  ```json
+  {
+    "error": "Short link limit exceeded. Your Pro plan allows up to 50 short links. You currently have 50 short links.",
+    "currentCount": 50,
+    "limit": 50
+  }
+  ```
+  **Frontend Action:** Show limit message with upgrade option
+
+- **409 Conflict - Slug already in use:**
+  ```json
+  {
+    "error": "This slug is already in use. Please choose a different slug."
+  }
+  ```
+  **Frontend Action:** Show error on slug input field, suggest alternative
+
+- **400 Bad Request - Invalid slug:**
+  ```json
+  {
+    "error": "Invalid slug format. Slug must be 3-30 characters, lowercase letters, numbers, and hyphens only. Cannot start/end with hyphen or use reserved words."
+  }
+  ```
+
+- **400 Bad Request - Invalid URL:**
+  ```json
+  {
+    "error": "Target URL must be a valid http or https URL"
+  }
+  ```
+
+- **404 Not Found - Update/remove non-existent:**
+  ```json
+  {
+    "error": "Short link not found: github"
+  }
+  ```
+
+**Validation Rules:**
+- Slug:
+  - 3-30 characters
+  - Lowercase letters, numbers, hyphens only
+  - Cannot start or end with hyphen
+  - Cannot contain consecutive hyphens
+  - Cannot use reserved words: admin, api, public, login, signup, settings, v1
+  - Must be globally unique (across ALL users)
+- Target URL:
+  - Must be valid http or https URL
+  - Max 2048 characters
+- Title:
+  - Optional
+  - Max 100 characters
+
+---
+
+### 4. Get Short Link Analytics (Auth Required, Pro+ Tiers Only)
+
+**Endpoint:** `GET /admin/getShortLinkAnalytics?slug={slug}`
+
+**Purpose:** Get detailed analytics for short link redirects
+
+**Query Parameters:**
+- `slug` (optional): Get analytics for a specific short link. If omitted, returns analytics for all short links.
+
+**Request:**
+```http
+GET /api/admin/getShortLinkAnalytics?slug=github
+Authorization: Bearer {jwt-token}
+```
+
+**Success Response (200 OK) - Free Tier:**
+```json
+{
+  "summary": {
+    "totalRedirects": 42,
+    "uniqueVisitors": 28
+  },
+  "hasAdvancedAnalytics": false,
+  "message": "Upgrade to Pro or higher to access detailed short link analytics including redirect history, referrers, and trends."
+}
+```
+**Frontend Action:** Show summary with upgrade prompt
+
+**Success Response (200 OK) - Pro+ Tier:**
+```json
+{
+  "summary": {
+    "totalRedirects": 157,
+    "uniqueVisitors": 89
+  },
+  "hasAdvancedAnalytics": true,
+  "topShortLinks": [
+    {
+      "slug": "github",
+      "targetUrl": "https://github.com/johndoe/awesome-project",
+      "clicks": 42
+    },
+    {
+      "slug": "blog",
+      "targetUrl": "https://myblog.com/latest-post",
+      "clicks": 35
+    }
+  ],
+  "redirectsByDay": [
+    {"date": "2024-01-15", "clicks": 5},
+    {"date": "2024-01-16", "clicks": 12},
+    {"date": "2024-01-17", "clicks": 25}
+  ],
+  "topReferrers": [
+    {"referrer": "https://twitter.com", "count": 45},
+    {"referrer": "https://reddit.com", "count": 28}
+  ],
+  "recentRedirects": [
+    {
+      "timestamp": "2024-01-20T14:25:00Z",
+      "slug": "github",
+      "targetUrl": "https://github.com/johndoe/awesome-project",
+      "ipAddress": "192.168.1.1",
+      "userAgent": "Mozilla/5.0...",
+      "referrer": "https://twitter.com"
+    }
+  ]
+}
+```
+
+**Notes:**
+- `redirectsByDay` shows last 30 days
+- `recentRedirects` shows last 100 redirects
+- `topReferrers` shows top 10 referrers
+- `topShortLinks` sorted by clicks descending
+
+---
+
+## Frontend Implementation Guide
+
+### Short Links Management Page
+
+**Component Structure:**
+```
+ShortLinksPage
+├── ShortLinksHeader (create button, tier info)
+├── ShortLinksList (table/cards)
+│   ├── ShortLinkItem (slug, URL, stats, actions)
+│   └── CreateShortLinkModal
+├── ShortLinksAnalytics (charts, stats)
+└── UpgradePrompt (for free tier users)
+```
+
+**State Management:**
+```typescript
+interface ShortLink {
+  slug: string;
+  targetUrl: string;
+  title: string;
+  active: boolean;
+  clicks: number;
+  createdAt: string;
+  lastClickedAt: string | null;
+}
+
+interface ShortLinksState {
+  links: ShortLink[];
+  total: number;
+  isLoading: boolean;
+  error: string | null;
+  currentTier: 'free' | 'pro' | 'premium' | 'enterprise';
+  limit: number;
+}
+```
+
+**Sample Actions:**
+
+1. **Load Short Links:**
+   ```typescript
+   async function loadShortLinks() {
+     const response = await fetch('/api/admin/getShortLinks', {
+       headers: { 'Authorization': `Bearer ${token}` }
+     });
+     const data = await response.json();
+     return data.shortLinks;
+   }
+   ```
+
+2. **Create Short Link:**
+   ```typescript
+   async function createShortLink(slug: string, targetUrl: string, title?: string) {
+     const response = await fetch('/api/admin/updateShortLinks', {
+       method: 'PUT',
+       headers: {
+         'Authorization': `Bearer ${token}`,
+         'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({
+         shortLinks: [{
+           operation: 'add',
+           slug,
+           targetUrl,
+           title: title || '',
+           active: true
+         }]
+       })
+     });
+     
+     if (!response.ok) {
+       const error = await response.json();
+       if (error.upgradeRequired) {
+         // Show upgrade modal
+         showUpgradeModal(error.feature, error.currentTier);
+       } else if (response.status === 409) {
+         // Slug already in use
+         showSlugConflictError(slug);
+       }
+       throw new Error(error.error);
+     }
+     
+     return response.json();
+   }
+   ```
+
+3. **Toggle Active Status:**
+   ```typescript
+   async function toggleShortLink(slug: string, active: boolean) {
+     await fetch('/api/admin/updateShortLinks', {
+       method: 'PUT',
+       headers: {
+         'Authorization': `Bearer ${token}`,
+         'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({
+         shortLinks: [{
+           operation: 'update',
+           slug,
+           active
+         }]
+       })
+     });
+   }
+   ```
+
+4. **Delete Short Link:**
+   ```typescript
+   async function deleteShortLink(slug: string) {
+     await fetch('/api/admin/updateShortLinks', {
+       method: 'PUT',
+       headers: {
+         'Authorization': `Bearer ${token}`,
+         'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({
+         shortLinks: [{
+           operation: 'remove',
+           slug
+         }]
+       })
+     });
+   }
+   ```
+
+### UI/UX Recommendations
+
+1. **Create Short Link Form:**
+   - Slug input: Show preview URL as user types (e.g., "yoursite.com/l?slug=github")
+   - Real-time validation with error messages
+   - Suggest available slugs if conflict
+   - Show remaining quota (e.g., "45/50 short links used")
+
+2. **Short Links Table/Cards:**
+   - Display: Slug, Target URL (truncated), Clicks, Created date
+   - Actions: Copy link, Edit, Toggle active, Delete
+   - Click to copy full short link
+   - Visual indicator for active/inactive status
+   - Sort by: Clicks, Date created, Slug name
+
+3. **Analytics (Pro+ tiers):**
+   - Chart: Redirects over time (last 30 days)
+   - Top performing short links
+   - Top referrers
+   - Recent redirects table
+
+4. **Tier-based UI:**
+   - Free tier: Show "Upgrade to Pro" banner prominently
+   - At limit: Show "Upgrade" instead of "Create" button
+   - Analytics section: Show preview with blur/lock for free tier
+
+5. **Error Handling:**
+   - 409 Conflict: Suggest available alternative slugs
+   - 403 Forbidden: Show upgrade modal with feature comparison
+   - 400 Bad Request: Inline validation errors on form
+
+### Sample Short Link URL Format
+
+The public short link URL will be:
+```
+https://yoursite.com/api/public/l?slug=github
+```
+
+Or if you set up a custom route:
+```
+https://yoursite.com/l/github
+```
+
+Frontend should provide a "Copy Link" button that copies this full URL to clipboard.
+
+---
+
+## Testing Checklist
+
+- [ ] Create short link as Pro user (success)
+- [ ] Create short link as Free user (shows upgrade prompt)
+- [ ] Create short link with duplicate slug (shows error)
+- [ ] Create short link with invalid slug format (shows validation error)
+- [ ] Update short link target URL
+- [ ] Toggle short link active/inactive
+- [ ] Delete short link
+- [ ] Visit short link URL (redirects correctly)
+- [ ] View analytics as Pro+ user (shows detailed data)
+- [ ] View analytics as Free user (shows upgrade message)
+- [ ] Reach tier limit and try to create (shows limit error)
+- [ ] Copy short link to clipboard
+- [ ] Bulk operations (add multiple links in one request)
+
+---
+
+## Migration Notes
+
+If you need to migrate existing short links from another service:
+
+1. Use bulk add operations (max 20 per request)
+2. Check for slug conflicts before migration
+3. Preserve click counts by manually updating after creation (requires separate update operation)
+4. Consider creating a migration API endpoint if needed for large datasets
