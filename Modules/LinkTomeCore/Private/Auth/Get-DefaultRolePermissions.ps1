@@ -42,7 +42,9 @@ function Get-DefaultRolePermissions {
             'write:phone',
             'read:subscription',
             'write:subscription',
-            'read:usersettings'
+            'read:usersettings',
+            'read:shortlinks',
+            'write:shortlinks'
         )
         'user_manager' = @(
             'read:dashboard',
@@ -54,7 +56,9 @@ function Get-DefaultRolePermissions {
             'write:pages',
             'read:appearance',
             'write:appearance',
-            'read:analytics'
+            'read:analytics',
+            'read:shortlinks',
+            'write:shortlinks'
         )
     }
     
