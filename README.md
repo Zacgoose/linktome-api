@@ -4,6 +4,8 @@ Backend API for LinkTome - a modern Linktree alternative built on Azure.
 
 **Frontend Repository:** [Zacgoose/linktome](https://github.com/Zacgoose/linktome)
 
+> 🚀 **New Feature Planning**: Agency/Multi-Account Profiles - See [Planning Documentation](./MULTI_ACCOUNT_PLANNING_README.md)
+
 ## Overview
 
 LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
