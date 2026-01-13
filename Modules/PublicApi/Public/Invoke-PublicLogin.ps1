@@ -62,6 +62,15 @@ function Invoke-PublicLogin {
             }
         }
         
+        # === Check if authentication is disabled (sub-accounts cannot login) ===
+        if ($User.PSObject.Properties['AuthDisabled'] -and $User.AuthDisabled -eq $true) {
+            Write-SecurityEvent -EventType 'SubAccountLoginAttempt' -UserId $User.RowKey -Email $User.PartitionKey -Username $User.Username -IpAddress $ClientIP -Endpoint 'public/login'
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::Forbidden
+                Body = @{ error = "Authentication is disabled for this account" }
+            }
+        }
+        
         $Valid = Test-PasswordHash -Password $Body.password -StoredHash $User.PasswordHash -StoredSalt $User.PasswordSalt
         
         if (-not $Valid) {

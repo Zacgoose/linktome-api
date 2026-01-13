@@ -1,6 +1,6 @@
 function Get-DefaultRolePermissions {
     <#
-    NOTE: This function now only supports user and user_manager roles for the simplified user management system.
+    NOTE: This function now supports user, user_manager, and sub_account_user roles for the simplified user management system.
     #>
     <#
     .SYNOPSIS
@@ -10,7 +10,7 @@ function Get-DefaultRolePermissions {
     #>
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('user', 'user_manager')]
+        [ValidateSet('user', 'user_manager', 'sub_account_user')]
         [string]$Role
     )
     
@@ -44,9 +44,24 @@ function Get-DefaultRolePermissions {
             'write:subscription',
             'read:usersettings',
             'read:shortlinks',
-            'write:shortlinks'
+            'write:shortlinks',
+            'manage:subaccounts'
         )
         'user_manager' = @(
+            'read:dashboard',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'read:shortlinks',
+            'write:shortlinks'
+        )
+        'sub_account_user' = @(
             'read:dashboard',
             'read:profile',
             'write:profile',
