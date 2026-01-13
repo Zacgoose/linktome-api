@@ -10,7 +10,7 @@ function Get-DefaultRolePermissions {
     #>
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('user', 'user_manager', 'sub_account_user')]
+        [ValidateSet('user', 'user_manager', 'agency_admin_user', 'sub_account_user')]
         [string]$Role
     )
     
@@ -44,8 +44,7 @@ function Get-DefaultRolePermissions {
             'write:subscription',
             'read:usersettings',
             'read:shortlinks',
-            'write:shortlinks',
-            'manage:subaccounts'
+            'write:shortlinks'
         )
         'user_manager' = @(
             'read:dashboard',
@@ -60,6 +59,38 @@ function Get-DefaultRolePermissions {
             'read:analytics',
             'read:shortlinks',
             'write:shortlinks'
+        )
+        'agency_admin_user' = @(
+            'read:dashboard',
+            'write:2fauth',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'read:users',
+            'manage:users',
+            'invite:user_manager',
+            'list:user_manager',
+            'remove:user_manager',
+            'respond:user_manager',
+            'read:apiauth',
+            'create:apiauth',
+            'update:apiauth',
+            'delete:apiauth',
+            'write:password',
+            'write:email',
+            'write:phone',
+            'read:subscription',
+            'write:subscription',
+            'read:usersettings',
+            'read:shortlinks',
+            'write:shortlinks',
+            'manage:subaccounts'
         )
         'sub_account_user' = @(
             'read:dashboard',

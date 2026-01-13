@@ -61,6 +61,11 @@ function Get-EndpointPermissions {
         'admin/getSubscription' = @('read:subscription')
         'admin/upgradeSubscription' = @('write:subscription')
         'admin/cancelSubscription' = @('write:subscription')
+
+        # Sub-account endpoints
+        'admin/getSubAccounts' = @('manage:subaccounts')
+        'admin/createSubAccount' = @('manage:subaccounts')
+        'admin/deleteSubAccount' = @('manage:subaccounts')
     }
     
     return $EndpointPermissions[$Endpoint]
