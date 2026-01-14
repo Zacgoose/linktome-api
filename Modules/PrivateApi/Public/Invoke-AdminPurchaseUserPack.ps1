@@ -99,11 +99,27 @@ function Invoke-AdminPurchaseUserPack {
         
         # For enterprise, allow custom limit
         if ($Body.packType -eq 'enterprise' -and $Body.customLimit) {
-            $PackLimit = [int]$Body.customLimit
+            # Validate custom limit is a positive integer
+            try {
+                $CustomLimitValue = [int]$Body.customLimit
+                if ($CustomLimitValue -le 0) {
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::BadRequest
+                        Body = @{ error = "Custom limit must be a positive integer" }
+                    }
+                }
+                $PackLimit = $CustomLimitValue
+            } catch {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::BadRequest
+                    Body = @{ error = "Invalid custom limit value. Must be a positive integer." }
+                }
+            }
         }
         
-        # If downgrading to 'none', check if user has existing sub-accounts
-        if ($Body.packType -eq 'none') {
+        # If downgrading to 'none', check if user has existing sub-accounts (only if currently has a pack)
+        $CurrentPackType = if ($User.PSObject.Properties['UserPackType'] -and $User.UserPackType) { $User.UserPackType } else { 'none' }
+        if ($Body.packType -eq 'none' -and $CurrentPackType -ne 'none') {
             $SubAccountsTable = Get-LinkToMeTable -TableName 'SubAccounts'
             $ExistingSubAccounts = Get-LinkToMeAzDataTableEntity @SubAccountsTable -Filter "PartitionKey eq '$SafeUserId'"
             $CurrentCount = ($ExistingSubAccounts | Measure-Object).Count
@@ -205,7 +221,9 @@ function Invoke-AdminPurchaseUserPack {
             message = if ($Body.packType -eq 'none') {
                 "User pack cancelled successfully"
             } else {
-                "User pack purchased successfully. You can now create up to $PackLimit sub-accounts."
+                # Display friendly message for unlimited packs
+                $LimitText = if ($PackLimit -eq -1) { "unlimited" } else { $PackLimit }
+                "User pack purchased successfully. You can now create up to $LimitText sub-accounts."
             }
         }
         
