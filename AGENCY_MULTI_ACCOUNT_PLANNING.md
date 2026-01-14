@@ -262,7 +262,51 @@ function Get-UserPackLimit {
 
 ### New Admin Endpoints
 
-#### 1. **GET /admin/GetSubAccounts**
+#### 1. **POST /admin/PurchaseUserPack**
+Purchase or update a user pack to enable sub-account management.
+
+**Authentication**: JWT (regular user accounts only)
+
+**Authorization**: Requires `write:subscription` permission
+
+**Request Body**:
+```json
+{
+  "packType": "starter" | "business" | "enterprise" | "none",
+  "billingCycle": "monthly" | "annual",
+  "customLimit": 50  // Only for enterprise pack (optional)
+}
+```
+
+**Response**:
+```json
+{
+  "userId": "user-123",
+  "packType": "business",
+  "packLimit": 10,
+  "role": "agency_admin_user",
+  "expiresAt": "2026-02-14T12:00:00Z",
+  "message": "User pack purchased successfully. You can now create up to 10 sub-accounts."
+}
+```
+
+**Business Logic**:
+- Validates pack type and billing cycle
+- Upgrades user role to `agency_admin_user` (grants `manage:subaccounts` permission)
+- Sets `UserPackType`, `UserPackLimit`, `UserPackPurchasedAt`, `UserPackExpiresAt`
+- When `packType` = `"none"`: downgrades role to `user`, blocks creating new sub-accounts
+- Prevents cancellation if sub-accounts exist (must delete them first)
+- Sub-accounts cannot purchase user packs
+
+**Pack Limits**:
+- `starter`: 3 sub-accounts
+- `business`: 10 sub-accounts
+- `enterprise`: Custom limit (or unlimited: -1)
+- `none`: 0 sub-accounts (cancels pack)
+
+---
+
+#### 2. **GET /admin/GetSubAccounts**
 List all sub-accounts owned by the authenticated user.
 
 **Authentication**: JWT (parent account only)
@@ -295,7 +339,7 @@ List all sub-accounts owned by the authenticated user.
 }
 ```
 
-#### 2. **POST /admin/CreateSubAccount**
+#### 3. **POST /admin/CreateSubAccount**
 Create a new sub-account under the authenticated parent account.
 
 **Authentication**: JWT (parent account only)
@@ -334,23 +378,7 @@ Create a new sub-account under the authenticated parent account.
 }
 ```
 
-#### 3. **PUT /admin/updateSubAccount**
-Update sub-account details (profile only, not credentials).
-
-**Authentication**: JWT (parent account only)
-
-**Request Body**:
-```json
-{
-  "userId": "user-abc123",
-  "displayName": "Brand One Updated",
-  "bio": "Updated bio",
-  "avatar": "https://example.com/avatar.jpg",
-  "type": "brand"
-}
-```
-
-#### 3. **DELETE /admin/DeleteSubAccount**
+#### 4. **DELETE /admin/DeleteSubAccount**
 Delete a sub-account and all associated data (pages, links, analytics).
 
 **Authentication**: JWT (parent account only)
@@ -367,9 +395,14 @@ Delete a sub-account and all associated data (pages, links, analytics).
 **Response**:
 ```json
 {
+  "userId": "user-abc123",
   "message": "Sub-account deleted successfully"
 }
 ```
+
+**Note**: The update endpoint was not implemented. Sub-accounts can update their own profile using the standard `/admin/updateProfile` endpoint, which is accessible to them via their content management permissions.
+
+---
 
 **Response**:
 Returns a new JWT or session token that includes:
