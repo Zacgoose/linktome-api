@@ -233,7 +233,12 @@ Update `Get-DefaultRolePermissions.ps1`:
 ```powershell
 'user' = @(
     # All existing permissions...
-    'manage:subaccounts'  # For users with user packs
+    # Does NOT include 'manage:subaccounts'
+)
+
+'agency_admin_user' = @(
+    # All 'user' permissions...
+    'manage:subaccounts'  # Only agency admins (users with user packs)
 )
 
 'sub_account_user' = @(

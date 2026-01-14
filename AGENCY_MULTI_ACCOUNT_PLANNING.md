@@ -35,7 +35,9 @@ The codebase already has foundational pieces that can be leveraged:
 
 2. **Role-Based Permissions** (`Get-DefaultRolePermissions.ps1`)
    - `user` role: Full permissions including subscription management
+   - `agency_admin_user` role: Same as `user` plus `manage:subaccounts` permission
    - `user_manager` role: Limited permissions (no API keys, 2FA setup, subscription changes)
+   - `sub_account_user` role: Content management only (no auth, billing, or user management)
 
 3. **Subscription Tier System** (`Get-TierFeatures.ps1`)
    - Four tiers: free, pro, premium, enterprise
@@ -180,6 +182,37 @@ Instead of tier-based sub-account limits, sub-accounts are purchased separately 
 - Example: Pro ($15) + Business Pack ($30) = $45/month
 - Sub-accounts inherit parent's tier features
 - All sub-accounts share parent's billing
+
+### Role Assignment Based on User Pack Purchase
+
+When a user purchases a user pack, they should be upgraded to the `agency_admin_user` role:
+
+**Purchase Flow:**
+1. User purchases a user pack (Starter/Business/Enterprise)
+2. Backend updates user record:
+   - Set `Role` = `'agency_admin_user'`
+   - Set `UserPackType` = `'starter'` | `'business'` | `'enterprise'`
+   - Set `UserPackLimit` = `3` | `10` | `custom number`
+   - Set `UserPackExpiresAt` = next billing date
+3. User now has `manage:subaccounts` permission (via agency_admin_user role)
+4. User can access sub-account management endpoints
+
+**Expiration/Cancellation Flow:**
+1. When user pack expires or is cancelled:
+2. Backend updates user record:
+   - Set `Role` = `'user'` (downgrade from agency_admin_user)
+   - Keep UserPackType/UserPackLimit for reference
+   - User loses `manage:subaccounts` permission
+3. Existing sub-accounts remain active but no new ones can be created
+4. User cannot access sub-account management endpoints
+
+**Database Fields** (in Users table):
+```powershell
+Role = 'user' | 'agency_admin_user' | 'sub_account_user' | 'user_manager'
+UserPackType = 'none' | 'starter' | 'business' | 'enterprise'
+UserPackLimit = 0 | 3 | 10 | custom
+UserPackExpiresAt = datetime (ISO 8601)
+```
 
 ### Database Storage
 
@@ -445,9 +478,14 @@ Add single permission for sub-account operations:
 
 ### Permission Assignment
 
-**Regular Users** (including parent accounts):
+**Regular Users** (`user` role):
 - All existing permissions (unchanged)
-- Plus: `manage:subaccounts` (if has user pack)
+- **Does NOT include**: `manage:subaccounts`
+
+**Agency Admin Users** (`agency_admin_user` role):
+- All `user` role permissions
+- **Plus**: `manage:subaccounts` permission
+- Assigned to users who purchase user packs
 
 **Sub-Accounts** (`sub_account_user` role):
 - Content management permissions only
@@ -462,7 +500,7 @@ Add single permission for sub-account operations:
 function Get-DefaultRolePermissions {
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('user', 'user_manager', 'sub_account_user')]  # Add sub_account_user
+        [ValidateSet('user', 'user_manager', 'agency_admin_user', 'sub_account_user')]
         [string]$Role
     )
     
@@ -474,6 +512,17 @@ function Get-DefaultRolePermissions {
             'read:profile',
             'write:profile',
             # ... all existing permissions ...
+            # Does NOT include 'manage:subaccounts'
+        )
+        
+        'agency_admin_user' = @(
+            # All 'user' permissions
+            'read:dashboard',
+            'write:2fauth',
+            # ... all user permissions ...
+            
+            # Plus sub-account management
+            'manage:subaccounts'
         )
         
         'user_manager' = @(

@@ -321,11 +321,16 @@ function Get-UserPackLimit {
 
 ## Update Users Table for User Packs
 
-Add user pack fields to Users table:
+Add user pack fields and role field to Users table:
 
 ```powershell
 # In Users table schema
 Users Table (additional fields):
+- Role (string, nullable)
+  - Values: 'user', 'agency_admin_user', 'sub_account_user', 'user_manager'
+  - 'agency_admin_user' = user with active user pack (has manage:subaccounts permission)
+  - Default: 'user' for regular accounts
+
 - UserPackType (string, nullable)
   - Values: null, 'starter', 'business', 'enterprise'
   - NULL = no pack purchased, cannot create sub-accounts
@@ -341,6 +346,14 @@ Users Table (additional fields):
   - Expiration date for the user pack (monthly/annual billing)
   - Check this before allowing sub-account creation
 ```
+
+**Important**: When a user purchases a user pack:
+1. Set `Role = 'agency_admin_user'` to grant `manage:subaccounts` permission
+2. Set `UserPackType`, `UserPackLimit`, `UserPackPurchasedAt`, `UserPackExpiresAt`
+
+When user pack expires or is cancelled:
+1. Set `Role = 'user'` to remove `manage:subaccounts` permission
+2. Keep UserPack fields for reference (but user cannot create new sub-accounts)
 
 **Note**: User packs are independent of base subscription tiers. A Free tier user can purchase a user pack to create sub-accounts.
 
@@ -948,15 +961,15 @@ The system checks these permissions via the existing `Get-DefaultRolePermissions
 - `read:analytics` - View analytics
 - `read:shortlinks`, `write:shortlinks` - Manage short links
 
-### Add New Role Type with Limited Permissions
+### Add New Role Types with Limited Permissions
 
-Update `Get-DefaultRolePermissions.ps1` to add new role:
+Update `Get-DefaultRolePermissions.ps1` to add new role types:
 
 ```powershell
 function Get-DefaultRolePermissions {
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('user', 'user_manager', 'sub_account_user')]  # Add sub_account_user
+        [ValidateSet('user', 'user_manager', 'agency_admin_user', 'sub_account_user')]
         [string]$Role
     )
     
@@ -992,6 +1005,41 @@ function Get-DefaultRolePermissions {
             'read:usersettings',
             'read:shortlinks',
             'write:shortlinks'
+            # Does NOT include 'manage:subaccounts'
+        )
+        
+        'agency_admin_user' = @(
+            # All 'user' permissions PLUS sub-account management
+            'read:dashboard',
+            'write:2fauth',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'read:users',
+            'manage:users',
+            'invite:user_manager',
+            'list:user_manager',
+            'remove:user_manager',
+            'respond:user_manager',
+            'read:apiauth',
+            'create:apiauth',
+            'update:apiauth',
+            'delete:apiauth',
+            'write:password',
+            'write:email',
+            'write:phone',
+            'read:subscription',
+            'write:subscription',
+            'read:usersettings',
+            'read:shortlinks',
+            'write:shortlinks',
+            'manage:subaccounts'  # Only agency admins can manage sub-accounts
         )
         
         'user_manager' = @(
