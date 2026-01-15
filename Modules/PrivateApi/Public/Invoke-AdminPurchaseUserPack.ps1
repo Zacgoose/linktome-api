@@ -200,16 +200,16 @@ function Invoke-AdminPurchaseUserPack {
         }
         
         # Update user entity
-        Update-LinkToMeAzDataTableEntity @UsersTable -Entity $User | Out-Null
+        Add-LinkToMeAzDataTableEntity @UsersTable -Entity $User -OperationType 'UpsertMerge' | Out-Null
         
         # Write security event
-        Write-SecurityEvent -EventType 'UserPackPurchased' -UserId $UserId -AdditionalData @{
+        Write-SecurityEvent -EventType 'UserPackPurchased' -UserId $UserId -AdditionalData (@{
             PackType = $Body.packType
             PackLimit = $PackLimit
             BillingCycle = $Body.billingCycle
             Role = $User.Role
             ExpiresAt = if ($User.PSObject.Properties['UserPackExpiresAt']) { $User.UserPackExpiresAt } else { $null }
-        }
+        } | ConvertTo-Json -Depth 10)
         
         # Build response
         $Results = @{

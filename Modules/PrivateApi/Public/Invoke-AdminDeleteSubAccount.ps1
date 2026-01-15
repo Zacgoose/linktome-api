@@ -80,11 +80,11 @@ function Invoke-AdminDeleteSubAccount {
         Remove-LinkToMeAzDataTableEntity @UsersTable -Entity $SubAccountUser
         
         # Write security event
-        Write-SecurityEvent -EventType 'SubAccountDeleted' -UserId $ParentUserId -AdditionalData @{
+        Write-SecurityEvent -EventType 'SubAccountDeleted' -UserId $ParentUserId -AdditionalData (@{
             SubAccountUserId = $SubAccountUserId
             SubAccountEmail = $SubAccountUser.PartitionKey
             SubAccountUsername = $SubAccountUser.Username
-        }
+        } | ConvertTo-Json -Depth 10)
         
         # Build response
         $Results = @{

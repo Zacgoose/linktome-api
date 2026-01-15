@@ -169,11 +169,11 @@ function Invoke-AdminCreateSubAccount {
         Add-LinkToMeAzDataTableEntity @SubAccountsTable -Entity $Relationship | Out-Null
         
         # Write security event
-        Write-SecurityEvent -EventType 'SubAccountCreated' -UserId $ParentUserId -AdditionalData @{
+        Write-SecurityEvent -EventType 'SubAccountCreated' -UserId $ParentUserId -AdditionalData (@{
             SubAccountUserId = $SubAccountUserId
             SubAccountEmail = $Body.email
             SubAccountUsername = $Body.username
-        }
+        } | ConvertTo-Json -Depth 10)
         
         # Build response
         $Results = @{
