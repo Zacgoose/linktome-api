@@ -131,7 +131,7 @@ function Invoke-AdminCreateSubAccount {
         }
         
         # Generate sub-account user ID
-        $SubAccountUserId = New-Guid
+        $SubAccountUserId = (New-Guid).ToString()
         
         # Get parent subscription for inheritance
         $ParentSubscription = Get-UserSubscription -User $ParentUser
