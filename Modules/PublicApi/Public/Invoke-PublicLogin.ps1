@@ -156,6 +156,7 @@ function Invoke-PublicLogin {
                 roles = $authContext.Roles
                 permissions = $authContext.Permissions
                 userManagements = $authContext.UserManagements
+                subAccounts = $authContext.SubAccounts
                 tier = $authContext.Tier
                 twoFactorEnabled = $authContext.TwoFactorEnabled
                 twoFactorEmailEnabled = $authContext.TwoFactorEmailEnabled

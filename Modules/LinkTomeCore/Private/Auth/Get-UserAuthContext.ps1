@@ -80,6 +80,43 @@ function Get-UserAuthContext {
         }
     }
     
+    # Build subAccounts array (only for agency_admin_user role)
+    $SubAccounts = @()
+    if ($ActualUserRole -eq 'agency_admin_user') {
+        try {
+            $SubAccountsTable = Get-LinkToMeTable -TableName 'SubAccounts'
+            $UsersTable = Get-LinkToMeTable -TableName 'Users'
+            
+            # Get all sub-accounts for this parent (PartitionKey = ParentUserId)
+            $SafeUserId = Protect-TableQueryValue -Value $User.RowKey
+            $SubAccountRelationships = Get-LinkToMeAzDataTableEntity @SubAccountsTable -Filter "PartitionKey eq '$SafeUserId'" -ErrorAction SilentlyContinue
+            
+            foreach ($relationship in $SubAccountRelationships) {
+                $SubAccountId = $relationship.RowKey
+                $SafeSubId = Protect-TableQueryValue -Value $SubAccountId
+                
+                # Get sub-account user details
+                $SubAccountUser = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeSubId'" -ErrorAction SilentlyContinue | Select-Object -First 1
+                
+                if ($SubAccountUser) {
+                    $SubAccountPermissions = Get-DefaultRolePermissions -Role 'sub_account_user'
+                    $SubAccounts += @{
+                        UserId = $SubAccountUser.RowKey
+                        username = $SubAccountUser.Username
+                        displayName = $SubAccountUser.DisplayName
+                        role = 'sub_account_user'
+                        permissions = $SubAccountPermissions
+                        type = if ($relationship.PSObject.Properties['Type'] -and $relationship.Type) { $relationship.Type } else { 'client' }
+                        status = if ($relationship.PSObject.Properties['Status'] -and $relationship.Status) { $relationship.Status } else { 'active' }
+                    }
+                }
+            }
+        } catch {
+            Write-Warning "Failed to load sub-accounts: $($_.Exception.Message)"
+            # Continue without sub-accounts - not critical for auth
+        }
+    }
+    
     # Get user's subscription information using centralized helper
     $Subscription = Get-UserSubscription -User $User
     
@@ -100,6 +137,7 @@ function Get-UserAuthContext {
         Roles = $Roles
         Permissions = $Permissions
         UserManagements = $UserManagements
+        SubAccounts = $SubAccounts
         Tier = $Subscription.EffectiveTier
         TwoFactorEnabled = $TwoFactorEnabled
         TwoFactorEmailEnabled = $TwoFactorEmailEnabled

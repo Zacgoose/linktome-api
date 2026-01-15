@@ -341,6 +341,121 @@ Regular User (user)
 
 ---
 
+## Authentication & JWT Updates
+
+### Sub-Accounts in JWT and Auth Responses
+
+Starting with this implementation, the JWT token and authentication responses (login, refresh token) now include a `subAccounts` array for agency admin users. This allows the frontend to:
+
+1. **Display all sub-accounts** immediately upon login
+2. **Use the existing user context system** to switch between parent and sub-accounts
+3. **Show sub-account permissions** for each profile
+
+### Updated Auth Response Structure
+
+```json
+{
+  "user": {
+    "UserId": "user-123",
+    "username": "john-doe",
+    "email": "john@example.com",
+    "tier": "premium",
+    "userRole": "agency_admin_user",
+    "permissions": [
+      "read:dashboard",
+      "write:profile",
+      "manage:subaccounts",
+      // ... all other permissions
+    ],
+    "userManagements": [],        // Existing feature for user managers
+    "subAccounts": [              // NEW: Sub-accounts array
+      {
+        "UserId": "sub-abc123",
+        "username": "client-alpha",
+        "displayName": "Client Alpha Inc",
+        "role": "sub_account_user",
+        "permissions": [
+          "read:dashboard",
+          "read:profile",
+          "write:profile",
+          "read:links",
+          "write:links",
+          // ... content management permissions only
+        ],
+        "type": "client",
+        "status": "active"
+      },
+      {
+        "UserId": "sub-def456",
+        "username": "brand-beta",
+        "displayName": "Brand Beta",
+        "role": "sub_account_user",
+        "permissions": [ /* ... */ ],
+        "type": "brand",
+        "status": "active"
+      }
+    ],
+    "IsSubAccount": false,
+    "AuthDisabled": false,
+    "twoFactorEnabled": false,
+    "twoFactorEmailEnabled": false,
+    "twoFactorTotpEnabled": false
+  }
+}
+```
+
+### Key Points
+
+- **`subAccounts` array** is only populated for `agency_admin_user` role
+- **Regular users** and **sub-accounts** will have an empty array: `subAccounts: []`
+- Each sub-account includes:
+  - `UserId` - Unique identifier for context switching
+  - `username` - Display name for the profile
+  - `displayName` - Optional friendly name
+  - `role` - Always `"sub_account_user"`
+  - `permissions` - List of allowed operations (content management only)
+  - `type` - Optional categorization (e.g., "client", "brand")
+  - `status` - Account status (e.g., "active")
+
+### Using Sub-Accounts for Context Switching
+
+The frontend can use the existing user context mechanism to switch between parent and sub-accounts:
+
+```javascript
+// After login, store sub-accounts
+const { user } = authResponse;
+const subAccounts = user.subAccounts || [];
+
+// Display sub-accounts in a switcher UI
+<ProfileSwitcher 
+  currentUser={user}
+  subAccounts={subAccounts}
+  onSwitch={(userId) => switchContext(userId)}
+/>
+
+// When user switches context
+function switchContext(userId) {
+  // Use existing context switching mechanism
+  // The backend will validate that the user has access to this sub-account
+  // and return updated permissions for the selected profile
+  
+  // For now, you can use the permissions from the subAccounts array
+  // to determine what UI elements to show
+  const selectedAccount = subAccounts.find(sa => sa.UserId === userId);
+  updateUIBasedOnPermissions(selectedAccount.permissions);
+}
+```
+
+### Benefits
+
+1. **Single API call** - No need to call GetSubAccounts separately on login
+2. **Immediate UX** - Show sub-account switcher immediately
+3. **Consistent pattern** - Mirrors existing `userManagements` structure
+4. **Efficient** - Sub-accounts loaded once and cached in JWT
+5. **Secure** - Sub-account list is validated server-side during auth
+
+---
+
 ## Authentication & Permissions
 
 ### How to Check Permissions in Frontend
