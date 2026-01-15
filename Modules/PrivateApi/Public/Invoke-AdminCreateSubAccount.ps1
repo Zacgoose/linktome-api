@@ -121,7 +121,7 @@ function Invoke-AdminCreateSubAccount {
         # Create sub-account user entity
         # Note: Sub-accounts do not have email addresses - notifications go to parent
         $SubAccountUser = @{
-            PartitionKey = "subaccount:$SubAccountUserId"
+            PartitionKey = $SubAccountUserId
             RowKey = $SubAccountUserId
             Username = $Body.username
             DisplayName = if ($Body.displayName) { $Body.displayName } else { $Body.username }
