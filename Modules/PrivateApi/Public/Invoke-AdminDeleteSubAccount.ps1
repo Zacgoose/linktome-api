@@ -74,10 +74,10 @@ function Invoke-AdminDeleteSubAccount {
         # (pages, links, analytics, etc.). For now, we'll delete the core entities.
         
         # Delete from SubAccounts table (relationship)
-        Remove-LinkToMeAzDataTableEntity @SubAccountsTable -Entity $Relationship
+        Remove-AzDataTableEntity @SubAccountsTable -Entity $Relationship
         
         # Delete from Users table
-        Remove-LinkToMeAzDataTableEntity @UsersTable -Entity $SubAccountUser
+        Remove-AzDataTableEntity @UsersTable -Entity $SubAccountUser
         
         # Write security event
         Write-SecurityEvent -EventType 'SubAccountDeleted' -UserId $ParentUserId -AdditionalData (@{
