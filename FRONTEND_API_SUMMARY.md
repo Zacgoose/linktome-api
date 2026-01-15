@@ -110,7 +110,6 @@ No request body needed (uses authenticated user's ID from JWT).
     {
       "userId": "user-sub1",
       "username": "client-acme",
-      "email": "acme@example.com",
       "displayName": "Acme Corp",
       "type": "client",
       "status": "active",
@@ -119,7 +118,6 @@ No request body needed (uses authenticated user's ID from JWT).
     {
       "userId": "user-sub2",
       "username": "brand-techco",
-      "email": "techco@example.com",
       "displayName": "TechCo Brand",
       "type": "brand",
       "status": "active",
@@ -181,12 +179,13 @@ No request body needed (uses authenticated user's ID from JWT).
 
 ```json
 {
-  "email": "newclient@example.com",       // Required: Valid email format, must be unique
   "username": "client-new",               // Required: 3-30 chars, alphanumeric + hyphens/underscores, must be unique
   "displayName": "New Client Name",       // Optional: Display name for the sub-account
   "type": "client"                        // Optional: "client" | "brand" | "other" (default: "client")
 }
 ```
+
+**Note:** Sub-accounts do NOT have email addresses. Any emails that would be sent to a sub-account will be sent to the parent account instead.
 
 ### Response
 
@@ -195,25 +194,19 @@ No request body needed (uses authenticated user's ID from JWT).
 {
   "userId": "user-sub3",
   "username": "client-new",
-  "email": "newclient@example.com",
   "displayName": "New Client Name",
   "isSubAccount": true,
   "authDisabled": true,
   "tier": "premium",
-  "createdAt": "2026-01-15T10:30:00Z"
+  "createdAt": "2026-01-15T10:30:00Z",
+  "message": "Sub-account created successfully"
 }
 ```
 
 **Error (400):**
 ```json
 {
-  "error": "Email is required"
-}
-```
-
-```json
-{
-  "error": "Email is already in use"
+  "error": "Username is required"
 }
 ```
 
@@ -244,13 +237,13 @@ No request body needed (uses authenticated user's ID from JWT).
 
 ### Notes
 
+- Sub-accounts **do NOT have email addresses** - all notifications go to parent account
 - Sub-account inherits parent's subscription tier
 - Sub-account is created with `IsSubAccount=true` and `AuthDisabled=true`
 - Sub-account gets `sub_account_user` role (content management permissions only)
 - Sub-account **cannot login** directly or via API
 - Sub-account **cannot** manage auth, billing, or users
 - Username must be unique across all users
-- Email must be unique across all users
 
 ---
 

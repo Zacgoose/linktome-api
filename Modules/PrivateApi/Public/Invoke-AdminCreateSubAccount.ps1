@@ -27,17 +27,10 @@ function Invoke-AdminCreateSubAccount {
         }
         
         # === Validate Required Fields ===
-        if (-not $Body.email -or -not $Body.username) {
+        if (-not $Body.username) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::BadRequest
-                Body = @{ error = "Email and username are required" }
-            }
-        }
-        
-        if (-not (Test-EmailFormat -Email $Body.email)) {
-            return [HttpResponseContext]@{
-                StatusCode = [HttpStatusCode]::BadRequest
-                Body = @{ error = "Invalid email format" }
+                Body = @{ error = "Username is required" }
             }
         }
         
@@ -108,17 +101,6 @@ function Invoke-AdminCreateSubAccount {
             }
         }
         
-        # Check if email already exists
-        $SafeEmail = Protect-TableQueryValue -Value $Body.email.ToLower()
-        $ExistingUser = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "PartitionKey eq '$SafeEmail'" -ErrorAction SilentlyContinue | Select-Object -First 1
-        
-        if ($ExistingUser) {
-            return [HttpResponseContext]@{
-                StatusCode = [HttpStatusCode]::Conflict
-                Body = @{ error = "Email already exists" }
-            }
-        }
-        
         # Check if username already exists
         $SafeUsername = Protect-TableQueryValue -Value $Body.username.ToLower()
         $ExistingUsername = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "Username eq '$SafeUsername'" -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -137,8 +119,9 @@ function Invoke-AdminCreateSubAccount {
         $ParentSubscription = Get-UserSubscription -User $ParentUser
         
         # Create sub-account user entity
+        # Note: Sub-accounts do not have email addresses - notifications go to parent
         $SubAccountUser = @{
-            PartitionKey = $Body.email.ToLower()
+            PartitionKey = "subaccount:$SubAccountUserId"
             RowKey = $SubAccountUserId
             Username = $Body.username
             DisplayName = if ($Body.displayName) { $Body.displayName } else { $Body.username }
@@ -171,7 +154,6 @@ function Invoke-AdminCreateSubAccount {
         # Write security event
         Write-SecurityEvent -EventType 'SubAccountCreated' -UserId $ParentUserId -AdditionalData (@{
             SubAccountUserId = $SubAccountUserId
-            SubAccountEmail = $Body.email
             SubAccountUsername = $Body.username
         } | ConvertTo-Json -Depth 10)
         
@@ -179,7 +161,6 @@ function Invoke-AdminCreateSubAccount {
         $Results = @{
             userId = $SubAccountUserId
             username = $NewUser.Username
-            email = $NewUser.PartitionKey
             displayName = $NewUser.DisplayName
             isSubAccount = $true
             authDisabled = $true

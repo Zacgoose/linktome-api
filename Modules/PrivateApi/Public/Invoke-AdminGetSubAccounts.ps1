@@ -81,7 +81,6 @@ function Invoke-AdminGetSubAccounts {
                 $SubAccountsList += [PSCustomObject]@{
                     userId = $SubAccountUser.RowKey
                     username = $SubAccountUser.Username
-                    email = $SubAccountUser.PartitionKey
                     displayName = $SubAccountUser.DisplayName
                     type = if ($relationship.PSObject.Properties['Type'] -and $relationship.Type) { $relationship.Type } else { 'client' }
                     status = if ($relationship.PSObject.Properties['Status'] -and $relationship.Status) { $relationship.Status } else { 'active' }
