@@ -23,16 +23,35 @@ function Test-ContextAwarePermission {
 
     if ($UserId) {
         Write-Verbose "[Auth] Checking user management context permissions for UserId: $UserId"
-        $userManagements = $User.userManagements
-        if (-not $userManagements) {
-            Write-Warning "[Auth] No userManagements found for user."
-            return $false
+        
+        # Check if UserId starts with "sub-" prefix (sub-account)
+        if ($UserId -like "sub-*") {
+            Write-Verbose "[Auth] Detected sub-account ID (sub- prefix). Checking subAccounts array."
+            $subAccounts = $User.subAccounts
+            if (-not $subAccounts) {
+                Write-Warning "[Auth] No subAccounts found for user."
+                return $false
+            }
+            $management = $subAccounts | Where-Object { $_.UserId -eq $UserId } | Select-Object -First 1
+            if (-not $management) {
+                Write-Warning "[Auth] No sub-account found for UserId: $UserId"
+                return $false
+            }
+        } else {
+            # Regular user management lookup
+            Write-Verbose "[Auth] Regular user ID. Checking userManagements."
+            $userManagements = $User.userManagements
+            if (-not $userManagements) {
+                Write-Warning "[Auth] No userManagements found for user."
+                return $false
+            }
+            $management = $userManagements | Where-Object { $_.UserId -eq $UserId } | Select-Object -First 1
+            if (-not $management) {
+                Write-Warning "[Auth] No management found for UserId: $UserId"
+                return $false
+            }
         }
-        $management = $userManagements | Where-Object { $_.UserId -eq $UserId } | Select-Object -First 1
-        if (-not $management) {
-            Write-Warning "[Auth] No management found for UserId: $UserId"
-            return $false
-        }
+        
         $userPermissions = $management.permissions
         if ($userPermissions -is [string]) {
             $userPermissions = $userPermissions -split ' '

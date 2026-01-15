@@ -112,8 +112,8 @@ function Invoke-AdminCreateSubAccount {
             }
         }
         
-        # Generate sub-account user ID
-        $SubAccountUserId = (New-Guid).ToString()
+        # Generate sub-account user ID with "sub-" prefix for easy identification
+        $SubAccountUserId = "sub-" + (New-Guid).ToString()
         
         # Get parent subscription for inheritance
         $ParentSubscription = Get-UserSubscription -User $ParentUser
