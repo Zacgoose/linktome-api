@@ -4,6 +4,7 @@ function Get-AggregatedAnalytics {
         Get pre-aggregated analytics data for a user
     .DESCRIPTION
         Retrieves pre-computed analytics aggregates from the AnalyticsAggregated table.
+        Queries user-level, page-level, and link-level aggregates separately.
         This is much faster than computing aggregates on-the-fly from raw events.
         Falls back to raw event aggregation if aggregated data is not available.
     .PARAMETER UserId
@@ -29,123 +30,136 @@ function Get-AggregatedAnalytics {
         # Get aggregated analytics table
         $AggregatedTable = Get-LinkToMeTable -TableName 'AnalyticsAggregated'
         
-        # Get aggregated records for this user
+        # Query user-level aggregates (PartitionKey: user-{userId})
         $SafeUserId = Protect-TableQueryValue -Value $UserId
-        $AggregatedRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$SafeUserId'"
+        $UserPartitionKey = "user-$SafeUserId"
+        $UserRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$UserPartitionKey'"
         
-        # If no aggregated data, return null to trigger fallback to raw events
-        if (-not $AggregatedRecords -or $AggregatedRecords.Count -eq 0) {
+        # Query page-level aggregates (PartitionKey: page-{userId})
+        $PagePartitionKey = "page-$SafeUserId"
+        $PageRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PagePartitionKey'"
+        
+        # Query link-level aggregates (PartitionKey: link-{userId})
+        $LinkPartitionKey = "link-$SafeUserId"
+        $LinkRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$LinkPartitionKey'"
+        
+        # If no aggregated data at all, return null to trigger fallback to raw events
+        if ((-not $UserRecords -or $UserRecords.Count -eq 0) -and 
+            (-not $PageRecords -or $PageRecords.Count -eq 0) -and
+            (-not $LinkRecords -or $LinkRecords.Count -eq 0)) {
             Write-Information "No aggregated analytics found for user $UserId, will use raw events"
             return $null
         }
         
-        # Filter by page if specified
-        if ($PageId) {
-            $SafePageId = Protect-TableQueryValue -Value $PageId
-            $AggregatedRecords = @($AggregatedRecords | Where-Object { 
-                $_.PageId -eq $SafePageId -or $_.RowKey -like "*-$SafePageId"
-            })
-        }
-        
         # Filter by date range
         $StartDate = [DateTimeOffset]::UtcNow.AddDays(-$DaysBack).ToString('yyyy-MM-dd')
-        $AggregatedRecords = @($AggregatedRecords | Where-Object { 
-            $_.Date -ge $StartDate
-        })
         
-        if ($AggregatedRecords.Count -eq 0) {
-            Write-Information "No aggregated analytics in date range for user $UserId"
-            return $null
+        if ($UserRecords) {
+            $UserRecords = @($UserRecords | Where-Object { $_.Date -ge $StartDate })
+        }
+        if ($PageRecords) {
+            $PageRecords = @($PageRecords | Where-Object { $_.Date -ge $StartDate })
+        }
+        if ($LinkRecords) {
+            $LinkRecords = @($LinkRecords | Where-Object { $_.Date -ge $StartDate })
         }
         
-        # Calculate summary totals
-        $TotalPageViews = ($AggregatedRecords | Measure-Object -Property PageViewCount -Sum).Sum
-        $TotalLinkClicks = ($AggregatedRecords | Measure-Object -Property LinkClickCount -Sum).Sum
-        $TotalUniqueVisitors = ($AggregatedRecords | Measure-Object -Property UniqueVisitorCount -Sum).Sum
+        # Filter by page if specified
+        if ($PageId) {
+            $PageRecords = @($PageRecords | Where-Object { $_.PageId -eq $PageId })
+        }
         
-        # Get views and clicks by day
-        $ViewsByDay = @($AggregatedRecords | 
-            Group-Object Date | 
-            ForEach-Object {
-                @{
-                    date = $_.Name
-                    count = ($_.Group | Measure-Object -Property PageViewCount -Sum).Sum
-                }
-            } | Sort-Object date)
-        
-        $ClicksByDay = @($AggregatedRecords | 
-            Group-Object Date | 
-            ForEach-Object {
-                @{
-                    date = $_.Name
-                    count = ($_.Group | Measure-Object -Property LinkClickCount -Sum).Sum
-                }
-            } | Sort-Object date)
-        
-        # Aggregate top clicked links across all days
-        $AllTopLinks = @{}
+        # Calculate summary totals from user-level aggregates
+        $TotalPageViews = 0
+        $TotalLinkClicks = 0
+        $TotalUniqueVisitors = 0
         $AllTopReferrers = @{}
         $AllTopUserAgents = @{}
         
-        foreach ($Record in $AggregatedRecords) {
-            # Aggregate top links
-            if ($Record.TopLinksJson) {
-                try {
-                    $TopLinks = $Record.TopLinksJson | ConvertFrom-Json
-                    foreach ($Link in $TopLinks) {
-                        $LinkId = $Link.linkId
-                        if (-not $AllTopLinks.ContainsKey($LinkId)) {
-                            $AllTopLinks[$LinkId] = @{
-                                linkId = $LinkId
-                                linkTitle = $Link.title
-                                linkUrl = $Link.url
-                                clickCount = 0
+        if ($UserRecords -and $UserRecords.Count -gt 0) {
+            $TotalPageViews = ($UserRecords | Measure-Object -Property PageViewCount -Sum).Sum
+            $TotalLinkClicks = ($UserRecords | Measure-Object -Property LinkClickCount -Sum).Sum
+            $TotalUniqueVisitors = ($UserRecords | Measure-Object -Property UniqueVisitorCount -Sum).Sum
+            
+            # Aggregate referrers and user agents from user-level records
+            foreach ($Record in $UserRecords) {
+                if ($Record.TopReferrersJson) {
+                    try {
+                        $TopReferrers = $Record.TopReferrersJson | ConvertFrom-Json
+                        foreach ($Ref in $TopReferrers) {
+                            if (-not $AllTopReferrers.ContainsKey($Ref.referrer)) {
+                                $AllTopReferrers[$Ref.referrer] = 0
                             }
+                            $AllTopReferrers[$Ref.referrer] += $Ref.count
                         }
-                        $AllTopLinks[$LinkId].clickCount += $Link.count
+                    } catch {
+                        Write-Warning "Failed to parse TopReferrersJson: $($_.Exception.Message)"
                     }
-                } catch {
-                    Write-Warning "Failed to parse TopLinksJson for record $($Record.RowKey): $($_.Exception.Message)"
                 }
-            }
-            
-            # Aggregate top referrers
-            if ($Record.TopReferrersJson) {
-                try {
-                    $TopReferrers = $Record.TopReferrersJson | ConvertFrom-Json
-                    foreach ($Ref in $TopReferrers) {
-                        $Referrer = $Ref.referrer
-                        if (-not $AllTopReferrers.ContainsKey($Referrer)) {
-                            $AllTopReferrers[$Referrer] = 0
+                
+                if ($Record.TopUserAgentsJson) {
+                    try {
+                        $TopUserAgents = $Record.TopUserAgentsJson | ConvertFrom-Json
+                        foreach ($UA in $TopUserAgents) {
+                            if (-not $AllTopUserAgents.ContainsKey($UA.userAgent)) {
+                                $AllTopUserAgents[$UA.userAgent] = 0
+                            }
+                            $AllTopUserAgents[$UA.userAgent] += $UA.count
                         }
-                        $AllTopReferrers[$Referrer] += $Ref.count
+                    } catch {
+                        Write-Warning "Failed to parse TopUserAgentsJson: $($_.Exception.Message)"
                     }
-                } catch {
-                    Write-Warning "Failed to parse TopReferrersJson for record $($Record.RowKey): $($_.Exception.Message)"
-                }
-            }
-            
-            # Aggregate top user agents
-            if ($Record.TopUserAgentsJson) {
-                try {
-                    $TopUserAgents = $Record.TopUserAgentsJson | ConvertFrom-Json
-                    foreach ($UA in $TopUserAgents) {
-                        $UserAgent = $UA.userAgent
-                        if (-not $AllTopUserAgents.ContainsKey($UserAgent)) {
-                            $AllTopUserAgents[$UserAgent] = 0
-                        }
-                        $AllTopUserAgents[$UserAgent] += $UA.count
-                    }
-                } catch {
-                    Write-Warning "Failed to parse TopUserAgentsJson for record $($Record.RowKey): $($_.Exception.Message)"
                 }
             }
         }
         
-        # Sort and get top 10 links overall
-        $LinkClicksByLink = @($AllTopLinks.Values | Sort-Object clickCount -Descending | Select-Object -First 10)
+        # Get views and clicks by day from user-level
+        $ViewsByDay = @()
+        $ClicksByDay = @()
         
-        # Sort and get top 10 referrers
+        if ($UserRecords -and $UserRecords.Count -gt 0) {
+            $ViewsByDay = @($UserRecords | 
+                Group-Object Date | 
+                ForEach-Object {
+                    @{
+                        date = $_.Name
+                        count = ($_.Group | Measure-Object -Property PageViewCount -Sum).Sum
+                    }
+                } | Sort-Object date)
+            
+            $ClicksByDay = @($UserRecords | 
+                Group-Object Date | 
+                ForEach-Object {
+                    @{
+                        date = $_.Name
+                        count = ($_.Group | Measure-Object -Property LinkClickCount -Sum).Sum
+                    }
+                } | Sort-Object date)
+        }
+        
+        # Get link clicks from link-level aggregates
+        $LinkClicksByLink = @()
+        if ($LinkRecords -and $LinkRecords.Count -gt 0) {
+            # Group by LinkId and sum clicks
+            $LinkClicksByLink = @($LinkRecords | 
+                Group-Object LinkId | 
+                ForEach-Object {
+                    $linkId = $_.Name
+                    $linkGroup = $_.Group
+                    $totalClicks = ($linkGroup | Measure-Object -Property ClickCount -Sum).Sum
+                    # Get title and URL from first record
+                    $firstRecord = $linkGroup[0]
+                    
+                    @{
+                        linkId = $linkId
+                        linkTitle = if ($firstRecord.LinkTitle) { $firstRecord.LinkTitle } else { '' }
+                        linkUrl = if ($firstRecord.LinkUrl) { $firstRecord.LinkUrl } else { '' }
+                        clickCount = $totalClicks
+                    }
+                } | Sort-Object clickCount -Descending | Select-Object -First 10)
+        }
+        
+        # Get top referrers and user agents
         $TopReferrersList = @($AllTopReferrers.GetEnumerator() | 
             Sort-Object Value -Descending | 
             Select-Object -First 10 | 
@@ -156,7 +170,6 @@ function Get-AggregatedAnalytics {
                 }
             })
         
-        # Sort and get top 5 user agents (browsers)
         $TopUserAgentsList = @($AllTopUserAgents.GetEnumerator() | 
             Sort-Object Value -Descending | 
             Select-Object -First 5 | 
@@ -167,20 +180,19 @@ function Get-AggregatedAnalytics {
                 }
             })
         
-        # Get per-page breakdown if no specific page filter
+        # Get per-page breakdown from page-level aggregates (if no specific page filter)
         $PageBreakdown = @()
-        if (-not $PageId) {
-            $PageBreakdown = @($AggregatedRecords | 
-                Where-Object { $_.PageId } |
+        if (-not $PageId -and $PageRecords -and $PageRecords.Count -gt 0) {
+            $PageBreakdown = @($PageRecords | 
                 Group-Object PageId | 
                 ForEach-Object {
                     $pageId = $_.Name
-                    $pageRecords = $_.Group
+                    $pageGroup = $_.Group
                     
                     @{
                         pageId = $pageId
-                        totalPageViews = ($pageRecords | Measure-Object -Property PageViewCount -Sum).Sum
-                        totalLinkClicks = ($pageRecords | Measure-Object -Property LinkClickCount -Sum).Sum
+                        totalPageViews = ($pageGroup | Measure-Object -Property PageViewCount -Sum).Sum
+                        totalLinkClicks = ($pageGroup | Measure-Object -Property LinkClickCount -Sum).Sum
                     }
                 } | Sort-Object totalPageViews -Descending)
         }

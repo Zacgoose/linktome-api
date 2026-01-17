@@ -4,10 +4,12 @@ function Start-AnalyticsAggregation {
         Aggregate and summarize analytics data
     .DESCRIPTION
         Timer function to aggregate daily analytics data for reporting.
-        Creates pre-computed aggregates in AnalyticsAggregated table for faster API responses.
-        Aggregates data by user and by day for efficient queries.
+        Creates pre-computed aggregates in AnalyticsAggregated table at three levels:
+        - User-level: Overall stats per user per day
+        - Page-level: Stats per page per user per day
+        - Link-level: Stats per link per user per day
         
-        After successful aggregation, cleans up old raw events (older than 31 days).
+        Uses incremental aggregation - merges with existing data and deletes processed raw events.
         Also cleans up old aggregated data (older than 180 days extended retention).
     .FUNCTIONALITY
         Timer
@@ -24,7 +26,7 @@ function Start-AnalyticsAggregation {
         # Get or create AnalyticsAggregated table (pre-computed aggregates)
         $AggregatedTable = Get-LinkToMeTable -TableName 'AnalyticsAggregated'
         
-        # Get all analytics events
+        # Get all analytics events (unprocessed raw data)
         $AllEvents = Get-LinkToMeAzDataTableEntity @AnalyticsTable
         
         if (-not $AllEvents -or $AllEvents.Count -eq 0) {
@@ -36,207 +38,439 @@ function Start-AnalyticsAggregation {
             return @{
                 Status = "Success"
                 Message = "No analytics events to aggregate"
-                AggregatedCount = 0
+                ProcessedEvents = 0
+                UserLevelRecords = 0
+                PageLevelRecords = 0
+                LinkLevelRecords = 0
                 RawEventsDeleted = 0
                 AggregatedRecordsDeleted = $AggCleanupResult.DeletedCount
             }
         }
         
-        # Process events from the last 31 days (to cover 30-day window with buffer)
-        $AggregationWindowDays = 31
-        $StartDate = [DateTimeOffset]::UtcNow.AddDays(-$AggregationWindowDays).Date
+        Write-Information "Processing $($AllEvents.Count) raw analytics events"
         
-        # Filter events within the aggregation window
-        $RecentEvents = @($AllEvents | Where-Object { 
-            $_.EventTimestamp -and ([DateTimeOffset]$_.EventTimestamp -ge $StartDate)
-        })
+        # Group events at three levels:
+        # 1. User-level: user-{userId}-{date}
+        # 2. Page-level: page-{userId}-{date}-{pageId}
+        # 3. Link-level: link-{userId}-{date}-{linkId}
         
-        Write-Information "Processing $($RecentEvents.Count) events from last $AggregationWindowDays days"
+        $UserLevelData = @{}
+        $PageLevelData = @{}
+        $LinkLevelData = @{}
+        $EventsToDelete = @()
         
-        # Group events by UserId and Date
-        $AggregatedData = @{}
-        
-        foreach ($Event in $RecentEvents) {
+        foreach ($Event in $AllEvents) {
             $UserId = $Event.PartitionKey
             $EventDate = ([DateTimeOffset]$Event.EventTimestamp).ToString('yyyy-MM-dd')
             $EventType = $Event.EventType
             $PageId = $Event.PageId
+            $LinkId = $Event.LinkId
             
-            # Create composite key: UserId-Date or UserId-Date-PageId
-            $AggKey = if ($PageId) { "$UserId-$EventDate-$PageId" } else { "$UserId-$EventDate" }
-            
-            if (-not $AggregatedData.ContainsKey($AggKey)) {
-                $AggregatedData[$AggKey] = @{
+            # ===== USER-LEVEL AGGREGATION =====
+            $UserKey = "user-$UserId-$EventDate"
+            if (-not $UserLevelData.ContainsKey($UserKey)) {
+                $UserLevelData[$UserKey] = @{
+                    Type = 'User'
                     UserId = $UserId
                     Date = $EventDate
-                    PageId = $PageId
                     PageViewCount = 0
                     LinkClickCount = 0
                     UniqueVisitors = @{}
-                    LinkClicks = @{}
                     Referrers = @{}
                     UserAgents = @{}
                 }
             }
             
-            # Increment counters
             if ($EventType -eq 'PageView') {
-                $AggregatedData[$AggKey].PageViewCount++
+                $UserLevelData[$UserKey].PageViewCount++
                 if ($Event.IpAddress) {
-                    $AggregatedData[$AggKey].UniqueVisitors[$Event.IpAddress] = $true
+                    $UserLevelData[$UserKey].UniqueVisitors[$Event.IpAddress] = $true
                 }
-                # Track referrers
                 if ($Event.Referrer) {
-                    $Referrer = [string]$Event.Referrer
-                    if (-not $AggregatedData[$AggKey].Referrers.ContainsKey($Referrer)) {
-                        $AggregatedData[$AggKey].Referrers[$Referrer] = 0
+                    $Ref = [string]$Event.Referrer
+                    if (-not $UserLevelData[$UserKey].Referrers.ContainsKey($Ref)) {
+                        $UserLevelData[$UserKey].Referrers[$Ref] = 0
                     }
-                    $AggregatedData[$AggKey].Referrers[$Referrer]++
+                    $UserLevelData[$UserKey].Referrers[$Ref]++
                 }
-                # Track user agents (browsers)
                 if ($Event.UserAgent) {
-                    $UserAgent = [string]$Event.UserAgent
-                    if (-not $AggregatedData[$AggKey].UserAgents.ContainsKey($UserAgent)) {
-                        $AggregatedData[$AggKey].UserAgents[$UserAgent] = 0
+                    $UA = [string]$Event.UserAgent
+                    if (-not $UserLevelData[$UserKey].UserAgents.ContainsKey($UA)) {
+                        $UserLevelData[$UserKey].UserAgents[$UA] = 0
                     }
-                    $AggregatedData[$AggKey].UserAgents[$UserAgent]++
+                    $UserLevelData[$UserKey].UserAgents[$UA]++
                 }
             } elseif ($EventType -eq 'LinkClick') {
-                $AggregatedData[$AggKey].LinkClickCount++
-                if ($Event.LinkId) {
-                    $LinkId = $Event.LinkId
-                    if (-not $AggregatedData[$AggKey].LinkClicks.ContainsKey($LinkId)) {
-                        $AggregatedData[$AggKey].LinkClicks[$LinkId] = @{
-                            Count = 0
-                            Title = $Event.LinkTitle
-                            Url = $Event.LinkUrl
-                        }
+                $UserLevelData[$UserKey].LinkClickCount++
+            }
+            
+            # ===== PAGE-LEVEL AGGREGATION =====
+            if ($PageId) {
+                $PageKey = "page-$UserId-$EventDate-$PageId"
+                if (-not $PageLevelData.ContainsKey($PageKey)) {
+                    $PageLevelData[$PageKey] = @{
+                        Type = 'Page'
+                        UserId = $UserId
+                        Date = $EventDate
+                        PageId = $PageId
+                        PageViewCount = 0
+                        LinkClickCount = 0
+                        UniqueVisitors = @{}
+                        Referrers = @{}
+                        UserAgents = @{}
                     }
-                    $AggregatedData[$AggKey].LinkClicks[$LinkId].Count++
+                }
+                
+                if ($EventType -eq 'PageView') {
+                    $PageLevelData[$PageKey].PageViewCount++
+                    if ($Event.IpAddress) {
+                        $PageLevelData[$PageKey].UniqueVisitors[$Event.IpAddress] = $true
+                    }
+                    if ($Event.Referrer) {
+                        $Ref = [string]$Event.Referrer
+                        if (-not $PageLevelData[$PageKey].Referrers.ContainsKey($Ref)) {
+                            $PageLevelData[$PageKey].Referrers[$Ref] = 0
+                        }
+                        $PageLevelData[$PageKey].Referrers[$Ref]++
+                    }
+                    if ($Event.UserAgent) {
+                        $UA = [string]$Event.UserAgent
+                        if (-not $PageLevelData[$PageKey].UserAgents.ContainsKey($UA)) {
+                            $PageLevelData[$PageKey].UserAgents[$UA] = 0
+                        }
+                        $PageLevelData[$PageKey].UserAgents[$UA]++
+                    }
+                } elseif ($EventType -eq 'LinkClick') {
+                    $PageLevelData[$PageKey].LinkClickCount++
                 }
             }
+            
+            # ===== LINK-LEVEL AGGREGATION =====
+            if ($LinkId -and $EventType -eq 'LinkClick') {
+                $LinkKey = "link-$UserId-$EventDate-$LinkId"
+                if (-not $LinkLevelData.ContainsKey($LinkKey)) {
+                    $LinkLevelData[$LinkKey] = @{
+                        Type = 'Link'
+                        UserId = $UserId
+                        Date = $EventDate
+                        LinkId = $LinkId
+                        LinkTitle = $Event.LinkTitle
+                        LinkUrl = $Event.LinkUrl
+                        ClickCount = 0
+                        Referrers = @{}
+                        UniqueVisitors = @{}
+                    }
+                }
+                
+                $LinkLevelData[$LinkKey].ClickCount++
+                if ($Event.IpAddress) {
+                    $LinkLevelData[$LinkKey].UniqueVisitors[$Event.IpAddress] = $true
+                }
+                if ($Event.Referrer) {
+                    $Ref = [string]$Event.Referrer
+                    if (-not $LinkLevelData[$LinkKey].Referrers.ContainsKey($Ref)) {
+                        $LinkLevelData[$LinkKey].Referrers[$Ref] = 0
+                    }
+                    $LinkLevelData[$LinkKey].Referrers[$Ref]++
+                }
+            }
+            
+            # Track this event for deletion after successful aggregation
+            $EventsToDelete += $Event
         }
         
-        Write-Information "Created $($AggregatedData.Count) aggregated records"
+        Write-Information "Created user-level: $($UserLevelData.Count), page-level: $($PageLevelData.Count), link-level: $($LinkLevelData.Count) records"
         
-        # Save aggregated data to table
-        $SavedCount = 0
-        foreach ($Key in $AggregatedData.Keys) {
-            $Agg = $AggregatedData[$Key]
+        # ===== SAVE/MERGE USER-LEVEL AGGREGATES =====
+        $UserSavedCount = 0
+        foreach ($Key in $UserLevelData.Keys) {
+            $Agg = $UserLevelData[$Key]
+            $PartitionKey = "user-$($Agg.UserId)"
+            $RowKey = $Agg.Date
             
-            # Create PartitionKey as UserId for efficient user-based queries
-            # Create RowKey as Date or Date-PageId for efficient time-based queries
-            $RowKey = if ($Agg.PageId) { "$($Agg.Date)-$($Agg.PageId)" } else { $Agg.Date }
+            # Try to get existing aggregate to merge
+            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -PartitionKey $PartitionKey -RowKey $RowKey -ErrorAction SilentlyContinue
             
-            # Prepare aggregated record as a clean hashtable with only supported types
-            # Azure Table Storage supports: String, Binary, Boolean, DateTime, Double, Guid, Int32, Int64
+            # Merge with existing or create new
+            $PageViewCount = [int]$Agg.PageViewCount
+            $LinkClickCount = [int]$Agg.LinkClickCount
+            $UniqueVisitors = $Agg.UniqueVisitors
+            $Referrers = $Agg.Referrers
+            $UserAgents = $Agg.UserAgents
+            
+            if ($ExistingAgg) {
+                # Merge counts
+                $PageViewCount += [int]$ExistingAgg.PageViewCount
+                $LinkClickCount += [int]$ExistingAgg.LinkClickCount
+                
+                # Merge unique visitors (IPs)
+                if ($ExistingAgg.UniqueVisitorsJson) {
+                    $ExistingVisitors = $ExistingAgg.UniqueVisitorsJson | ConvertFrom-Json
+                    foreach ($Visitor in $ExistingVisitors) {
+                        $UniqueVisitors[$Visitor] = $true
+                    }
+                }
+                
+                # Merge referrers
+                if ($ExistingAgg.TopReferrersJson) {
+                    $ExistingReferrers = $ExistingAgg.TopReferrersJson | ConvertFrom-Json
+                    foreach ($Ref in $ExistingReferrers) {
+                        if (-not $Referrers.ContainsKey($Ref.referrer)) {
+                            $Referrers[$Ref.referrer] = 0
+                        }
+                        $Referrers[$Ref.referrer] += $Ref.count
+                    }
+                }
+                
+                # Merge user agents
+                if ($ExistingAgg.TopUserAgentsJson) {
+                    $ExistingUAs = $ExistingAgg.TopUserAgentsJson | ConvertFrom-Json
+                    foreach ($UA in $ExistingUAs) {
+                        if (-not $UserAgents.ContainsKey($UA.userAgent)) {
+                            $UserAgents[$UA.userAgent] = 0
+                        }
+                        $UserAgents[$UA.userAgent] += $UA.count
+                    }
+                }
+            }
+            
+            # Build aggregate record
             $AggRecord = @{
-                PartitionKey = [string]$Agg.UserId
+                PartitionKey = [string]$PartitionKey
                 RowKey = [string]$RowKey
+                RecordType = [string]'User'
+                UserId = [string]$Agg.UserId
                 Date = [string]$Agg.Date
-                PageViewCount = [int]$Agg.PageViewCount
-                LinkClickCount = [int]$Agg.LinkClickCount
-                UniqueVisitorCount = [int]$Agg.UniqueVisitors.Count
+                PageViewCount = [int]$PageViewCount
+                LinkClickCount = [int]$LinkClickCount
+                UniqueVisitorCount = [int]$UniqueVisitors.Count
                 LastUpdated = [DateTimeOffset]::UtcNow
             }
             
-            # Add PageId if present (as string)
-            if ($Agg.PageId) {
-                $AggRecord['PageId'] = [string]$Agg.PageId
+            # Store unique visitors as JSON array
+            if ($UniqueVisitors.Count -gt 0) {
+                $VisitorsArray = @($UniqueVisitors.Keys)
+                $AggRecord['UniqueVisitorsJson'] = [string]($VisitorsArray | ConvertTo-Json -Compress)
             }
             
-            # Add top clicked links as JSON string (up to 10)
-            if ($Agg.LinkClicks.Count -gt 0) {
-                $TopLinks = $Agg.LinkClicks.GetEnumerator() | 
-                    Sort-Object { $_.Value.Count } -Descending | 
-                    Select-Object -First 10
-                
-                # Build array of link objects
-                $LinkArray = @($TopLinks | ForEach-Object {
-                    @{
-                        linkId = [string]$_.Key
-                        count = [int]$_.Value.Count
-                        title = if ($_.Value.Title) { [string]$_.Value.Title } else { '' }
-                        url = if ($_.Value.Url) { [string]$_.Value.Url } else { '' }
-                    }
+            # Store top 10 referrers as JSON
+            if ($Referrers.Count -gt 0) {
+                $TopRefs = $Referrers.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 10
+                $RefsArray = @($TopRefs | ForEach-Object {
+                    @{ referrer = [string]$_.Key; count = [int]$_.Value }
                 })
-                
-                # Convert to JSON string for storage
-                $LinkClicksJson = $LinkArray | ConvertTo-Json -Compress -Depth 2
-                
-                # Store as string property
-                $AggRecord['TopLinksJson'] = [string]$LinkClicksJson
+                $AggRecord['TopReferrersJson'] = [string]($RefsArray | ConvertTo-Json -Compress -Depth 2)
             }
             
-            # Add top referrers as JSON string (up to 10)
-            if ($Agg.Referrers.Count -gt 0) {
-                $TopReferrers = $Agg.Referrers.GetEnumerator() | 
-                    Sort-Object Value -Descending | 
-                    Select-Object -First 10
-                
-                $ReferrersArray = @($TopReferrers | ForEach-Object {
-                    @{
-                        referrer = [string]$_.Key
-                        count = [int]$_.Value
-                    }
+            # Store top 5 user agents as JSON
+            if ($UserAgents.Count -gt 0) {
+                $TopUAs = $UserAgents.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 5
+                $UAsArray = @($TopUAs | ForEach-Object {
+                    @{ userAgent = [string]$_.Key; count = [int]$_.Value }
                 })
-                
-                $ReferrersJson = $ReferrersArray | ConvertTo-Json -Compress -Depth 2
-                $AggRecord['TopReferrersJson'] = [string]$ReferrersJson
-            }
-            
-            # Add top user agents (browsers) as JSON string (up to 5)
-            if ($Agg.UserAgents.Count -gt 0) {
-                $TopUserAgents = $Agg.UserAgents.GetEnumerator() | 
-                    Sort-Object Value -Descending | 
-                    Select-Object -First 5
-                
-                $UserAgentsArray = @($TopUserAgents | ForEach-Object {
-                    @{
-                        userAgent = [string]$_.Key
-                        count = [int]$_.Value
-                    }
-                })
-                
-                $UserAgentsJson = $UserAgentsArray | ConvertTo-Json -Compress -Depth 2
-                $AggRecord['TopUserAgentsJson'] = [string]$UserAgentsJson
+                $AggRecord['TopUserAgentsJson'] = [string]($UAsArray | ConvertTo-Json -Compress -Depth 2)
             }
             
             try {
                 Add-LinkToMeAzDataTableEntity @AggregatedTable -Entity $AggRecord -Force | Out-Null
-                $SavedCount++
+                $UserSavedCount++
             } catch {
-                Write-Warning "Failed to save aggregated record for ${Key}: $($_.Exception.Message)"
+                Write-Warning "Failed to save user-level aggregate for ${Key}: $($_.Exception.Message)"
             }
         }
         
-        Write-Information "Analytics aggregation completed - saved $SavedCount aggregated records"
+        # ===== SAVE/MERGE PAGE-LEVEL AGGREGATES =====
+        $PageSavedCount = 0
+        foreach ($Key in $PageLevelData.Keys) {
+            $Agg = $PageLevelData[$Key]
+            $PartitionKey = "page-$($Agg.UserId)"
+            $RowKey = "$($Agg.Date)-$($Agg.PageId)"
+            
+            # Try to get existing aggregate to merge
+            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -PartitionKey $PartitionKey -RowKey $RowKey -ErrorAction SilentlyContinue
+            
+            # Merge with existing or create new
+            $PageViewCount = [int]$Agg.PageViewCount
+            $LinkClickCount = [int]$Agg.LinkClickCount
+            $UniqueVisitors = $Agg.UniqueVisitors
+            $Referrers = $Agg.Referrers
+            $UserAgents = $Agg.UserAgents
+            
+            if ($ExistingAgg) {
+                # Merge counts
+                $PageViewCount += [int]$ExistingAgg.PageViewCount
+                $LinkClickCount += [int]$ExistingAgg.LinkClickCount
+                
+                # Merge unique visitors
+                if ($ExistingAgg.UniqueVisitorsJson) {
+                    $ExistingVisitors = $ExistingAgg.UniqueVisitorsJson | ConvertFrom-Json
+                    foreach ($Visitor in $ExistingVisitors) {
+                        $UniqueVisitors[$Visitor] = $true
+                    }
+                }
+                
+                # Merge referrers
+                if ($ExistingAgg.TopReferrersJson) {
+                    $ExistingReferrers = $ExistingAgg.TopReferrersJson | ConvertFrom-Json
+                    foreach ($Ref in $ExistingReferrers) {
+                        if (-not $Referrers.ContainsKey($Ref.referrer)) {
+                            $Referrers[$Ref.referrer] = 0
+                        }
+                        $Referrers[$Ref.referrer] += $Ref.count
+                    }
+                }
+                
+                # Merge user agents
+                if ($ExistingAgg.TopUserAgentsJson) {
+                    $ExistingUAs = $ExistingAgg.TopUserAgentsJson | ConvertFrom-Json
+                    foreach ($UA in $ExistingUAs) {
+                        if (-not $UserAgents.ContainsKey($UA.userAgent)) {
+                            $UserAgents[$UA.userAgent] = 0
+                        }
+                        $UserAgents[$UA.userAgent] += $UA.count
+                    }
+                }
+            }
+            
+            # Build aggregate record
+            $AggRecord = @{
+                PartitionKey = [string]$PartitionKey
+                RowKey = [string]$RowKey
+                RecordType = [string]'Page'
+                UserId = [string]$Agg.UserId
+                Date = [string]$Agg.Date
+                PageId = [string]$Agg.PageId
+                PageViewCount = [int]$PageViewCount
+                LinkClickCount = [int]$LinkClickCount
+                UniqueVisitorCount = [int]$UniqueVisitors.Count
+                LastUpdated = [DateTimeOffset]::UtcNow
+            }
+            
+            # Store unique visitors as JSON array
+            if ($UniqueVisitors.Count -gt 0) {
+                $VisitorsArray = @($UniqueVisitors.Keys)
+                $AggRecord['UniqueVisitorsJson'] = [string]($VisitorsArray | ConvertTo-Json -Compress)
+            }
+            
+            # Store top 10 referrers as JSON
+            if ($Referrers.Count -gt 0) {
+                $TopRefs = $Referrers.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 10
+                $RefsArray = @($TopRefs | ForEach-Object {
+                    @{ referrer = [string]$_.Key; count = [int]$_.Value }
+                })
+                $AggRecord['TopReferrersJson'] = [string]($RefsArray | ConvertTo-Json -Compress -Depth 2)
+            }
+            
+            # Store top 5 user agents as JSON
+            if ($UserAgents.Count -gt 0) {
+                $TopUAs = $UserAgents.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 5
+                $UAsArray = @($TopUAs | ForEach-Object {
+                    @{ userAgent = [string]$_.Key; count = [int]$_.Value }
+                })
+                $AggRecord['TopUserAgentsJson'] = [string]($UAsArray | ConvertTo-Json -Compress -Depth 2)
+            }
+            
+            try {
+                Add-LinkToMeAzDataTableEntity @AggregatedTable -Entity $AggRecord -Force | Out-Null
+                $PageSavedCount++
+            } catch {
+                Write-Warning "Failed to save page-level aggregate for ${Key}: $($_.Exception.Message)"
+            }
+        }
         
-        # After successful aggregation, clean up old raw events (older than aggregation window)
-        Write-Information "Cleaning up old raw analytics events"
+        # ===== SAVE/MERGE LINK-LEVEL AGGREGATES =====
+        $LinkSavedCount = 0
+        foreach ($Key in $LinkLevelData.Keys) {
+            $Agg = $LinkLevelData[$Key]
+            $PartitionKey = "link-$($Agg.UserId)"
+            $RowKey = "$($Agg.Date)-$($Agg.LinkId)"
+            
+            # Try to get existing aggregate to merge
+            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -PartitionKey $PartitionKey -RowKey $RowKey -ErrorAction SilentlyContinue
+            
+            # Merge with existing or create new
+            $ClickCount = [int]$Agg.ClickCount
+            $UniqueVisitors = $Agg.UniqueVisitors
+            $Referrers = $Agg.Referrers
+            
+            if ($ExistingAgg) {
+                # Merge counts
+                $ClickCount += [int]$ExistingAgg.ClickCount
+                
+                # Merge unique visitors
+                if ($ExistingAgg.UniqueVisitorsJson) {
+                    $ExistingVisitors = $ExistingAgg.UniqueVisitorsJson | ConvertFrom-Json
+                    foreach ($Visitor in $ExistingVisitors) {
+                        $UniqueVisitors[$Visitor] = $true
+                    }
+                }
+                
+                # Merge referrers
+                if ($ExistingAgg.TopReferrersJson) {
+                    $ExistingReferrers = $ExistingAgg.TopReferrersJson | ConvertFrom-Json
+                    foreach ($Ref in $ExistingReferrers) {
+                        if (-not $Referrers.ContainsKey($Ref.referrer)) {
+                            $Referrers[$Ref.referrer] = 0
+                        }
+                        $Referrers[$Ref.referrer] += $Ref.count
+                    }
+                }
+            }
+            
+            # Build aggregate record
+            $AggRecord = @{
+                PartitionKey = [string]$PartitionKey
+                RowKey = [string]$RowKey
+                RecordType = [string]'Link'
+                UserId = [string]$Agg.UserId
+                Date = [string]$Agg.Date
+                LinkId = [string]$Agg.LinkId
+                LinkTitle = if ($Agg.LinkTitle) { [string]$Agg.LinkTitle } else { [string]'' }
+                LinkUrl = if ($Agg.LinkUrl) { [string]$Agg.LinkUrl } else { [string]'' }
+                ClickCount = [int]$ClickCount
+                UniqueVisitorCount = [int]$UniqueVisitors.Count
+                LastUpdated = [DateTimeOffset]::UtcNow
+            }
+            
+            # Store unique visitors as JSON array
+            if ($UniqueVisitors.Count -gt 0) {
+                $VisitorsArray = @($UniqueVisitors.Keys)
+                $AggRecord['UniqueVisitorsJson'] = [string]($VisitorsArray | ConvertTo-Json -Compress)
+            }
+            
+            # Store top 10 referrers as JSON
+            if ($Referrers.Count -gt 0) {
+                $TopRefs = $Referrers.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 10
+                $RefsArray = @($TopRefs | ForEach-Object {
+                    @{ referrer = [string]$_.Key; count = [int]$_.Value }
+                })
+                $AggRecord['TopReferrersJson'] = [string]($RefsArray | ConvertTo-Json -Compress -Depth 2)
+            }
+            
+            try {
+                Add-LinkToMeAzDataTableEntity @AggregatedTable -Entity $AggRecord -Force | Out-Null
+                $LinkSavedCount++
+            } catch {
+                Write-Warning "Failed to save link-level aggregate for ${Key}: $($_.Exception.Message)"
+            }
+        }
+        
+        Write-Information "Saved aggregates - User: $UserSavedCount, Page: $PageSavedCount, Link: $LinkSavedCount"
+        
+        # ===== DELETE RAW EVENTS AFTER SUCCESSFUL AGGREGATION =====
+        Write-Information "Deleting $($EventsToDelete.Count) processed raw analytics events"
         $RawEventsDeleted = 0
         
-        # Use same retention period as aggregation window (31 days)
-        $RawDataRetentionDays = $AggregationWindowDays
-        $RawDataCutoffDate = [DateTimeOffset]::UtcNow.AddDays(-$RawDataRetentionDays).Date
-        
-        # Find events older than the retention period
-        $OldEvents = @($AllEvents | Where-Object { 
-            $_.EventTimestamp -and ([DateTimeOffset]$_.EventTimestamp -lt $RawDataCutoffDate)
-        })
-        
-        Write-Information "Found $($OldEvents.Count) old raw events to delete"
-        
-        foreach ($OldEvent in $OldEvents) {
+        foreach ($Event in $EventsToDelete) {
             try {
-                Remove-AzDataTableEntity -Context $AnalyticsTable.Context -Entity $OldEvent | Out-Null
+                Remove-AzDataTableEntity -Context $AnalyticsTable.Context -Entity $Event | Out-Null
                 $RawEventsDeleted++
             } catch {
-                Write-Warning "Failed to delete raw event $($OldEvent.RowKey): $($_.Exception.Message)"
+                Write-Warning "Failed to delete raw event $($Event.RowKey): $($_.Exception.Message)"
             }
         }
         
-        Write-Information "Deleted $RawEventsDeleted old raw analytics events"
+        Write-Information "Deleted $RawEventsDeleted raw analytics events"
         
         # Clean up old aggregated data (180 days extended retention)
         Write-Information "Cleaning up old aggregated analytics data"
@@ -246,9 +480,10 @@ function Start-AnalyticsAggregation {
         return @{
             Status = "Success"
             Message = "Analytics aggregation and cleanup completed"
-            ProcessedEvents = $RecentEvents.Count
-            AggregatedRecords = $SavedCount
-            AggregationWindowDays = $AggregationWindowDays
+            ProcessedEvents = $AllEvents.Count
+            UserLevelRecords = $UserSavedCount
+            PageLevelRecords = $PageSavedCount
+            LinkLevelRecords = $LinkSavedCount
             RawEventsDeleted = $RawEventsDeleted
             AggregatedRecordsDeleted = $AggCleanupResult.DeletedCount
             AggregatedRetentionDays = $AggCleanupResult.RetentionDays
