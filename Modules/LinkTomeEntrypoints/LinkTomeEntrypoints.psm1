@@ -339,7 +339,7 @@ function Receive-LinkTomeOrchestrationTrigger {
         Entrypoint
     #>
     param($Context)
-    Write-Debug "LINKTOME_ACTION=$($Item.Command ?? $Item.FunctionName)"
+    Write-Debug "LINKTOME_ACTION=Orchestrator"
     try {
         if (Test-Json -Json $Context.Input) {
             $OrchestratorInput = $Context.Input | ConvertFrom-Json
@@ -453,7 +453,8 @@ function Receive-LinkTomeActivityTrigger {
         Entrypoint
     #>
     param($Item)
-    Write-Debug "LINKTOME_ACTION=$($Item.Command ?? $Item.FunctionName)"
+    $DebugAction = if ($Item.Command) { $Item.Command } else { $Item.FunctionName }
+    Write-Debug "LINKTOME_ACTION=$DebugAction"
     Write-Information "Activity function running: $($Item | ConvertTo-Json -Depth 10 -Compress)"
     try {
         $Output = $null
@@ -578,7 +579,7 @@ function Receive-LinkTomeTimerTrigger {
                 Write-Information "LINKTOME TIMER PARAMETERS: $($Parameters | ConvertTo-Json -Depth 10 -Compress)"
             }
 
-            Invoke-Command -ScriptBlock { & $Function.Command @Parameters }
+            $Results = Invoke-Command -ScriptBlock { & $Function.Command @Parameters }
 
             if ($Results -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') {
                 $FunctionStatus.OrchestratorId = $Results -join ','
