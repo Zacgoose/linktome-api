@@ -216,9 +216,13 @@ function Start-AnalyticsAggregation {
         Write-Information "Cleaning up old raw analytics events"
         $RawEventsDeleted = 0
         
-        # Find events older than the aggregation window (31 days)
+        # Use same retention period as aggregation window (31 days)
+        $RawDataRetentionDays = $AggregationWindowDays
+        $RawDataCutoffDate = [DateTimeOffset]::UtcNow.AddDays(-$RawDataRetentionDays).Date
+        
+        # Find events older than the retention period
         $OldEvents = @($AllEvents | Where-Object { 
-            $_.EventTimestamp -and ([DateTimeOffset]$_.EventTimestamp -lt $StartDate)
+            $_.EventTimestamp -and ([DateTimeOffset]$_.EventTimestamp -lt $RawDataCutoffDate)
         })
         
         Write-Information "Found $($OldEvents.Count) old raw events to delete"
@@ -269,8 +273,14 @@ function Clear-OldAggregatedAnalytics {
     
     try {
         # Extended retention for aggregated data: 180 days (6 months)
-        $RetentionDays = 180
-        $CutoffDate = [DateTimeOffset]::UtcNow.AddDays(-$RetentionDays).ToString('yyyy-MM-dd')
+        # This can be made configurable via environment variable if needed
+        $RetentionDays = if ($env:ANALYTICS_AGGREGATED_RETENTION_DAYS) { 
+            [int]$env:ANALYTICS_AGGREGATED_RETENTION_DAYS 
+        } else { 
+            180 
+        }
+        
+        $CutoffDate = [DateTimeOffset]::UtcNow.AddDays(-$RetentionDays)
         
         # Get all aggregated records
         $AllAggregated = Get-LinkToMeAzDataTableEntity @AggregatedTable
@@ -282,9 +292,9 @@ function Clear-OldAggregatedAnalytics {
             }
         }
         
-        # Find records older than retention period
+        # Find records older than retention period (compare as DateTimeOffset)
         $OldRecords = @($AllAggregated | Where-Object { 
-            $_.Date -and ([string]$_.Date -lt $CutoffDate)
+            $_.Date -and ([DateTimeOffset]::Parse($_.Date) -lt $CutoffDate)
         })
         
         $DeletedCount = 0
