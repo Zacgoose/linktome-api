@@ -25,7 +25,10 @@ function New-LinkToMeJWT {
         [string[]]$Permissions = @(),
         
         [Parameter(ParameterSetName='Explicit')]
-        [object[]]$UserManagements = $null
+        [object[]]$UserManagements = $null,
+        
+        [Parameter(ParameterSetName='Explicit')]
+        [object[]]$SubAccounts = $null
     )
     
     # If User object provided, get all context from it
@@ -37,6 +40,7 @@ function New-LinkToMeJWT {
         $Roles = $authContext.Roles
         $Permissions = $authContext.Permissions
         $UserManagements = $authContext.UserManagements
+        $SubAccounts = $authContext.SubAccounts
     }
     
     $Secret = Get-JwtSecret | ConvertTo-SecureString -AsPlainText -Force
@@ -62,6 +66,11 @@ function New-LinkToMeJWT {
     # Add userManagements if provided
     if ($UserManagements -and $UserManagements.Count -gt 0) {
         $Claims['userManagements'] = $UserManagements
+    }
+    
+    # Add subAccounts if provided
+    if ($SubAccounts -and $SubAccounts.Count -gt 0) {
+        $Claims['subAccounts'] = $SubAccounts
     }
     
     $Token = New-JsonWebToken -Claims $Claims -HashAlgorithm SHA256 -SecureKey $Secret -TimeToLive ($ExpirationMinutes * 60)

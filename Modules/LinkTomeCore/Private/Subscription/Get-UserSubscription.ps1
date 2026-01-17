@@ -4,7 +4,8 @@ function Get-UserSubscription {
         Get complete subscription information for a user
     .DESCRIPTION
         Centralizes all subscription data access and provides a consistent subscription object
-        with all relevant fields including tier, status, billing info, and access control
+        with all relevant fields including tier, status, billing info, and access control.
+        For sub-accounts, inherits subscription from parent account.
     .PARAMETER User
         The user object from the Users table
     .OUTPUTS
@@ -15,6 +16,39 @@ function Get-UserSubscription {
         [Parameter(Mandatory)]
         [object]$User
     )
+    
+    # Check if this is a sub-account and inherit parent's subscription
+    if ($User.PSObject.Properties['IsSubAccount'] -and $User.IsSubAccount -eq $true) {
+        # Get parent from SubAccounts table
+        try {
+            $SubAccountsTable = Get-LinkToMeTable -TableName 'SubAccounts'
+            $SafeSubId = Protect-TableQueryValue -Value $User.RowKey
+            $Relationship = Get-LinkToMeAzDataTableEntity @SubAccountsTable -Filter "RowKey eq '$SafeSubId'" | Select-Object -First 1
+            
+            if ($Relationship) {
+                $ParentUserId = $Relationship.PartitionKey
+                
+                # Get parent user
+                $UsersTable = Get-LinkToMeTable -TableName 'Users'
+                $SafeParentId = Protect-TableQueryValue -Value $ParentUserId
+                $ParentUser = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeParentId'" | Select-Object -First 1
+                
+                if ($ParentUser) {
+                    # Get parent's subscription (recursive in case parent is also a sub-account)
+                    $ParentSubscription = Get-UserSubscription -User $ParentUser
+                    
+                    # Mark as inherited for display purposes
+                    $ParentSubscription.IsInherited = $true
+                    $ParentSubscription.InheritedFromUserId = $ParentUserId
+                    
+                    return $ParentSubscription
+                }
+            }
+        } catch {
+            Write-Warning "Failed to get parent subscription for sub-account $($User.RowKey): $($_.Exception.Message)"
+            # Fall through to return sub-account's own subscription data
+        }
+    }
     
     # Get current timestamp for comparisons
     $Now = (Get-Date).ToUniversalTime()
@@ -169,5 +203,9 @@ function Get-UserSubscription {
         IsCancelled = ($Status -eq 'cancelled')
         IsExpired = ($Status -eq 'expired')
         IsSuspended = ($Status -eq 'suspended')
+        
+        # Sub-account inheritance markers
+        IsInherited = $false
+        InheritedFromUserId = $null
     }
 }

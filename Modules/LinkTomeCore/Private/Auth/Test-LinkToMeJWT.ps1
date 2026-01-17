@@ -39,6 +39,10 @@ function Test-LinkToMeJWT {
         if ($Payload.PSObject.Properties.Name -contains 'userManagements') {
             $UserManagements = $Payload.userManagements
         }
+        $subAccounts = $null
+        if ($Payload.PSObject.Properties.Name -contains 'subAccounts') {
+            $subAccounts = $Payload.subAccounts
+        }
         return @{
             Valid = $true
             UserId = $Payload.sub
@@ -47,6 +51,7 @@ function Test-LinkToMeJWT {
             Roles = $Roles
             Permissions = $Permissions
             userManagements = $UserManagements
+            subAccounts = $subAccounts
         }
     } catch {
         Write-Warning "Token validation failed: $($_.Exception.Message)"
