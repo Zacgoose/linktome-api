@@ -244,6 +244,16 @@ $Timers | Format-Table Command, Priority, Cron
 Start-DurableCleanup
 ```
 
+### Automatic Initialization
+
+The timer infrastructure automatically creates status tracking entities on first run. You do not need to manually create the LinkTomeTimers table or populate it with entities - the timer trigger will:
+
+1. Create status entities for any timer that doesn't have one yet
+2. Gracefully handle empty tables or missing entities
+3. Continue execution even if status tracking fails
+
+This ensures the timer system works "out of the box" without manual setup.
+
 ## Implementation Status
 
 All timer functions are currently **stubs** with TODO comments indicating the logic that needs to be implemented. Each function returns a success status but does not perform actual work yet.
@@ -257,10 +267,11 @@ To implement a timer:
 ## Next Steps
 
 1. Implement the actual logic for each timer function based on business requirements
-2. Add proper error handling and retry logic
-3. Create Azure Table Storage table for LinkTomeTimers to track execution status
+2. Add proper error handling and retry logic (error handling infrastructure already in place)
+3. Deploy to Azure Functions and verify timer triggers work correctly
 4. Add monitoring and alerting for failed timer executions
-5. Deploy to Azure Functions and verify timer triggers work correctly
+
+**Note**: The LinkTomeTimers table is automatically created and populated on first run - no manual initialization required!
 
 ## References
 
