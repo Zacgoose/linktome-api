@@ -31,7 +31,7 @@ function Start-RefreshTokenCleanup {
         }
         
         # Current time for expiration checks
-        $Now = (Get-Date).ToUniversalTime()
+        $Now = [DateTimeOffset]::UtcNow
         
         # Find expired or invalid tokens
         $TokensToDelete = @($AllTokens | Where-Object { 
@@ -43,13 +43,13 @@ function Start-RefreshTokenCleanup {
             # Delete if expired (ExpiresAt is in ISO 8601 string format)
             if ($_.ExpiresAt) {
                 try {
-                    $ExpiresAt = [DateTime]::Parse($_.ExpiresAt)
+                    $ExpiresAt = [DateTimeOffset]::Parse($_.ExpiresAt)
                     if ($ExpiresAt -lt $Now) {
                         return $true
                     }
                 } catch {
                     # If we can't parse the date, consider it for deletion
-                    Write-Warning "Failed to parse ExpiresAt for token $($_.PartitionKey): $($_.Exception.Message)"
+                    Write-Warning "Failed to parse ExpiresAt for token $($_.PartitionKey): $($Error[0].Exception.Message)"
                     return $true
                 }
             }
