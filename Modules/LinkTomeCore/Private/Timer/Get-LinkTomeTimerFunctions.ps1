@@ -11,7 +11,8 @@ function Get-LinkTomeTimerFunctions {
     param()
 
     try {
-        $TimersJsonPath = Join-Path (Get-Item $PSScriptRoot).Parent.Parent.Parent.FullName 'LinkTomeTimers.json'
+        # Navigate from Modules/LinkTomeCore/Private/Timer to root
+        $TimersJsonPath = Join-Path (Get-Item $PSScriptRoot).Parent.Parent.Parent.Parent.FullName 'LinkTomeTimers.json'
         
         if (-not (Test-Path $TimersJsonPath)) {
             Write-Warning "LinkTomeTimers.json not found at: $TimersJsonPath"
@@ -38,7 +39,7 @@ function Get-LinkTomeTimerFunctions {
                 Command          = $Timer.Command
                 Description      = $Timer.Description
                 Cron             = $Timer.Cron
-                Priority         = if ($Timer.Priority) { $Timer.Priority } else { 99 }
+                Priority         = if ($null -ne $Timer.Priority) { $Timer.Priority } else { 99 }
                 RunOnProcessor   = if ($null -ne $Timer.RunOnProcessor) { $Timer.RunOnProcessor } else { $true }
                 PreferredProcessor = $Timer.PreferredProcessor
                 IsSystem         = if ($null -ne $Timer.IsSystem) { $Timer.IsSystem } else { $false }
