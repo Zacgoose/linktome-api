@@ -104,5 +104,14 @@
     "Priority": 11,
     "RunOnProcessor": true,
     "IsSystem": true
+  },
+  {
+    "Id": "a3b4c5d6-e7f8-9012-789a-bcdef0123456",
+    "Command": "Start-RefreshTokenCleanup",
+    "Description": "Timer to cleanup expired and invalid refresh tokens",
+    "Cron": "0 0 * * * *",
+    "Priority": 12,
+    "RunOnProcessor": true,
+    "IsSystem": true
   }
 ]
