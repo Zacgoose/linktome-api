@@ -561,7 +561,12 @@ function Receive-LinkTomeTimerTrigger {
         
         # Check if this timer should run based on cron schedule and last occurrence
         $LastOccurrence = if ($FunctionStatus.LastOccurrence) { 
-            [datetime]$FunctionStatus.LastOccurrence 
+            # Convert DateTimeOffset to DateTime for cron evaluation
+            if ($FunctionStatus.LastOccurrence -is [DateTimeOffset]) {
+                $FunctionStatus.LastOccurrence.DateTime
+            } else {
+                [datetime]$FunctionStatus.LastOccurrence
+            }
         } else { 
             $null 
         }
