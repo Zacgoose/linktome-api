@@ -547,6 +547,18 @@ function Receive-LinkTomeTimerTrigger {
         Write-Information "LinkTomeTimer: $($Function.Command) - $($Function.Cron)"
         $FunctionStatus = $Statuses | Where-Object { $_.RowKey -eq $Function.Id }
         
+        # Create a new status entity if it doesn't exist
+        if (-not $FunctionStatus) {
+            Write-Information "Creating new status entry for timer: $($Function.Id)"
+            $FunctionStatus = @{
+                PartitionKey = 'Timer'
+                RowKey = $Function.Id
+                LastOccurrence = $null
+                Status = 'Pending'
+                OrchestratorId = $null
+            }
+        }
+        
         if ($FunctionStatus.OrchestratorId) {
             $FunctionName = $env:WEBSITE_SITE_NAME
             $InstancesTable = Get-LinkToMeTable -TableName ('{0}Instances' -f ($FunctionName -replace '-', ''))
@@ -558,7 +570,12 @@ function Receive-LinkTomeTimerTrigger {
         }
         
         try {
-            if ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
+            if ($FunctionStatus -is [hashtable]) {
+                # For hashtables, we can directly set values
+                if ($FunctionStatus.ContainsKey('ErrorMsg')) {
+                    $FunctionStatus['ErrorMsg'] = ''
+                }
+            } elseif ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
                 $FunctionStatus.ErrorMsg = ''
             }
 
@@ -582,7 +599,11 @@ function Receive-LinkTomeTimerTrigger {
             $Results = Invoke-Command -ScriptBlock { & $Function.Command @Parameters }
 
             if ($Results -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') {
-                $FunctionStatus.OrchestratorId = $Results -join ','
+                if ($FunctionStatus -is [hashtable]) {
+                    $FunctionStatus['OrchestratorId'] = $Results -join ','
+                } else {
+                    $FunctionStatus.OrchestratorId = $Results -join ','
+                }
                 $Status = 'Started'
             } else {
                 $Status = 'Completed'
@@ -590,7 +611,9 @@ function Receive-LinkTomeTimerTrigger {
         } catch {
             $Status = 'Failed'
             $ErrorMsg = $_.Exception.Message
-            if ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
+            if ($FunctionStatus -is [hashtable]) {
+                $FunctionStatus['ErrorMsg'] = $ErrorMsg
+            } elseif ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
                 $FunctionStatus.ErrorMsg = $ErrorMsg
             } else {
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name ErrorMsg -Value $ErrorMsg
@@ -598,10 +621,21 @@ function Receive-LinkTomeTimerTrigger {
             Write-Information "Error in LinkTomeTimer for $($Function.Command): $($_.Exception.Message)"
         }
         
-        $FunctionStatus.LastOccurrence = $UtcNow
-        $FunctionStatus.Status = $Status
+        # Update status properties
+        if ($FunctionStatus -is [hashtable]) {
+            $FunctionStatus['LastOccurrence'] = $UtcNow
+            $FunctionStatus['Status'] = $Status
+        } else {
+            $FunctionStatus.LastOccurrence = $UtcNow
+            $FunctionStatus.Status = $Status
+        }
 
-        Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force
+        # Only save if entity is valid
+        try {
+            Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force
+        } catch {
+            Write-Warning "Failed to save timer status for $($Function.Command): $($_.Exception.Message)"
+        }
     }
     return $true
 }
