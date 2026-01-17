@@ -101,38 +101,44 @@ function Start-AnalyticsAggregation {
             # Create RowKey as Date or Date-PageId for efficient time-based queries
             $RowKey = if ($Agg.PageId) { "$($Agg.Date)-$($Agg.PageId)" } else { $Agg.Date }
             
-            # Prepare aggregated record
+            # Prepare aggregated record as a clean hashtable with only supported types
+            # Azure Table Storage supports: String, Binary, Boolean, DateTime, Double, Guid, Int32, Int64
             $AggRecord = @{
-                PartitionKey = $Agg.UserId
-                RowKey = $RowKey
-                Date = $Agg.Date
-                PageViewCount = $Agg.PageViewCount
-                LinkClickCount = $Agg.LinkClickCount
-                UniqueVisitorCount = $Agg.UniqueVisitors.Count
+                PartitionKey = [string]$Agg.UserId
+                RowKey = [string]$RowKey
+                Date = [string]$Agg.Date
+                PageViewCount = [int]$Agg.PageViewCount
+                LinkClickCount = [int]$Agg.LinkClickCount
+                UniqueVisitorCount = [int]$Agg.UniqueVisitors.Count
                 LastUpdated = [DateTimeOffset]::UtcNow
             }
             
-            # Add PageId if present
+            # Add PageId if present (as string)
             if ($Agg.PageId) {
-                $AggRecord.PageId = $Agg.PageId
+                $AggRecord['PageId'] = [string]$Agg.PageId
             }
             
-            # Add top clicked links (up to 10)
+            # Add top clicked links as JSON string (up to 10)
             if ($Agg.LinkClicks.Count -gt 0) {
                 $TopLinks = $Agg.LinkClicks.GetEnumerator() | 
                     Sort-Object { $_.Value.Count } -Descending | 
                     Select-Object -First 10
                 
-                $LinkClicksJson = @($TopLinks | ForEach-Object {
+                # Build array of link objects
+                $LinkArray = @($TopLinks | ForEach-Object {
                     @{
-                        linkId = $_.Key
-                        count = $_.Value.Count
-                        title = $_.Value.Title
-                        url = $_.Value.Url
+                        linkId = [string]$_.Key
+                        count = [int]$_.Value.Count
+                        title = if ($_.Value.Title) { [string]$_.Value.Title } else { '' }
+                        url = if ($_.Value.Url) { [string]$_.Value.Url } else { '' }
                     }
-                }) | ConvertTo-Json -Compress -Depth 3
+                })
                 
-                $AggRecord.TopLinksJson = $LinkClicksJson
+                # Convert to JSON string for storage
+                $LinkClicksJson = $LinkArray | ConvertTo-Json -Compress -Depth 2
+                
+                # Store as string property
+                $AggRecord['TopLinksJson'] = [string]$LinkClicksJson
             }
             
             try {
