@@ -84,7 +84,11 @@ function Get-AggregatedAnalytics {
         
         # Aggregate top clicked links across all days
         $AllTopLinks = @{}
+        $AllTopReferrers = @{}
+        $AllTopUserAgents = @{}
+        
         foreach ($Record in $AggregatedRecords) {
+            # Aggregate top links
             if ($Record.TopLinksJson) {
                 try {
                     $TopLinks = $Record.TopLinksJson | ConvertFrom-Json
@@ -104,10 +108,64 @@ function Get-AggregatedAnalytics {
                     Write-Warning "Failed to parse TopLinksJson for record $($Record.RowKey): $($_.Exception.Message)"
                 }
             }
+            
+            # Aggregate top referrers
+            if ($Record.TopReferrersJson) {
+                try {
+                    $TopReferrers = $Record.TopReferrersJson | ConvertFrom-Json
+                    foreach ($Ref in $TopReferrers) {
+                        $Referrer = $Ref.referrer
+                        if (-not $AllTopReferrers.ContainsKey($Referrer)) {
+                            $AllTopReferrers[$Referrer] = 0
+                        }
+                        $AllTopReferrers[$Referrer] += $Ref.count
+                    }
+                } catch {
+                    Write-Warning "Failed to parse TopReferrersJson for record $($Record.RowKey): $($_.Exception.Message)"
+                }
+            }
+            
+            # Aggregate top user agents
+            if ($Record.TopUserAgentsJson) {
+                try {
+                    $TopUserAgents = $Record.TopUserAgentsJson | ConvertFrom-Json
+                    foreach ($UA in $TopUserAgents) {
+                        $UserAgent = $UA.userAgent
+                        if (-not $AllTopUserAgents.ContainsKey($UserAgent)) {
+                            $AllTopUserAgents[$UserAgent] = 0
+                        }
+                        $AllTopUserAgents[$UserAgent] += $UA.count
+                    }
+                } catch {
+                    Write-Warning "Failed to parse TopUserAgentsJson for record $($Record.RowKey): $($_.Exception.Message)"
+                }
+            }
         }
         
         # Sort and get top 10 links overall
         $LinkClicksByLink = @($AllTopLinks.Values | Sort-Object clickCount -Descending | Select-Object -First 10)
+        
+        # Sort and get top 10 referrers
+        $TopReferrersList = @($AllTopReferrers.GetEnumerator() | 
+            Sort-Object Value -Descending | 
+            Select-Object -First 10 | 
+            ForEach-Object {
+                @{
+                    referrer = $_.Key
+                    count = $_.Value
+                }
+            })
+        
+        # Sort and get top 5 user agents (browsers)
+        $TopUserAgentsList = @($AllTopUserAgents.GetEnumerator() | 
+            Sort-Object Value -Descending | 
+            Select-Object -First 5 | 
+            ForEach-Object {
+                @{
+                    userAgent = $_.Key
+                    count = $_.Value
+                }
+            })
         
         # Get per-page breakdown if no specific page filter
         $PageBreakdown = @()
@@ -137,6 +195,8 @@ function Get-AggregatedAnalytics {
             viewsByDay = $ViewsByDay
             clicksByDay = $ClicksByDay
             linkClicksByLink = $LinkClicksByLink
+            topReferrers = $TopReferrersList
+            topUserAgents = $TopUserAgentsList
             pageBreakdown = $PageBreakdown
             source = 'aggregated'
         }

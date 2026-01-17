@@ -60,6 +60,14 @@ function Invoke-AdminGetAnalytics {
                 $Results.viewsByDay = $AggregatedData.viewsByDay
                 $Results.clicksByDay = $AggregatedData.clicksByDay
                 
+                # Add new aggregated data
+                if ($AggregatedData.topReferrers) {
+                    $Results.topReferrers = $AggregatedData.topReferrers
+                }
+                if ($AggregatedData.topUserAgents) {
+                    $Results.topUserAgents = $AggregatedData.topUserAgents
+                }
+                
                 if ($AggregatedData.pageBreakdown.Count -gt 0) {
                     # Enrich with page names from Pages table
                     $PagesTable = Get-LinkToMeTable -TableName 'Pages'
