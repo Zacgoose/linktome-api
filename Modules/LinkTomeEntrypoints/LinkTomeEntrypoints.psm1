@@ -544,7 +544,7 @@ function Receive-LinkTomeTimerTrigger {
     $FunctionName = $env:WEBSITE_SITE_NAME
 
     foreach ($Function in $Functions) {
-        Write-Information "LinkTomeTimer: $($Function.Command) - $($Function.Cron)"
+        Write-Information "LinkTomeTimer: Evaluating $($Function.Command) - $($Function.Cron)"
         $FunctionStatus = $Statuses | Where-Object { $_.RowKey -eq $Function.Id }
         
         # Create a new status entity if it doesn't exist
@@ -558,6 +558,22 @@ function Receive-LinkTomeTimerTrigger {
                 OrchestratorId = $null
             }
         }
+        
+        # Check if this timer should run based on cron schedule and last occurrence
+        $LastOccurrence = if ($FunctionStatus.LastOccurrence) { 
+            [datetime]$FunctionStatus.LastOccurrence 
+        } else { 
+            $null 
+        }
+        
+        $ShouldRun = Test-CronSchedule -CronExpression $Function.Cron -LastOccurrence $LastOccurrence -CurrentTime $UtcNow
+        
+        if (-not $ShouldRun) {
+            Write-Information "Skipping $($Function.Command) - not scheduled to run at this time"
+            continue
+        }
+        
+        Write-Information "Executing timer: $($Function.Command) - $($Function.Cron)"
         
         if ($FunctionStatus.OrchestratorId) {
             $FunctionName = $env:WEBSITE_SITE_NAME
