@@ -1,0 +1,11 @@
+{
+  "scriptFile": "../Modules/LinkTomeEntrypoints/LinkTomeEntrypoints.psm1",
+  "entryPoint": "Receive-LinkTomeOrchestrationTrigger",
+  "bindings": [
+    {
+      "name": "Context",
+      "type": "orchestrationTrigger",
+      "direction": "in"
+    }
+  ]
+}

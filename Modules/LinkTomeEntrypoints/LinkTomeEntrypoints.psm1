@@ -327,4 +327,282 @@ function New-LinkTomeCoreRequest {
     }
 }
 
-Export-ModuleMember -Function @('Receive-LinkTomeHttpTrigger', 'New-LinkTomeCoreRequest')
+function Receive-LinkTomeOrchestrationTrigger {
+    <#
+    .SYNOPSIS
+        Execute durable orchestrator function
+    .DESCRIPTION
+        Execute orchestrator from azure function app
+    .PARAMETER Context
+        The context object from the function app
+    .FUNCTIONALITY
+        Entrypoint
+    #>
+    param($Context)
+    Write-Debug "LINKTOME_ACTION=$($Item.Command ?? $Item.FunctionName)"
+    try {
+        if (Test-Json -Json $Context.Input) {
+            $OrchestratorInput = $Context.Input | ConvertFrom-Json
+        } else {
+            $OrchestratorInput = $Context.Input
+        }
+        Write-Information "Orchestrator started $($OrchestratorInput.OrchestratorName)"
+        Set-DurableCustomStatus -CustomStatus $OrchestratorInput.OrchestratorName
+        $DurableRetryOptions = @{
+            FirstRetryInterval  = (New-TimeSpan -Seconds 5)
+            MaxNumberOfAttempts = if ($OrchestratorInput.MaxAttempts) { $OrchestratorInput.MaxAttempts } else { 1 }
+            BackoffCoefficient  = 2
+        }
+
+        switch ($OrchestratorInput.DurableMode) {
+            'FanOut' {
+                $DurableMode = 'FanOut'
+                $NoWait = $true
+            }
+            'Sequence' {
+                $DurableMode = 'Sequence'
+                $NoWait = $false
+            }
+            'NoScaling' {
+                $DurableMode = 'NoScaling'
+                $NoWait = $false
+            }
+            default {
+                $DurableMode = 'FanOut (Default)'
+                $NoWait = $true
+            }
+        }
+        Write-Information "Durable Mode: $DurableMode"
+
+        $RetryOptions = New-DurableRetryOptions @DurableRetryOptions
+        if (!$OrchestratorInput.Batch -or ($OrchestratorInput.Batch | Measure-Object).Count -eq 0) {
+            $Batch = (Invoke-ActivityFunction -FunctionName 'LinkTomeActivityFunction' -Input $OrchestratorInput.QueueFunction -ErrorAction Stop) | Where-Object { $null -ne $_.FunctionName }
+        } else {
+            $Batch = $OrchestratorInput.Batch | Where-Object { $null -ne $_.FunctionName }
+        }
+
+        if (($Batch | Measure-Object).Count -gt 0) {
+            Write-Information "Batch Count: $($Batch.Count)"
+            $Output = foreach ($Item in $Batch) {
+                if ($DurableMode -eq 'NoScaling') {
+                    $Activity = @{
+                        FunctionName = 'LinkTomeActivityFunction'
+                        Input        = $Item
+                        ErrorAction  = 'Stop'
+                    }
+                    Invoke-ActivityFunction @Activity
+                } else {
+                    $DurableActivity = @{
+                        FunctionName = 'LinkTomeActivityFunction'
+                        Input        = $Item
+                        NoWait       = $NoWait
+                        RetryOptions = $RetryOptions
+                        ErrorAction  = 'Stop'
+                    }
+                    Invoke-DurableActivity @DurableActivity
+                }
+            }
+
+            if ($NoWait -and $Output) {
+                $Output = $Output | Where-Object { $_.GetType().Name -eq 'ActivityInvocationTask' }
+                if (($Output | Measure-Object).Count -gt 0) {
+                    Write-Information "Waiting for ($($Output.Count)) activity functions to complete..."
+                    $Results = foreach ($Task in $Output) {
+                        try {
+                            Wait-ActivityFunction -Task $Task
+                        } catch {}
+                    }
+                } else {
+                    $Results = @()
+                }
+            } else {
+                $Results = $Output
+            }
+        }
+
+        if ($Results -and $OrchestratorInput.PostExecution) {
+            Write-Information "Running post execution function $($OrchestratorInput.PostExecution.FunctionName)"
+            $PostExecParams = @{
+                FunctionName = $OrchestratorInput.PostExecution.FunctionName
+                Parameters   = $OrchestratorInput.PostExecution.Parameters
+                Results      = @($Results)
+            }
+            if ($null -ne $PostExecParams.FunctionName) {
+                $null = Invoke-ActivityFunction -FunctionName LinkTomeActivityFunction -Input $PostExecParams
+                Write-Information "Post execution function $($OrchestratorInput.PostExecution.FunctionName) completed"
+            } else {
+                Write-Information 'No post execution function name provided'
+                Write-Information ($PostExecParams | ConvertTo-Json -Depth 10)
+            }
+        }
+    } catch {
+        Write-Information "Orchestrator error $($_.Exception.Message) line $($_.InvocationInfo.ScriptLineNumber)"
+    }
+    return $true
+}
+
+function Receive-LinkTomeActivityTrigger {
+    <#
+    .SYNOPSIS
+        Execute durable activity function
+    .DESCRIPTION
+        Execute durable activity function from an orchestrator
+    .PARAMETER Item
+        The item to process
+    .FUNCTIONALITY
+        Entrypoint
+    #>
+    param($Item)
+    Write-Debug "LINKTOME_ACTION=$($Item.Command ?? $Item.FunctionName)"
+    Write-Information "Activity function running: $($Item | ConvertTo-Json -Depth 10 -Compress)"
+    try {
+        $Output = $null
+        Set-Location (Get-Item $PSScriptRoot).Parent.Parent.FullName
+        
+        $metric = @{
+            Kind         = 'LinkTomeCommandStart'
+            InvocationId = "$($ExecutionContext.InvocationId)"
+            Command      = $Item.Command
+            TaskName     = $Item.TaskName
+            JSONData     = ($Item | ConvertTo-Json -Depth 10 -Compress)
+        } | ConvertTo-Json -Depth 10 -Compress
+
+        Write-Information -MessageData $metric -Tag 'LinkTomeCommandStart'
+
+        if ($Item.FunctionName) {
+            $FunctionName = 'Push-{0}' -f $Item.FunctionName
+
+            try {
+                Write-Verbose "Activity starting Function: $FunctionName."
+                Invoke-Command -ScriptBlock { & $FunctionName -Item $Item }
+                $Status = 'Completed'
+                Write-Verbose "Activity completed Function: $FunctionName."
+            } catch {
+                $Status = 'Failed'
+                Write-Warning "Activity error Function: $FunctionName - $($_.Exception.Message)"
+                throw
+            }
+        } elseif ($Item.Command) {
+            try {
+                Write-Verbose "Activity running Command: $($Item.Command)"
+                if ($Item.Parameters) {
+                    $Parameters = $Item.Parameters
+                } else {
+                    $Parameters = @{}
+                }
+                $Output = Invoke-Command -ScriptBlock { & $Item.Command @Parameters }
+                $Status = 'Completed'
+                Write-Verbose "Activity completed Command: $($Item.Command)"
+            } catch {
+                $Status = 'Failed'
+                Write-Warning "Activity error Command: $($Item.Command) - $($_.Exception.Message)"
+                throw
+            }
+        } else {
+            Write-Warning 'Activity function called with no FunctionName or Command'
+            $Status = 'Failed'
+        }
+
+        $metric = @{
+            Kind         = 'LinkTomeCommandEnd'
+            InvocationId = "$($ExecutionContext.InvocationId)"
+            Command      = $Item.Command
+            Status       = $Status
+        } | ConvertTo-Json -Depth 10 -Compress
+
+        Write-Information -MessageData $metric -Tag 'LinkTomeCommandEnd'
+    } catch {
+        Write-Warning "Activity function error: $($_.Exception.Message)"
+        throw
+    }
+
+    if ($null -ne $Output -and $Output -ne '') {
+        return $Output
+    } else {
+        return "Activity function ended with status $($Status)."
+    }
+}
+
+function Receive-LinkTomeTimerTrigger {
+    <#
+    .SYNOPSIS
+        This function is used to execute timer functions based on the cron schedule.
+    .DESCRIPTION
+        This function is used to execute timer functions based on the cron schedule.
+    .PARAMETER Timer
+        The timer trigger object from the function app
+    .FUNCTIONALITY
+        Entrypoint
+    #>
+    param($Timer)
+
+    $UtcNow = (Get-Date).ToUniversalTime()
+    $Functions = Get-LinkTomeTimerFunctions
+    $Table = Get-LinkToMeTable -tablename LinkTomeTimers
+    $Statuses = Get-LinkToMeAzDataTableEntity @Table
+    $FunctionName = $env:WEBSITE_SITE_NAME
+
+    foreach ($Function in $Functions) {
+        Write-Information "LinkTomeTimer: $($Function.Command) - $($Function.Cron)"
+        $FunctionStatus = $Statuses | Where-Object { $_.RowKey -eq $Function.Id }
+        
+        if ($FunctionStatus.OrchestratorId) {
+            $FunctionName = $env:WEBSITE_SITE_NAME
+            $InstancesTable = Get-LinkToMeTable -TableName ('{0}Instances' -f ($FunctionName -replace '-', ''))
+            $Instance = Get-LinkToMeAzDataTableEntity @InstancesTable -Filter "PartitionKey eq '$($FunctionStatus.OrchestratorId)'" -Property PartitionKey, RowKey, RuntimeStatus
+            if ($Instance.RuntimeStatus -eq 'Running') {
+                Write-Warning "LinkTome Timer: $($Function.Command) - $($FunctionStatus.OrchestratorId) is still running, skipping execution"
+                continue
+            }
+        }
+        
+        try {
+            if ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
+                $FunctionStatus.ErrorMsg = ''
+            }
+
+            $Parameters = @{}
+            if ($Function.Parameters) {
+                $Parameters = $Function.Parameters | ConvertTo-Json | ConvertFrom-Json -AsHashtable
+            }
+
+            $metadata = @{
+                Command     = $Function.Command
+                Cron        = $Function.Cron
+                FunctionId  = $Function.Id
+                TriggerType = 'Timer'
+            }
+
+            if ($Parameters.Count -gt 0) {
+                $metadata['ParameterCount'] = $Parameters.Count
+                Write-Information "LINKTOME TIMER PARAMETERS: $($Parameters | ConvertTo-Json -Depth 10 -Compress)"
+            }
+
+            Invoke-Command -ScriptBlock { & $Function.Command @Parameters }
+
+            if ($Results -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') {
+                $FunctionStatus.OrchestratorId = $Results -join ','
+                $Status = 'Started'
+            } else {
+                $Status = 'Completed'
+            }
+        } catch {
+            $Status = 'Failed'
+            $ErrorMsg = $_.Exception.Message
+            if ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
+                $FunctionStatus.ErrorMsg = $ErrorMsg
+            } else {
+                $FunctionStatus | Add-Member -MemberType NoteProperty -Name ErrorMsg -Value $ErrorMsg
+            }
+            Write-Information "Error in LinkTomeTimer for $($Function.Command): $($_.Exception.Message)"
+        }
+        
+        $FunctionStatus.LastOccurrence = $UtcNow
+        $FunctionStatus.Status = $Status
+
+        Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force
+    }
+    return $true
+}
+
+Export-ModuleMember -Function @('Receive-LinkTomeHttpTrigger', 'New-LinkTomeCoreRequest', 'Receive-LinkTomeOrchestrationTrigger', 'Receive-LinkTomeActivityTrigger', 'Receive-LinkTomeTimerTrigger')
