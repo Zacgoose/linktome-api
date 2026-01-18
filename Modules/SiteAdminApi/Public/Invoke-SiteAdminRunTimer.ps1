@@ -28,8 +28,8 @@ function Invoke-SiteAdminRunTimer {
         # Auth is handled by the entrypoint - just use the authenticated user
         $User = $Request.AuthenticatedUser
         
-        # Parse request body
-        $Body = $Request.Body | ConvertFrom-Json -ErrorAction Stop
+        # Request body is already parsed by HTTP trigger
+        $Body = $Request.Body
         
         if (-not $Body.timerId) {
             return [HttpResponseContext]@{
@@ -128,8 +128,8 @@ function Invoke-SiteAdminRunTimer {
                 }
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ErrorMsg' -Value '' -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggered' -Value $true -Force
-                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredBy' -Value $AuthContext.Email -Force
-                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredByRole' -Value $AuthContext.UserRole -Force
+                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredBy' -Value $User.Email -Force
+                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredByRole' -Value $User.UserRole -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredAt' -Value $UtcNow -Force
                 
                 Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force | Out-Null
