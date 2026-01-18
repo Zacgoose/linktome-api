@@ -538,126 +538,93 @@ function Receive-LinkTomeTimerTrigger {
     param($Timer)
 
     $UtcNow = (Get-Date).ToUniversalTime()
+    
+    # Get-LinkTomeTimerFunctions now handles schedule evaluation using NCrontab
+    # and returns only timers that should run based on their cron schedule and last occurrence
     $Functions = Get-LinkTomeTimerFunctions
+    
+    if ($Functions.Count -eq 0) {
+        Write-Information "No timer functions scheduled to run at this time"
+        return
+    }
+    
     $Table = Get-LinkToMeTable -tablename LinkTomeTimers
-    $Statuses = Get-LinkToMeAzDataTableEntity @Table
     $FunctionName = $env:WEBSITE_SITE_NAME
 
     foreach ($Function in $Functions) {
-        Write-Information "LinkTomeTimer: Evaluating $($Function.Command) - $($Function.Cron)"
-        $FunctionStatus = $Statuses | Where-Object { $_.RowKey -eq $Function.Id }
+        Write-Information "LinkTomeTimer: Executing $($Function.Command) - Next occurrence: $($Function.NextOccurrence)"
         
-        # Create a new status entity if it doesn't exist
-        if (-not $FunctionStatus) {
-            Write-Information "Creating new status entry for timer: $($Function.Id)"
-            $FunctionStatus = @{
-                PartitionKey = 'Timer'
-                RowKey = $Function.Id
-                LastOccurrence = $null
-                Status = 'Pending'
-                OrchestratorId = $null
-            }
-        }
+        # Get current status from table
+        $FunctionStatus = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$($Function.Id)'"
         
-        # Check if this timer should run based on cron schedule and last occurrence
-        $LastOccurrence = if ($FunctionStatus.LastOccurrence) { 
-            # Convert DateTimeOffset to DateTime for cron evaluation
-            if ($FunctionStatus.LastOccurrence -is [DateTimeOffset]) {
-                $FunctionStatus.LastOccurrence.DateTime
-            } else {
-                [datetime]$FunctionStatus.LastOccurrence
-            }
-        } else { 
-            $null 
-        }
-        
-        $ShouldRun = Test-CronSchedule -CronExpression $Function.Cron -LastOccurrence $LastOccurrence -CurrentTime $UtcNow
-        
-        if (-not $ShouldRun) {
-            Write-Information "Skipping $($Function.Command) - not scheduled to run at this time"
-            continue
-        }
-        
-        Write-Information "Executing timer: $($Function.Command) - $($Function.Cron)"
-        
-        if ($FunctionStatus.OrchestratorId) {
+        # Check if orchestrator is still running
+        if ($Function.OrchestratorId) {
             $FunctionName = $env:WEBSITE_SITE_NAME
             $InstancesTable = Get-LinkToMeTable -TableName ('{0}Instances' -f ($FunctionName -replace '-', ''))
-            $Instance = Get-LinkToMeAzDataTableEntity @InstancesTable -Filter "PartitionKey eq '$($FunctionStatus.OrchestratorId)'" -Property PartitionKey, RowKey, RuntimeStatus
+            $Instance = Get-LinkToMeAzDataTableEntity @InstancesTable -Filter "PartitionKey eq '$($Function.OrchestratorId)'" -Property PartitionKey, RowKey, RuntimeStatus
             if ($Instance.RuntimeStatus -eq 'Running') {
-                Write-Warning "LinkTome Timer: $($Function.Command) - $($FunctionStatus.OrchestratorId) is still running, skipping execution"
+                Write-Warning "LinkTome Timer: $($Function.Command) - $($Function.OrchestratorId) is still running, skipping execution"
                 continue
             }
         }
         
         try {
-            if ($FunctionStatus -is [hashtable]) {
-                # For hashtables, we can directly set values
-                if ($FunctionStatus.ContainsKey('ErrorMsg')) {
-                    $FunctionStatus['ErrorMsg'] = ''
+            # Clear any previous error message
+            if ($FunctionStatus) {
+                if ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
+                    $FunctionStatus.ErrorMsg = ''
                 }
-            } elseif ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
-                $FunctionStatus.ErrorMsg = ''
             }
 
             $Parameters = @{}
-            if ($Function.Parameters) {
-                $Parameters = $Function.Parameters | ConvertTo-Json | ConvertFrom-Json -AsHashtable
-            }
-
-            $metadata = @{
-                Command     = $Function.Command
-                Cron        = $Function.Cron
-                FunctionId  = $Function.Id
-                TriggerType = 'Timer'
-            }
-
-            if ($Parameters.Count -gt 0) {
-                $metadata['ParameterCount'] = $Parameters.Count
+            if ($Function.Parameters -and $Function.Parameters.Count -gt 0) {
+                $Parameters = $Function.Parameters
                 Write-Information "LINKTOME TIMER PARAMETERS: $($Parameters | ConvertTo-Json -Depth 10 -Compress)"
             }
 
-            $Results = Invoke-Command -ScriptBlock { & $Function.Command @Parameters }
+            Write-Information "Executing: $($Function.Command) with parameters: $($Parameters.Keys -join ', ')"
+            $Results = & $Function.Command @Parameters
 
+            # Check if result is an orchestrator ID (GUID)
             if ($Results -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') {
-                if ($FunctionStatus -is [hashtable]) {
-                    $FunctionStatus['OrchestratorId'] = $Results -join ','
-                } else {
+                if ($FunctionStatus) {
                     $FunctionStatus.OrchestratorId = $Results -join ','
                 }
                 $Status = 'Started'
+                Write-Information "Timer started orchestrator: $Results"
             } else {
                 $Status = 'Completed'
+                Write-Information "Timer completed successfully"
             }
         } catch {
             $Status = 'Failed'
             $ErrorMsg = $_.Exception.Message
-            if ($FunctionStatus -is [hashtable]) {
-                $FunctionStatus['ErrorMsg'] = $ErrorMsg
-            } elseif ($FunctionStatus.PSObject.Properties.Name -contains 'ErrorMsg') {
-                $FunctionStatus.ErrorMsg = $ErrorMsg
-            } else {
-                $FunctionStatus | Add-Member -MemberType NoteProperty -Name ErrorMsg -Value $ErrorMsg
+            if ($FunctionStatus) {
+                if ($FunctionStatus.PSObject.Properties.Name -notcontains 'ErrorMsg') {
+                    $FunctionStatus | Add-Member -MemberType NoteProperty -Name ErrorMsg -Value $ErrorMsg -Force
+                } else {
+                    $FunctionStatus.ErrorMsg = $ErrorMsg
+                }
             }
-            Write-Information "Error in LinkTomeTimer for $($Function.Command): $($_.Exception.Message)"
+            Write-Warning "Error in LinkTomeTimer for $($Function.Command): $ErrorMsg"
+            Write-Warning "Stack trace: $($_.ScriptStackTrace)"
         }
         
-        # Update status properties
-        if ($FunctionStatus -is [hashtable]) {
-            $FunctionStatus['LastOccurrence'] = $UtcNow
-            $FunctionStatus['Status'] = $Status
-        } else {
+        # Update status in table
+        if ($FunctionStatus) {
             $FunctionStatus.LastOccurrence = $UtcNow
             $FunctionStatus.Status = $Status
-        }
-
-        # Only save if entity is valid
-        try {
-            Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force
-        } catch {
-            Write-Warning "Failed to save timer status for $($Function.Command): $($_.Exception.Message)"
+            
+            try {
+                Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force | Out-Null
+                Write-Information "Updated timer status: $($Function.Command) - $Status"
+            } catch {
+                Write-Warning "Failed to save timer status for $($Function.Command): $($_.Exception.Message)"
+            }
         }
     }
+    
+    Write-Information "LinkTomeTimer trigger completed"
     return $true
 }
 
