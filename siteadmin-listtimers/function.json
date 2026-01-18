@@ -1,0 +1,21 @@
+{
+  "scriptFile": "../Modules/LinkTomeEntrypoints/LinkTomeEntrypoints.psm1",
+  "entryPoint": "Receive-SiteAdminApiRequest",
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "Request",
+      "methods": [
+        "get"
+      ],
+      "route": "siteadmin/timers"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "Response"
+    }
+  ]
+}

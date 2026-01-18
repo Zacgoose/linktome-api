@@ -628,4 +628,73 @@ function Receive-LinkTomeTimerTrigger {
     return $true
 }
 
-Export-ModuleMember -Function @('Receive-LinkTomeHttpTrigger', 'New-LinkTomeCoreRequest', 'Receive-LinkTomeOrchestrationTrigger', 'Receive-LinkTomeActivityTrigger', 'Receive-LinkTomeTimerTrigger')
+function Receive-SiteAdminApiRequest {
+    <#
+    .SYNOPSIS
+        Handle Site Admin API requests
+    .DESCRIPTION
+        Entry point for site administrator API requests including manual timer triggers
+    .PARAMETER Request
+        The request object from the function app
+    .PARAMETER TriggerMetadata
+        The trigger metadata object from the function app
+    .FUNCTIONALITY
+        Entrypoint
+    #>
+    param(
+        $Request,
+        $TriggerMetadata
+    )
+
+    if ($Request.Headers.'x-ms-coldstart' -eq 1) {
+        Write-Information '** Function app cold start detected **'
+    }
+
+    # Convert the request to a PSCustomObject
+    $Request = $Request | ConvertTo-Json -Depth 100 | ConvertFrom-Json
+    Set-Location (Get-Item $PSScriptRoot).Parent.Parent.FullName
+
+    # Import SiteAdminApi module
+    Import-Module (Join-Path $PSScriptRoot '../SiteAdminApi/SiteAdminApi.psm1') -Force
+
+    # Route based on the URL path
+    $Route = $Request.Params.route
+    
+    try {
+        switch -Regex ($Route) {
+            'siteadmin/runtimer' {
+                $Response = Invoke-SiteAdminRunTimer -Request $Request -TriggerMetadata $TriggerMetadata
+            }
+            'siteadmin/timers' {
+                $Response = Invoke-SiteAdminListTimers -Request $Request -TriggerMetadata $TriggerMetadata
+            }
+            default {
+                $Response = Send-ApiResponse -StatusCode 404 -Body @{
+                    error = 'Not found'
+                    message = "Site admin route not found: $Route"
+                }
+            }
+        }
+    } catch {
+        Write-Error "Error in Receive-SiteAdminApiRequest: $($_.Exception.Message)"
+        $Response = Send-ApiResponse -StatusCode 500 -Body @{
+            error = 'Internal server error'
+            message = $_.Exception.Message
+        }
+    }
+
+    # Prepare response
+    if ($null -ne $Response -and $null -ne $Response.StatusCode) {
+        if ($Response.Body -is [PSCustomObject]) {
+            $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
+        }
+        Push-OutputBinding -Name Response -Value $Response
+    } else {
+        Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::InternalServerError
+            Body       = '{"error":"Unexpected null response from handler"}'
+        })
+    }
+}
+
+Export-ModuleMember -Function @('Receive-LinkTomeHttpTrigger', 'New-LinkTomeCoreRequest', 'Receive-LinkTomeOrchestrationTrigger', 'Receive-LinkTomeActivityTrigger', 'Receive-LinkTomeTimerTrigger', 'Receive-SiteAdminApiRequest')
