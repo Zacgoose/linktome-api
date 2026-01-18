@@ -65,8 +65,6 @@ function Invoke-SiteAdminRunTimer {
             }
         }
 
-        Write-Information "Site super admin $($User.Email) (role: $($User.UserRole)) manually triggering timer: $($Timer.Command)"
-
         # Get timer status table
         $Table = Get-LinkToMeTable -TableName 'LinkTomeTimers'
         $FunctionStatus = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$TimerId'" | Select-Object -First 1
