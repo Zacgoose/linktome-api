@@ -67,6 +67,10 @@ function Get-EndpointPermissions {
         'admin/getSubAccounts' = @('manage:subaccounts')
         'admin/createSubAccount' = @('manage:subaccounts')
         'admin/deleteSubAccount' = @('manage:subaccounts')
+        
+        # Site Admin endpoints
+        'siteadmin/listtimers' = @('read:siteadmin')
+        'siteadmin/runtimer' = @('write:siteadmin')
     }
     
     return $EndpointPermissions[$Endpoint]

@@ -25,26 +25,9 @@ function Invoke-SiteAdminRunTimer {
     )
 
     try {
-        # Validate authentication
-        $AuthContext = $Request.Context.AuthContext
-        if (-not $AuthContext) {
-            return Send-ApiResponse -StatusCode 401 -Body @{
-                error = 'Authentication required'
-                message = 'You must be authenticated to access this endpoint'
-            }
-        }
-
-        # Check for write:siteadmin permission
-        if (-not ($AuthContext.Permissions -contains 'write:siteadmin')) {
-            Write-Warning "Unauthorized site admin access attempt by: $($AuthContext.Email) (role: $($AuthContext.UserRole))"
-            return Send-ApiResponse -StatusCode 403 -Body @{
-                error = 'Forbidden'
-                message = 'This endpoint requires write:siteadmin permission (site_super_admin role)'
-                requiredPermission = 'write:siteadmin'
-                requiredRole = 'site_super_admin'
-            }
-        }
-
+        # Auth is handled by the entrypoint - just use the authenticated user
+        $User = $Request.AuthenticatedUser
+        
         # Parse request body
         $Body = $Request.Body | ConvertFrom-Json -ErrorAction Stop
         
@@ -82,7 +65,7 @@ function Invoke-SiteAdminRunTimer {
             }
         }
 
-        Write-Information "Site super admin $($AuthContext.Email) (role: $($AuthContext.UserRole)) manually triggering timer: $($Timer.Command)"
+        Write-Information "Site super admin $($User.Email) (role: $($User.UserRole)) manually triggering timer: $($Timer.Command)"
 
         # Get timer status table
         $Table = Get-LinkToMeTable -TableName 'LinkTomeTimers'
@@ -150,8 +133,8 @@ function Invoke-SiteAdminRunTimer {
                 status = $Status
                 orchestratorId = $OrchestratorId
                 executedAt = $UtcNow.ToString('o')
-                executedBy = $AuthContext.Email
-                executedByRole = $AuthContext.UserRole
+                executedBy = $User.Email
+                executedByRole = $User.UserRole
             }
 
         } catch {
@@ -166,8 +149,8 @@ function Invoke-SiteAdminRunTimer {
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'Status' -Value 'Failed' -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ErrorMsg' -Value $ErrorMsg -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggered' -Value $true -Force
-                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredBy' -Value $AuthContext.Email -Force
-                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredByRole' -Value $AuthContext.UserRole -Force
+                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredBy' -Value $User.Email -Force
+                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredByRole' -Value $User.UserRole -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredAt' -Value $UtcNow -Force
                 
                 Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force | Out-Null

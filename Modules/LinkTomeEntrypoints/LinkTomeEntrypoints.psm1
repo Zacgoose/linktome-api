@@ -254,6 +254,57 @@ function New-LinkTomeCoreRequest {
         }
         
         # ============================================================
+        # SITE ADMIN ENDPOINTS - Cookie/JWT auth with site_super_admin role
+        # ============================================================
+        elseif ($Endpoint -match '^siteadmin/') {
+            $User = Get-UserFromRequest -Request $Request
+            if (-not $User) {
+                Write-SecurityEvent -EventType 'AuthFailed' -Endpoint $Endpoint -IpAddress $ClientIP
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Unauthorized
+                    Body = @{ error = "Unauthorized" }
+                }
+            }
+
+            # Rate limit check
+            $RateLimit = Test-RateLimit -Identifier $User.UserId -Endpoint $Endpoint -MaxRequests 30 -WindowSeconds 30
+            if (-not $RateLimit.Allowed) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::TooManyRequests
+                    Body = @{ error = "Too many requests" }
+                }
+            }
+
+            $RequiredPermissions = Get-EndpointPermissions -Endpoint $Endpoint
+            
+            if ($null -eq $RequiredPermissions) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "Access denied" }
+                }
+            }
+            
+            if ($RequiredPermissions.Count -gt 0) {
+                $HasPermission = Test-ContextAwarePermission -User $User -RequiredPermissions $RequiredPermissions -UserId $null
+                if (-not $HasPermission) {
+                    Write-Warning "Unauthorized site admin access attempt by: $($User.Email) (role: $($User.UserRole))"
+                    return [HttpResponseContext]@{
+                        StatusCode = [HttpStatusCode]::Forbidden
+                        Body = @{ 
+                            error = "Insufficient permissions" 
+                            message = "This endpoint requires $($RequiredPermissions -join ', ') permission (site_super_admin role)"
+                            requiredPermissions = $RequiredPermissions
+                            requiredRole = 'site_super_admin'
+                        }
+                    }
+                }
+            }
+            
+            $Request | Add-Member -NotePropertyName 'AuthMethod' -NotePropertyValue 'session' -Force
+            $Request | Add-Member -NotePropertyName 'AuthenticatedUser' -NotePropertyValue $User -Force
+        }
+        
+        # ============================================================
         # ADMIN ENDPOINTS - Cookie/JWT auth
         # ============================================================
         elseif ($Endpoint -match '^admin/') {
@@ -628,73 +679,4 @@ function Receive-LinkTomeTimerTrigger {
     return $true
 }
 
-function Receive-SiteAdminApiRequest {
-    <#
-    .SYNOPSIS
-        Handle Site Admin API requests
-    .DESCRIPTION
-        Entry point for site administrator API requests including manual timer triggers
-    .PARAMETER Request
-        The request object from the function app
-    .PARAMETER TriggerMetadata
-        The trigger metadata object from the function app
-    .FUNCTIONALITY
-        Entrypoint
-    #>
-    param(
-        $Request,
-        $TriggerMetadata
-    )
-
-    if ($Request.Headers.'x-ms-coldstart' -eq 1) {
-        Write-Information '** Function app cold start detected **'
-    }
-
-    # Convert the request to a PSCustomObject
-    $Request = $Request | ConvertTo-Json -Depth 100 | ConvertFrom-Json
-    Set-Location (Get-Item $PSScriptRoot).Parent.Parent.FullName
-
-    # Import SiteAdminApi module
-    Import-Module (Join-Path $PSScriptRoot '../SiteAdminApi/SiteAdminApi.psm1') -Force
-
-    # Route based on the URL path
-    $Route = $Request.Params.route
-    
-    try {
-        switch -Regex ($Route) {
-            'siteadmin/runtimer' {
-                $Response = Invoke-SiteAdminRunTimer -Request $Request -TriggerMetadata $TriggerMetadata
-            }
-            'siteadmin/timers' {
-                $Response = Invoke-SiteAdminListTimers -Request $Request -TriggerMetadata $TriggerMetadata
-            }
-            default {
-                $Response = Send-ApiResponse -StatusCode 404 -Body @{
-                    error = 'Not found'
-                    message = "Site admin route not found: $Route"
-                }
-            }
-        }
-    } catch {
-        Write-Error "Error in Receive-SiteAdminApiRequest: $($_.Exception.Message)"
-        $Response = Send-ApiResponse -StatusCode 500 -Body @{
-            error = 'Internal server error'
-            message = $_.Exception.Message
-        }
-    }
-
-    # Prepare response
-    if ($null -ne $Response -and $null -ne $Response.StatusCode) {
-        if ($Response.Body -is [PSCustomObject]) {
-            $Response.Body = $Response.Body | ConvertTo-Json -Depth 20 -Compress
-        }
-        Push-OutputBinding -Name Response -Value $Response
-    } else {
-        Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-            StatusCode = [HttpStatusCode]::InternalServerError
-            Body       = '{"error":"Unexpected null response from handler"}'
-        })
-    }
-}
-
-Export-ModuleMember -Function @('Receive-LinkTomeHttpTrigger', 'New-LinkTomeCoreRequest', 'Receive-LinkTomeOrchestrationTrigger', 'Receive-LinkTomeActivityTrigger', 'Receive-LinkTomeTimerTrigger', 'Receive-SiteAdminApiRequest')
+Export-ModuleMember -Function @('Receive-LinkTomeHttpTrigger', 'New-LinkTomeCoreRequest', 'Receive-LinkTomeOrchestrationTrigger', 'Receive-LinkTomeActivityTrigger', 'Receive-LinkTomeTimerTrigger')

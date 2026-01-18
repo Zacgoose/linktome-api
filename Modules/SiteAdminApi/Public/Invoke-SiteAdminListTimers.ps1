@@ -24,26 +24,9 @@ function Invoke-SiteAdminListTimers {
     )
 
     try {
-        # Validate authentication
-        $AuthContext = $Request.Context.AuthContext
-        if (-not $AuthContext) {
-            return Send-ApiResponse -StatusCode 401 -Body @{
-                error = 'Authentication required'
-                message = 'You must be authenticated to access this endpoint'
-            }
-        }
-
-        # Check for read:siteadmin permission
-        if (-not ($AuthContext.Permissions -contains 'read:siteadmin')) {
-            Write-Warning "Unauthorized site admin access attempt by: $($AuthContext.Email) (role: $($AuthContext.UserRole))"
-            return Send-ApiResponse -StatusCode 403 -Body @{
-                error = 'Forbidden'
-                message = 'This endpoint requires read:siteadmin permission (site_super_admin role)'
-                requiredPermission = 'read:siteadmin'
-                requiredRole = 'site_super_admin'
-            }
-        }
-
+        # Auth is handled by the entrypoint - just use the authenticated user
+        $User = $Request.AuthenticatedUser
+        
         # Load timer configuration
         $TimersJsonPath = Join-Path $PSScriptRoot '../../../LinkTomeTimers.json'
         if (-not (Test-Path $TimersJsonPath)) {

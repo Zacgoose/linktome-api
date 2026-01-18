@@ -1,6 +1,6 @@
 {
   "scriptFile": "../Modules/LinkTomeEntrypoints/LinkTomeEntrypoints.psm1",
-  "entryPoint": "Receive-SiteAdminApiRequest",
+  "entryPoint": "Receive-LinkTomeHttpTrigger",
   "bindings": [
     {
       "authLevel": "anonymous",
@@ -10,7 +10,7 @@
       "methods": [
         "get"
       ],
-      "route": "siteadmin/timers"
+      "route": "siteadmin/listtimers/{Endpoint:regex(siteadmin/listtimers)}"
     },
     {
       "type": "http",
