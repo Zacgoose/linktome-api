@@ -6,7 +6,7 @@ $TotalStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 # Import modules
 $SwModules = [System.Diagnostics.Stopwatch]::StartNew()
 $ModulesPath = Join-Path $PSScriptRoot 'Modules'
-$Modules = @('LinkTomeCore', 'AzBobbyTables', 'PrivateApi', 'PublicApi', 'PSJsonWebToken')
+$Modules = @('LinkTomeCore', 'AzBobbyTables', 'PrivateApi', 'PublicApi', 'SiteAdminApi', 'PSJsonWebToken')
 foreach ($Module in $Modules) {
     $SwModule = [System.Diagnostics.Stopwatch]::StartNew()
     try {
