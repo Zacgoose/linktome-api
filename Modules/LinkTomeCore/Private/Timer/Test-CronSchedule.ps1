@@ -49,21 +49,28 @@ function Test-CronSchedule {
         $CronMonth = $Parts[4]
         $CronDayOfWeek = $Parts[5]
         
+        # Calculate the minimum interval based on the cron expression
+        $MinIntervalSeconds = Get-CronMinimumInterval -CronExpression $CronExpression
+        
         # If we have a last occurrence, check if enough time has passed
         if ($LastOccurrence) {
-            # Calculate the minimum interval based on the cron expression
-            $MinIntervalSeconds = Get-CronMinimumInterval -CronExpression $CronExpression
-            
             $TimeSinceLastRun = ($CurrentTime - $LastOccurrence).TotalSeconds
             
-            # If not enough time has passed, don't run
+            # If not enough time has passed since last run, don't run
             if ($TimeSinceLastRun -lt $MinIntervalSeconds) {
                 Write-Information "Timer not ready: Only $([math]::Round($TimeSinceLastRun, 0))s since last run, need $MinIntervalSeconds s"
                 return $false
             }
+            
+            # If enough time has passed since last run, check if it should have run by now
+            # This handles missed runs (e.g., scheduled for 3:00 AM but now it's 3:05 AM)
+            if ($TimeSinceLastRun -ge $MinIntervalSeconds) {
+                Write-Information "Timer ready: $([math]::Round($TimeSinceLastRun, 0))s since last run (minimum: $MinIntervalSeconds s)"
+                return $true
+            }
         }
         
-        # Check if current time matches the cron expression
+        # If no last occurrence, check if current time matches the cron expression
         $Matches = @(
             (Test-CronField -Value $CurrentTime.Second -Field $CronSecond -Min 0 -Max 59),
             (Test-CronField -Value $CurrentTime.Minute -Field $CronMinute -Min 0 -Max 59),
