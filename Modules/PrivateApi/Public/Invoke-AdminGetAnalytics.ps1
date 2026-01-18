@@ -36,7 +36,16 @@ function Invoke-AdminGetAnalytics {
         Write-FeatureUsageEvent -UserId $UserId -Feature 'advanced_analytics' -Allowed $HasAdvancedAnalytics -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/getAnalytics'
         
         # Try to get pre-aggregated analytics first (much faster)
-        $AggregatedData = Get-AggregatedAnalytics -UserId $UserId -PageId $PageId -DaysBack 30
+        # Apply tier-based limits on historical data days
+        $DaysBackLimit = switch ($UserTier) {
+            'free' { 7 }        # Free: 7 days
+            'premium' { 30 }    # Premium: 30 days
+            'enterprise' { 90 } # Enterprise: 90 days
+            default { 7 }       # Default to free tier limit
+        }
+        
+        Write-Information "User tier: $UserTier, Days back limit: $DaysBackLimit"
+        $AggregatedData = Get-AggregatedAnalytics -UserId $UserId -PageId $PageId -DaysBack $DaysBackLimit
         
         if ($AggregatedData) {
             Write-Information "Using pre-aggregated analytics data"
@@ -172,9 +181,9 @@ function Invoke-AdminGetAnalytics {
                 $lcblObj
             } | Sort-Object clickCount -Descending)
             
-            # Get page views by day (last 30 days)
-            $ThirtyDaysAgo = [DateTimeOffset]::UtcNow.AddDays(-30)
-            $ViewsByDay = @($PageViews | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $ThirtyDaysAgo } | 
+            # Get page views by day (apply tier-based days limit)
+            $DaysAgo = [DateTimeOffset]::UtcNow.AddDays(-$DaysBackLimit)
+            $ViewsByDay = @($PageViews | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $DaysAgo } | 
                 Group-Object { ([DateTimeOffset]$_.EventTimestamp).ToString('yyyy-MM-dd') } | 
                 ForEach-Object {
                     @{
@@ -183,8 +192,8 @@ function Invoke-AdminGetAnalytics {
                     }
                 } | Sort-Object date)
             
-            # Get link clicks by day (last 30 days)
-            $ClicksByDay = @($LinkClicks | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $ThirtyDaysAgo } | 
+            # Get link clicks by day (apply tier-based days limit)
+            $ClicksByDay = @($LinkClicks | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $DaysAgo } | 
                 Group-Object { ([DateTimeOffset]$_.EventTimestamp).ToString('yyyy-MM-dd') } | 
                 ForEach-Object {
                     @{

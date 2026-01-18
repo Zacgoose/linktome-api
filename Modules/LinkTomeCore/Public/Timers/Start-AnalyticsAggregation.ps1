@@ -49,10 +49,13 @@ function Start-AnalyticsAggregation {
         
         Write-Information "Processing $($AllEvents.Count) raw analytics events"
         
-        # Group events at three levels:
-        # 1. User-level: user-{userId}-{date}
-        # 2. Page-level: page-{userId}-{date}-{pageId}
-        # 3. Link-level: link-{userId}-{date}-{linkId}
+        # Group events at three levels with new partition/row key structure:
+        # PartitionKey format: {type}-{guid} (e.g., user-abc123, page-abc123, link-abc123)
+        # RowKey format: yyyy-MM-dd (e.g., 2026-01-18)
+        # 
+        # 1. User-level: PK=user-{userId}, RK={date}
+        # 2. Page-level: PK=page-{pageId}, RK={date}
+        # 3. Link-level: PK=link-{linkId}, RK={date}
         
         $UserLevelData = @{}
         $PageLevelData = @{}
@@ -67,7 +70,7 @@ function Start-AnalyticsAggregation {
             $LinkId = $Event.LinkId
             
             # ===== USER-LEVEL AGGREGATION =====
-            $UserKey = "user-$UserId-$EventDate"
+            $UserKey = "user-$UserId|$EventDate"
             if (-not $UserLevelData.ContainsKey($UserKey)) {
                 $UserLevelData[$UserKey] = @{
                     Type = 'User'
@@ -106,7 +109,7 @@ function Start-AnalyticsAggregation {
             
             # ===== PAGE-LEVEL AGGREGATION =====
             if ($PageId) {
-                $PageKey = "page-$UserId-$EventDate-$PageId"
+                $PageKey = "page-$PageId|$EventDate"
                 if (-not $PageLevelData.ContainsKey($PageKey)) {
                     $PageLevelData[$PageKey] = @{
                         Type = 'Page'
@@ -147,7 +150,7 @@ function Start-AnalyticsAggregation {
             
             # ===== LINK-LEVEL AGGREGATION =====
             if ($LinkId -and $EventType -eq 'LinkClick') {
-                $LinkKey = "link-$UserId-$EventDate-$LinkId"
+                $LinkKey = "link-$LinkId|$EventDate"
                 if (-not $LinkLevelData.ContainsKey($LinkKey)) {
                     $LinkLevelData[$LinkKey] = @{
                         Type = 'Link'
@@ -283,8 +286,8 @@ function Start-AnalyticsAggregation {
         $PageSavedCount = 0
         foreach ($Key in $PageLevelData.Keys) {
             $Agg = $PageLevelData[$Key]
-            $PartitionKey = "page-$($Agg.UserId)"
-            $RowKey = "$($Agg.Date)-$($Agg.PageId)"
+            $PartitionKey = "page-$($Agg.PageId)"
+            $RowKey = $Agg.Date
             
             # Try to get existing aggregate to merge
             $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PartitionKey' and RowKey eq '$RowKey'" -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -382,8 +385,8 @@ function Start-AnalyticsAggregation {
         $LinkSavedCount = 0
         foreach ($Key in $LinkLevelData.Keys) {
             $Agg = $LinkLevelData[$Key]
-            $PartitionKey = "link-$($Agg.UserId)"
-            $RowKey = "$($Agg.Date)-$($Agg.LinkId)"
+            $PartitionKey = "link-$($Agg.LinkId)"
+            $RowKey = $Agg.Date
             
             # Try to get existing aggregate to merge
             $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PartitionKey' and RowKey eq '$RowKey'" -ErrorAction SilentlyContinue | Select-Object -First 1

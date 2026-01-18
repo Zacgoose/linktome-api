@@ -7,6 +7,11 @@ function Get-AggregatedAnalytics {
         Queries user-level, page-level, and link-level aggregates separately.
         This is much faster than computing aggregates on-the-fly from raw events.
         Falls back to raw event aggregation if aggregated data is not available.
+        
+        New partition key structure:
+        - User-level: PK=user-{userId}, RK=yyyy-MM-dd
+        - Page-level: PK=page-{pageId}, RK=yyyy-MM-dd
+        - Link-level: PK=link-{linkId}, RK=yyyy-MM-dd
     .PARAMETER UserId
         User ID to get analytics for
     .PARAMETER PageId
@@ -30,18 +35,60 @@ function Get-AggregatedAnalytics {
         # Get aggregated analytics table
         $AggregatedTable = Get-LinkToMeTable -TableName 'AnalyticsAggregated'
         
+        # Calculate date range for filtering
+        $StartDate = [DateTimeOffset]::UtcNow.AddDays(-$DaysBack).ToString('yyyy-MM-dd')
+        
         # Query user-level aggregates (PartitionKey: user-{userId})
         $SafeUserId = Protect-TableQueryValue -Value $UserId
         $UserPartitionKey = "user-$SafeUserId"
-        $UserRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$UserPartitionKey'"
+        $UserRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$UserPartitionKey' and RowKey ge '$StartDate'"
         
-        # Query page-level aggregates (PartitionKey: page-{userId})
-        $PagePartitionKey = "page-$SafeUserId"
-        $PageRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PagePartitionKey'"
+        # Get all user's pages and links to query their specific aggregates
+        $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+        $LinksTable = Get-LinkToMeTable -TableName 'Links'
         
-        # Query link-level aggregates (PartitionKey: link-{userId})
-        $LinkPartitionKey = "link-$SafeUserId"
-        $LinkRecords = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$LinkPartitionKey'"
+        $UserPages = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId'"
+        $UserLinks = Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'"
+        
+        # Query page-level aggregates for each of user's pages
+        $PageRecords = @()
+        if ($UserPages) {
+            foreach ($Page in $UserPages) {
+                $PagePK = "page-$($Page.RowKey)"
+                $PageAggs = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PagePK' and RowKey ge '$StartDate'"
+                if ($PageAggs) {
+                    # Add UserId to each record for consistent processing
+                    foreach ($Agg in $PageAggs) {
+                        $Agg | Add-Member -MemberType NoteProperty -Name 'PageId' -Value $Page.RowKey -Force
+                        $Agg | Add-Member -MemberType NoteProperty -Name 'UserId' -Value $UserId -Force
+                    }
+                    $PageRecords += $PageAggs
+                }
+            }
+        }
+        
+        # Query link-level aggregates for each of user's links
+        $LinkRecords = @()
+        if ($UserLinks) {
+            foreach ($Link in $UserLinks) {
+                $LinkPK = "link-$($Link.RowKey)"
+                $LinkAggs = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$LinkPK' and RowKey ge '$StartDate'"
+                if ($LinkAggs) {
+                    # Add metadata from link record
+                    foreach ($Agg in $LinkAggs) {
+                        $Agg | Add-Member -MemberType NoteProperty -Name 'LinkId' -Value $Link.RowKey -Force
+                        $Agg | Add-Member -MemberType NoteProperty -Name 'UserId' -Value $UserId -Force
+                        if (-not $Agg.LinkTitle -and $Link.Title) {
+                            $Agg | Add-Member -MemberType NoteProperty -Name 'LinkTitle' -Value $Link.Title -Force
+                        }
+                        if (-not $Agg.LinkUrl -and $Link.Url) {
+                            $Agg | Add-Member -MemberType NoteProperty -Name 'LinkUrl' -Value $Link.Url -Force
+                        }
+                    }
+                    $LinkRecords += $LinkAggs
+                }
+            }
+        }
         
         # If no aggregated data at all, return null to trigger fallback to raw events
         if ((-not $UserRecords -or $UserRecords.Count -eq 0) -and 
@@ -51,22 +98,14 @@ function Get-AggregatedAnalytics {
             return $null
         }
         
-        # Filter by date range
-        $StartDate = [DateTimeOffset]::UtcNow.AddDays(-$DaysBack).ToString('yyyy-MM-dd')
-        
-        if ($UserRecords) {
-            $UserRecords = @($UserRecords | Where-Object { $_.Date -ge $StartDate })
-        }
-        if ($PageRecords) {
-            $PageRecords = @($PageRecords | Where-Object { $_.Date -ge $StartDate })
-        }
-        if ($LinkRecords) {
-            $LinkRecords = @($LinkRecords | Where-Object { $_.Date -ge $StartDate })
-        }
-        
         # Filter by page if specified
         if ($PageId) {
             $PageRecords = @($PageRecords | Where-Object { $_.PageId -eq $PageId })
+            # Filter link records to only those belonging to the specified page
+            if ($UserLinks) {
+                $PageLinkIds = @($UserLinks | Where-Object { $_.PageId -eq $PageId } | Select-Object -ExpandProperty RowKey)
+                $LinkRecords = @($LinkRecords | Where-Object { $PageLinkIds -contains $_.LinkId })
+            }
         }
         
         # Calculate summary totals from user-level aggregates
@@ -119,7 +158,7 @@ function Get-AggregatedAnalytics {
         
         if ($UserRecords -and $UserRecords.Count -gt 0) {
             $ViewsByDay = @($UserRecords | 
-                Group-Object Date | 
+                Group-Object RowKey | 
                 ForEach-Object {
                     @{
                         date = $_.Name
@@ -128,7 +167,7 @@ function Get-AggregatedAnalytics {
                 } | Sort-Object date)
             
             $ClicksByDay = @($UserRecords | 
-                Group-Object Date | 
+                Group-Object RowKey | 
                 ForEach-Object {
                     @{
                         date = $_.Name
