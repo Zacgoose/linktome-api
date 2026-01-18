@@ -36,12 +36,13 @@ function Invoke-AdminGetAnalytics {
         Write-FeatureUsageEvent -UserId $UserId -Feature 'advanced_analytics' -Allowed $HasAdvancedAnalytics -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/getAnalytics'
         
         # Try to get pre-aggregated analytics first (much faster)
-        # Apply tier-based limits on historical data days
-        $DaysBackLimit = switch ($UserTier) {
-            'free' { 7 }        # Free: 7 days
-            'premium' { 30 }    # Premium: 30 days
-            'enterprise' { 90 } # Enterprise: 90 days
-            default { 7 }       # Default to free tier limit
+        # Apply tier-based limits on historical data days (from Get-TierFeatures)
+        $TierFeatures = Get-TierFeatures -Tier $UserTier
+        $DaysBackLimit = if ($TierFeatures.limits.analyticsRetentionDays -eq -1) {
+            # Unlimited for enterprise - use the aggregated data retention period
+            180
+        } else {
+            $TierFeatures.limits.analyticsRetentionDays
         }
         
         Write-Information "User tier: $UserTier, Days back limit: $DaysBackLimit"
