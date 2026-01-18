@@ -32,9 +32,12 @@ function Invoke-SiteAdminRunTimer {
         $Body = $Request.Body | ConvertFrom-Json -ErrorAction Stop
         
         if (-not $Body.timerId) {
-            return Send-ApiResponse -StatusCode 400 -Body @{
-                error = 'Missing required field'
-                message = 'timerId is required'
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{
+                    error = 'Missing required field'
+                    message = 'timerId is required'
+                }
             }
         }
 
@@ -50,18 +53,24 @@ function Invoke-SiteAdminRunTimer {
         $Timer = $Timers | Where-Object { $_.Id -eq $TimerId } | Select-Object -First 1
 
         if (-not $Timer) {
-            return Send-ApiResponse -StatusCode 404 -Body @{
-                error = 'Timer not found'
-                message = "No timer found with ID: $TimerId"
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::NotFound
+                Body = @{
+                    error = 'Timer not found'
+                    message = "No timer found with ID: $TimerId"
+                }
             }
         }
 
         # Check if the command function exists
         $CommandExists = Get-Command -Name $Timer.Command -ErrorAction SilentlyContinue
         if (-not $CommandExists) {
-            return Send-ApiResponse -StatusCode 400 -Body @{
-                error = 'Invalid timer configuration'
-                message = "Timer command not found: $($Timer.Command)"
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{
+                    error = 'Invalid timer configuration'
+                    message = "Timer command not found: $($Timer.Command)"
+                }
             }
         }
 
@@ -76,11 +85,14 @@ function Invoke-SiteAdminRunTimer {
             $Instance = Get-LinkToMeAzDataTableEntity @InstancesTable -Filter "PartitionKey eq '$($FunctionStatus.OrchestratorId)'" -Property PartitionKey, RowKey, RuntimeStatus | Select-Object -First 1
             
             if ($Instance -and $Instance.RuntimeStatus -eq 'Running') {
-                return Send-ApiResponse -StatusCode 409 -Body @{
-                    error = 'Timer already running'
-                    message = "Timer $($Timer.Command) has an orchestrator still running: $($FunctionStatus.OrchestratorId)"
-                    orchestratorId = $FunctionStatus.OrchestratorId
-                    status = 'Running'
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Conflict
+                    Body = @{
+                        error = 'Timer already running'
+                        message = "Timer $($Timer.Command) has an orchestrator still running: $($FunctionStatus.OrchestratorId)"
+                        orchestratorId = $FunctionStatus.OrchestratorId
+                        status = 'Running'
+                    }
                 }
             }
         }
@@ -123,16 +135,19 @@ function Invoke-SiteAdminRunTimer {
                 Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force | Out-Null
             }
 
-            return Send-ApiResponse -StatusCode 200 -Body @{
-                success = $true
-                message = "Timer $($Timer.Command) executed successfully"
-                timerId = $TimerId
-                command = $Timer.Command
-                status = $Status
-                orchestratorId = $OrchestratorId
-                executedAt = $UtcNow.ToString('o')
-                executedBy = $User.Email
-                executedByRole = $User.UserRole
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::OK
+                Body = @{
+                    success = $true
+                    message = "Timer $($Timer.Command) executed successfully"
+                    timerId = $TimerId
+                    command = $Timer.Command
+                    status = $Status
+                    orchestratorId = $OrchestratorId
+                    executedAt = $UtcNow.ToString('o')
+                    executedBy = $User.Email
+                    executedByRole = $User.UserRole
+                }
             }
 
         } catch {
@@ -154,11 +169,14 @@ function Invoke-SiteAdminRunTimer {
                 Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force | Out-Null
             }
 
-            return Send-ApiResponse -StatusCode 500 -Body @{
-                error = 'Timer execution failed'
-                message = $ErrorMsg
-                timerId = $TimerId
-                command = $Timer.Command
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::InternalServerError
+                Body = @{
+                    error = 'Timer execution failed'
+                    message = $ErrorMsg
+                    timerId = $TimerId
+                    command = $Timer.Command
+                }
             }
         }
 
@@ -166,9 +184,12 @@ function Invoke-SiteAdminRunTimer {
         Write-Error "Error in Invoke-SiteAdminRunTimer: $($_.Exception.Message)"
         Write-Error "Stack trace: $($_.ScriptStackTrace)"
         
-        return Send-ApiResponse -StatusCode 500 -Body @{
-            error = 'Internal server error'
-            message = $_.Exception.Message
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::InternalServerError
+            Body = @{
+                error = 'Internal server error'
+                message = $_.Exception.Message
+            }
         }
     }
 }

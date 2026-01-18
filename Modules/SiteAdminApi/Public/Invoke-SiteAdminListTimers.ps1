@@ -108,19 +108,25 @@ function Invoke-SiteAdminListTimers {
             $TimerList += $TimerInfo
         }
 
-        return Send-ApiResponse -StatusCode 200 -Body @{
-            success = $true
-            timers = $TimerList
-            count = $TimerList.Count
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::OK
+            Body = @{
+                success = $true
+                timers = $TimerList
+                count = $TimerList.Count
+            }
         }
 
     } catch {
         Write-Error "Error in Invoke-SiteAdminListTimers: $($_.Exception.Message)"
         Write-Error "Stack trace: $($_.ScriptStackTrace)"
         
-        return Send-ApiResponse -StatusCode 500 -Body @{
-            error = 'Internal server error'
-            message = $_.Exception.Message
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::InternalServerError
+            Body = @{
+                error = 'Internal server error'
+                message = $_.Exception.Message
+            }
         }
     }
 }
