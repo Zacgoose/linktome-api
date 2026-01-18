@@ -107,24 +107,11 @@ function Get-DefaultRolePermissions {
             'write:shortlinks'
         )
         'site_super_admin' = @(
-            # Full system access for site operators
+            # Full system access for site operators but these are not regular users and do not get access to normal user features like links/pages and user managemtnents and subscriptions
             'read:dashboard',
             'write:2fauth',
             'read:profile',
             'write:profile',
-            'read:links',
-            'write:links',
-            'read:pages',
-            'write:pages',
-            'read:appearance',
-            'write:appearance',
-            'read:analytics',
-            'read:users',
-            'manage:users',
-            'invite:user_manager',
-            'list:user_manager',
-            'remove:user_manager',
-            'respond:user_manager',
             'read:apiauth',
             'create:apiauth',
             'update:apiauth',
@@ -132,13 +119,7 @@ function Get-DefaultRolePermissions {
             'write:password',
             'write:email',
             'write:phone',
-            'read:subscription',
-            'write:subscription',
             'read:usersettings',
-            'read:shortlinks',
-            'write:shortlinks',
-            'manage:subaccounts',
-            # Site admin permissions
             'read:siteadmin',
             'write:siteadmin'
         )
