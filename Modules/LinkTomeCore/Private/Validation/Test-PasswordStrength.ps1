@@ -73,9 +73,10 @@ function Test-PasswordStrength {
         return $Result
     }
     # Only allow standard ASCII special characters
-    if ($Password -notmatch '[!"#$%&''()*+,\-./:;<=>?@[\\]^_`{|}~]') {
+    # Use single quotes for regex, escape only necessary characters, and include @
+    if ($Password -notmatch '[!"#$%&''()*+,\-./:;<=>?@[\\\]^_`{|}~@]') {
         $Result.Valid = $false
-        $Result.Message = 'Password must contain at least one standard special character (!"#$%&''()*+,-./:;<=>?@[\\]^_`{|}~)'
+        $Result.Message = 'Password must contain at least one standard special character (!"#$%&''()*+,-./:;<=>?@[\\]^_`{|}~@)'
         return $Result
     }
     # Disallow any non-ASCII character (including emoji)

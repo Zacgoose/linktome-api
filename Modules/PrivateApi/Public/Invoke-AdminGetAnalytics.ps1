@@ -35,39 +35,115 @@ function Invoke-AdminGetAnalytics {
         $UserTier = $User.SubscriptionTier
         Write-FeatureUsageEvent -UserId $UserId -Feature 'advanced_analytics' -Allowed $HasAdvancedAnalytics -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/getAnalytics'
         
-        $Table = Get-LinkToMeTable -TableName 'Analytics'
+        # Try to get pre-aggregated analytics first (much faster)
+        # Apply tier-based limits on historical data days (from Get-TierFeatures)
+        $TierFeatures = Get-TierFeatures -Tier $UserTier
+        $DaysBackLimit = if ($TierFeatures.limits.analyticsRetentionDays -eq -1) {
+            # Unlimited for enterprise - use the aggregated data retention period
+            180
+        } else {
+            $TierFeatures.limits.analyticsRetentionDays
+        }
+        
+        Write-Information "User tier: $UserTier, Days back limit: $DaysBackLimit"
+        $AggregatedData = Get-AggregatedAnalytics -UserId $UserId -PageId $PageId -DaysBack $DaysBackLimit
+        
+        if ($AggregatedData) {
+            Write-Information "Using pre-aggregated analytics data"
+            
+            # Use aggregated summary
+            $Summary = $AggregatedData.summary
+            
+            # Basic analytics (available to all tiers)
+            $Results = @{
+                summary = $Summary
+                hasAdvancedAnalytics = $HasAdvancedAnalytics
+            }
+            
+            # Advanced analytics - only for premium/enterprise tiers
+            if ($HasAdvancedAnalytics) {
+                # For aggregated data, we don't have individual event details
+                # But we have the pre-computed stats which are the main value
+                $Results.recentPageViews = @()  # Not available in aggregated data
+                $Results.recentLinkClicks = @()  # Not available in aggregated data
+                $Results.linkClicksByLink = $AggregatedData.linkClicksByLink
+                $Results.viewsByDay = $AggregatedData.viewsByDay
+                $Results.clicksByDay = $AggregatedData.clicksByDay
+                
+                # Add new aggregated data
+                if ($AggregatedData.topReferrers) {
+                    $Results.topReferrers = $AggregatedData.topReferrers
+                }
+                if ($AggregatedData.topUserAgents) {
+                    $Results.topUserAgents = $AggregatedData.topUserAgents
+                }
+                
+                if ($AggregatedData.pageBreakdown.Count -gt 0) {
+                    # Enrich with page names from Pages table
+                    $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+                    $SafeUserId = Protect-TableQueryValue -Value $UserId
+                    $UserPages = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId'"
+                    
+                    $Results.pageBreakdown = @($AggregatedData.pageBreakdown | ForEach-Object {
+                        $pageInfo = $UserPages | Where-Object { $_.RowKey -eq $_.pageId } | Select-Object -First 1
+                        if ($pageInfo) {
+                            @{
+                                pageId = $_.pageId
+                                pageName = $pageInfo.Name
+                                pageSlug = $pageInfo.Slug
+                                totalPageViews = $_.totalPageViews
+                                totalLinkClicks = $_.totalLinkClicks
+                            }
+                        }
+                    } | Where-Object { $_ })
+                }
+            } else {
+                # Return limited data for free tier
+                $Results.recentPageViews = @()
+                $Results.recentLinkClicks = @()
+                $Results.linkClicksByLink = @()
+                $Results.viewsByDay = @()
+                $Results.clicksByDay = @()
+            }
+            
+            $StatusCode = [HttpStatusCode]::OK
+        } else {
+            # Fallback to raw analytics events if aggregated data not available
+            Write-Information "Falling back to raw analytics events"
+            
+            $Table = Get-LinkToMeTable -TableName 'Analytics'
 
-        # Get analytics events for this user context
-        $SafeUserId = Protect-TableQueryValue -Value $UserId
-        $Events = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
-        
-        # Filter by page if specified
-        if ($PageId) {
-            $SafePageId = Protect-TableQueryValue -Value $PageId
-            $Events = @($Events | Where-Object { $_.PageId -eq $SafePageId })
-        }
-        
-        # Group events by type and calculate stats
-        $PageViews = @($Events | Where-Object { $_.EventType -eq 'PageView' })
-        $LinkClicks = @($Events | Where-Object { $_.EventType -eq 'LinkClick' })
-        
-        # Calculate summary statistics
-        $Summary = @{
-            totalPageViews = $PageViews.Count
-            totalLinkClicks = $LinkClicks.Count
-            uniqueVisitors = @($PageViews | Select-Object -Property IpAddress -Unique).Count
-        }
-        
-        # Basic analytics (available to all tiers)
-        $Results = @{
-            summary = $Summary
-            hasAdvancedAnalytics = $HasAdvancedAnalytics
-        }
-        
-        # Advanced analytics - only for premium/enterprise tiers
-        if ($HasAdvancedAnalytics) {
-            # Get recent page views (last 100)
-            $RecentPageViews = @($PageViews | Sort-Object EventTimestamp -Descending | Select-Object -First 100 | ForEach-Object {
+            # Get analytics events for this user context
+            $SafeUserId = Protect-TableQueryValue -Value $UserId
+            $Events = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
+            
+            # Filter by page if specified
+            if ($PageId) {
+                $SafePageId = Protect-TableQueryValue -Value $PageId
+                $Events = @($Events | Where-Object { $_.PageId -eq $SafePageId })
+            }
+            
+            # Group events by type and calculate stats
+            $PageViews = @($Events | Where-Object { $_.EventType -eq 'PageView' })
+            $LinkClicks = @($Events | Where-Object { $_.EventType -eq 'LinkClick' })
+            
+            # Calculate summary statistics
+            $Summary = @{
+                totalPageViews = $PageViews.Count
+                totalLinkClicks = $LinkClicks.Count
+                uniqueVisitors = @($PageViews | Select-Object -Property IpAddress -Unique).Count
+            }
+            
+            # Basic analytics (available to all tiers)
+            $Results = @{
+                summary = $Summary
+                hasAdvancedAnalytics = $HasAdvancedAnalytics
+            }
+            
+            # Advanced analytics - only for premium/enterprise tiers
+            if ($HasAdvancedAnalytics) {
+                # Get recent page views (last 100)
+                $RecentPageViews = @($PageViews | Sort-Object EventTimestamp -Descending | Select-Object -First 100 | ForEach-Object {
                 $pvObj = @{
                     timestamp = $_.EventTimestamp
                     ipAddress = $_.IpAddress
@@ -106,9 +182,9 @@ function Invoke-AdminGetAnalytics {
                 $lcblObj
             } | Sort-Object clickCount -Descending)
             
-            # Get page views by day (last 30 days)
-            $ThirtyDaysAgo = [DateTimeOffset]::UtcNow.AddDays(-30)
-            $ViewsByDay = @($PageViews | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $ThirtyDaysAgo } | 
+            # Get page views by day (apply tier-based days limit)
+            $DaysAgo = [DateTimeOffset]::UtcNow.AddDays(-$DaysBackLimit)
+            $ViewsByDay = @($PageViews | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $DaysAgo } | 
                 Group-Object { ([DateTimeOffset]$_.EventTimestamp).ToString('yyyy-MM-dd') } | 
                 ForEach-Object {
                     @{
@@ -117,8 +193,8 @@ function Invoke-AdminGetAnalytics {
                     }
                 } | Sort-Object date)
             
-            # Get link clicks by day (last 30 days)
-            $ClicksByDay = @($LinkClicks | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $ThirtyDaysAgo } | 
+            # Get link clicks by day (apply tier-based days limit)
+            $ClicksByDay = @($LinkClicks | Where-Object { [DateTimeOffset]$_.EventTimestamp -gt $DaysAgo } | 
                 Group-Object { ([DateTimeOffset]$_.EventTimestamp).ToString('yyyy-MM-dd') } | 
                 ForEach-Object {
                     @{
@@ -165,16 +241,17 @@ function Invoke-AdminGetAnalytics {
             if ($PageBreakdown.Count -gt 0) {
                 $Results.pageBreakdown = $PageBreakdown
             }
-        } else {
-            # Return limited data for free tier (frontend manages upgrade prompts)
-            $Results.recentPageViews = @()
-            $Results.recentLinkClicks = @()
-            $Results.linkClicksByLink = @()
-            $Results.viewsByDay = @()
-            $Results.clicksByDay = @()
+            } else {
+                # Return limited data for free tier (frontend manages upgrade prompts)
+                $Results.recentPageViews = @()
+                $Results.recentLinkClicks = @()
+                $Results.linkClicksByLink = @()
+                $Results.viewsByDay = @()
+                $Results.clicksByDay = @()
+            }
+            
+            $StatusCode = [HttpStatusCode]::OK
         }
-        
-        $StatusCode = [HttpStatusCode]::OK
         
     } catch {
         Write-Error "Get analytics error: $($_.Exception.Message)"

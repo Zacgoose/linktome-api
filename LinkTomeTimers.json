@@ -1,0 +1,117 @@
+[
+  {
+    "Id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "Command": "Start-DurableCleanup",
+    "Description": "Timer function to cleanup durable functions and expired orchestrations",
+    "Cron": "0 */15 * * * *",
+    "Priority": 0,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "Command": "Start-SubscriptionCleanup",
+    "Description": "Timer to process expired subscriptions and downgrade accounts",
+    "Cron": "0 0 2 * * *",
+    "Priority": 1,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "Command": "Start-AnalyticsAggregation",
+    "Description": "Timer to aggregate and summarize analytics data",
+    "Cron": "0 0 3 * * *",
+    "Priority": 2,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "d4e5f6a7-b8c9-0123-def1-234567890123",
+    "Command": "Start-BillingOrchestrator",
+    "Description": "Orchestrator to process billing and subscription renewals",
+    "Cron": "0 0 0 * * *",
+    "Priority": 3,
+    "RunOnProcessor": true
+  },
+  {
+    "Id": "e5f6a7b8-c9d0-1234-ef12-345678901234",
+    "Command": "Start-SecurityEventCleanup",
+    "Description": "Timer to cleanup old security events and audit logs",
+    "Cron": "0 0 1 * * *",
+    "Priority": 4,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "f6a7b8c9-d0e1-2345-f123-456789012345",
+    "Command": "Start-RateLimitCleanup",
+    "Description": "Timer to cleanup expired rate limit entries",
+    "Cron": "0 */30 * * * *",
+    "Priority": 5,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "a7b8c9d0-e1f2-3456-1234-567890123456",
+    "Command": "Start-TwoFactorSessionCleanup",
+    "Description": "Timer to cleanup expired 2FA sessions",
+    "Cron": "0 */15 * * * *",
+    "Priority": 6,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "b8c9d0e1-f2a3-4567-2345-678901234567",
+    "Command": "Start-ScheduledTaskOrchestrator",
+    "Description": "Orchestrator to process user scheduled tasks and notifications",
+    "Cron": "0 */15 * * * *",
+    "Priority": 7,
+    "RunOnProcessor": true
+  },
+  {
+    "Id": "c9d0e1f2-a3b4-5678-3456-789012345678",
+    "Command": "Start-BackupOrchestrator",
+    "Description": "Orchestrator to backup critical data",
+    "Cron": "0 0 4 * * *",
+    "Priority": 8,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "d0e1f2a3-b4c5-6789-4567-890123456789",
+    "Command": "Start-HealthCheckOrchestrator",
+    "Description": "Orchestrator to perform system health checks",
+    "Cron": "0 0 * * * *",
+    "Priority": 9,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "e1f2a3b4-c5d6-7890-5678-901234567890",
+    "Command": "Start-FeatureUsageCleanup",
+    "Description": "Timer to cleanup old feature usage tracking data",
+    "Cron": "0 0 23 * * *",
+    "Priority": 10,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "f2a3b4c5-d6e7-8901-6789-012345678901",
+    "Command": "Start-InactiveAccountCleanup",
+    "Description": "Timer to identify and process inactive accounts",
+    "Cron": "0 0 5 * * 0",
+    "Priority": 11,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  },
+  {
+    "Id": "a3b4c5d6-e7f8-9012-789a-bcdef0123456",
+    "Command": "Start-RefreshTokenCleanup",
+    "Description": "Timer to cleanup expired and invalid refresh tokens",
+    "Cron": "0 0 * * * *",
+    "Priority": 12,
+    "RunOnProcessor": true,
+    "IsSystem": true
+  }
+]

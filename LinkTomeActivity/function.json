@@ -1,0 +1,11 @@
+{
+  "scriptFile": "../Modules/LinkTomeEntrypoints/LinkTomeEntrypoints.psm1",
+  "entryPoint": "Receive-LinkTomeActivityTrigger",
+  "bindings": [
+    {
+      "name": "Item",
+      "type": "activityTrigger",
+      "direction": "in"
+    }
+  ]
+}
