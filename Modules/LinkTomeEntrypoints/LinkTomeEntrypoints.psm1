@@ -290,12 +290,7 @@ function New-LinkTomeCoreRequest {
                     Write-Warning "Unauthorized site admin access attempt by: $($User.Email) (role: $($User.UserRole))"
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::Forbidden
-                        Body = @{ 
-                            error = "Insufficient permissions" 
-                            message = "This endpoint requires $($RequiredPermissions -join ', ') permission (site_super_admin role)"
-                            requiredPermissions = $RequiredPermissions
-                            requiredRole = 'site_super_admin'
-                        }
+                        Body = @{ error = "Insufficient permissions" }
                     }
                 }
             }
