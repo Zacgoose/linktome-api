@@ -131,16 +131,12 @@ function Get-LinkTomeTimerFunctions {
                     }
                     Add-LinkToMeAzDataTableEntity @Table -Entity $Status -Force | Out-Null
                 } else {
-                    # Update existing status
-                    $Status.Command = $Timer.Command
-                    $Status.Cron = $CronString
-                    $Status.NextOccurrence = $NextOccurrence.ToUniversalTime()
+                    # Update existing status - use Add-Member to safely update properties
+                    $Status | Add-Member -MemberType NoteProperty -Name 'Command' -Value $Timer.Command -Force
+                    $Status | Add-Member -MemberType NoteProperty -Name 'Cron' -Value $CronString -Force
+                    $Status | Add-Member -MemberType NoteProperty -Name 'NextOccurrence' -Value $NextOccurrence.ToUniversalTime() -Force
                     $PreferredProcessor = $Timer.PreferredProcessor ?? ''
-                    if ($Status.PSObject.Properties.Name -notcontains 'PreferredProcessor') {
-                        $Status | Add-Member -MemberType NoteProperty -Name 'PreferredProcessor' -Value $PreferredProcessor -Force
-                    } else {
-                        $Status.PreferredProcessor = $PreferredProcessor
-                    }
+                    $Status | Add-Member -MemberType NoteProperty -Name 'PreferredProcessor' -Value $PreferredProcessor -Force
                     Add-LinkToMeAzDataTableEntity @Table -Entity $Status -Force | Out-Null
                 }
                 
