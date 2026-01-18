@@ -9,7 +9,7 @@ function Get-UserAuthContext {
     )
     
     # Parse and validate user role
-    $AllowedRoles = @('user', 'user_manager', 'agency_admin_user', 'sub_account_user')
+    $AllowedRoles = @('user', 'user_manager', 'agency_admin_user', 'sub_account_user', 'site_super_admin')
     $ActualUserRole = $null
     $RolesArr = @()
     

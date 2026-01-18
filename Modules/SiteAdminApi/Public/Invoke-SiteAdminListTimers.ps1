@@ -6,6 +6,7 @@ function Invoke-SiteAdminListTimers {
     .DESCRIPTION
         Returns a list of all timer functions configured in LinkTomeTimers.json along with
         their current status, last occurrence, next scheduled occurrence, and any error messages.
+        Requires read:siteadmin permission (site_super_admin role).
     
     .PARAMETER Request
         The HTTP request object
@@ -23,7 +24,7 @@ function Invoke-SiteAdminListTimers {
     )
 
     try {
-        # Validate site admin permission
+        # Validate authentication
         $AuthContext = $Request.Context.AuthContext
         if (-not $AuthContext) {
             return Send-ApiResponse -StatusCode 401 -Body @{
@@ -32,13 +33,14 @@ function Invoke-SiteAdminListTimers {
             }
         }
 
-        # Check if user is a site admin
-        $SiteAdminEmails = ($env:SITE_ADMIN_EMAILS -split ',').Trim()
-        if (-not ($SiteAdminEmails -contains $AuthContext.Email)) {
-            Write-Warning "Unauthorized site admin access attempt by: $($AuthContext.Email)"
+        # Check for read:siteadmin permission
+        if (-not ($AuthContext.Permissions -contains 'read:siteadmin')) {
+            Write-Warning "Unauthorized site admin access attempt by: $($AuthContext.Email) (role: $($AuthContext.UserRole))"
             return Send-ApiResponse -StatusCode 403 -Body @{
                 error = 'Forbidden'
-                message = 'This endpoint requires site administrator privileges'
+                message = 'This endpoint requires read:siteadmin permission (site_super_admin role)'
+                requiredPermission = 'read:siteadmin'
+                requiredRole = 'site_super_admin'
             }
         }
 
@@ -101,6 +103,11 @@ function Invoke-SiteAdminListTimers {
                 } else { 
                     $null 
                 }
+                $TimerInfo.manuallyTriggeredByRole = if ($Status.PSObject.Properties['ManuallyTriggeredByRole']) { 
+                    $Status.ManuallyTriggeredByRole 
+                } else { 
+                    $null 
+                }
                 $TimerInfo.manuallyTriggeredAt = if ($Status.PSObject.Properties['ManuallyTriggeredAt']) { 
                     $Status.ManuallyTriggeredAt.ToString('o') 
                 } else { 
@@ -114,6 +121,7 @@ function Invoke-SiteAdminListTimers {
                 $TimerInfo.errorMsg = $null
                 $TimerInfo.manuallyTriggered = $false
                 $TimerInfo.manuallyTriggeredBy = $null
+                $TimerInfo.manuallyTriggeredByRole = $null
                 $TimerInfo.manuallyTriggeredAt = $null
             }
 

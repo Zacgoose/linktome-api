@@ -6,7 +6,7 @@ function Invoke-SiteAdminRunTimer {
     .DESCRIPTION
         Allows site administrators to manually trigger any timer function configured in LinkTomeTimers.json.
         This bypasses the normal cron schedule and runs the timer immediately.
-        Inspired by CIPP-API's manual scheduler functionality.
+        Requires write:siteadmin permission (site_super_admin role).
     
     .PARAMETER Request
         The HTTP request object containing the timer ID to run
@@ -25,7 +25,7 @@ function Invoke-SiteAdminRunTimer {
     )
 
     try {
-        # Validate site admin permission
+        # Validate authentication
         $AuthContext = $Request.Context.AuthContext
         if (-not $AuthContext) {
             return Send-ApiResponse -StatusCode 401 -Body @{
@@ -34,14 +34,14 @@ function Invoke-SiteAdminRunTimer {
             }
         }
 
-        # Check if user is a site admin (this would be a special role/flag in the Users table)
-        # For now, we'll use an environment variable for site admin emails
-        $SiteAdminEmails = ($env:SITE_ADMIN_EMAILS -split ',').Trim()
-        if (-not ($SiteAdminEmails -contains $AuthContext.Email)) {
-            Write-Warning "Unauthorized site admin access attempt by: $($AuthContext.Email)"
+        # Check for write:siteadmin permission
+        if (-not ($AuthContext.Permissions -contains 'write:siteadmin')) {
+            Write-Warning "Unauthorized site admin access attempt by: $($AuthContext.Email) (role: $($AuthContext.UserRole))"
             return Send-ApiResponse -StatusCode 403 -Body @{
                 error = 'Forbidden'
-                message = 'This endpoint requires site administrator privileges'
+                message = 'This endpoint requires write:siteadmin permission (site_super_admin role)'
+                requiredPermission = 'write:siteadmin'
+                requiredRole = 'site_super_admin'
             }
         }
 
@@ -82,7 +82,7 @@ function Invoke-SiteAdminRunTimer {
             }
         }
 
-        Write-Information "Site admin $($AuthContext.Email) manually triggering timer: $($Timer.Command)"
+        Write-Information "Site super admin $($AuthContext.Email) (role: $($AuthContext.UserRole)) manually triggering timer: $($Timer.Command)"
 
         # Get timer status table
         $Table = Get-LinkToMeTable -TableName 'LinkTomeTimers'
@@ -136,6 +136,7 @@ function Invoke-SiteAdminRunTimer {
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ErrorMsg' -Value '' -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggered' -Value $true -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredBy' -Value $AuthContext.Email -Force
+                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredByRole' -Value $AuthContext.UserRole -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredAt' -Value $UtcNow -Force
                 
                 Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force | Out-Null
@@ -150,6 +151,7 @@ function Invoke-SiteAdminRunTimer {
                 orchestratorId = $OrchestratorId
                 executedAt = $UtcNow.ToString('o')
                 executedBy = $AuthContext.Email
+                executedByRole = $AuthContext.UserRole
             }
 
         } catch {
@@ -165,6 +167,7 @@ function Invoke-SiteAdminRunTimer {
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ErrorMsg' -Value $ErrorMsg -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggered' -Value $true -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredBy' -Value $AuthContext.Email -Force
+                $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredByRole' -Value $AuthContext.UserRole -Force
                 $FunctionStatus | Add-Member -MemberType NoteProperty -Name 'ManuallyTriggeredAt' -Value $UtcNow -Force
                 
                 Add-LinkToMeAzDataTableEntity @Table -Entity $FunctionStatus -Force | Out-Null

@@ -10,7 +10,7 @@ function Get-DefaultRolePermissions {
     #>
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('user', 'user_manager', 'agency_admin_user', 'sub_account_user')]
+        [ValidateSet('user', 'user_manager', 'agency_admin_user', 'sub_account_user', 'site_super_admin')]
         [string]$Role
     )
     
@@ -105,6 +105,42 @@ function Get-DefaultRolePermissions {
             'read:analytics',
             'read:shortlinks',
             'write:shortlinks'
+        )
+        'site_super_admin' = @(
+            # Full system access for site operators
+            'read:dashboard',
+            'write:2fauth',
+            'read:profile',
+            'write:profile',
+            'read:links',
+            'write:links',
+            'read:pages',
+            'write:pages',
+            'read:appearance',
+            'write:appearance',
+            'read:analytics',
+            'read:users',
+            'manage:users',
+            'invite:user_manager',
+            'list:user_manager',
+            'remove:user_manager',
+            'respond:user_manager',
+            'read:apiauth',
+            'create:apiauth',
+            'update:apiauth',
+            'delete:apiauth',
+            'write:password',
+            'write:email',
+            'write:phone',
+            'read:subscription',
+            'write:subscription',
+            'read:usersettings',
+            'read:shortlinks',
+            'write:shortlinks',
+            'manage:subaccounts',
+            # Site admin permissions
+            'read:siteadmin',
+            'write:siteadmin'
         )
     }
     

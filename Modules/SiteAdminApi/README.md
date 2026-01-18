@@ -2,19 +2,26 @@
 
 Site administrator API endpoints for managing timer functions and system operations.
 
-## Authentication
+## Authentication & Authorization
 
 All site admin endpoints require:
 1. **Valid JWT authentication** - User must be logged in
-2. **Site admin privileges** - User's email must be in the `SITE_ADMIN_EMAILS` environment variable
+2. **Site super admin role** - User must have the `site_super_admin` role
+3. **Appropriate permissions**:
+   - `read:siteadmin` - Required for viewing timer status
+   - `write:siteadmin` - Required for manually triggering timers
 
-### Environment Variable Setup
+### Role Setup
 
-Set the `SITE_ADMIN_EMAILS` environment variable with comma-separated admin emails:
+Users with the `site_super_admin` role automatically receive these permissions:
+- All standard user permissions (pages, links, analytics, etc.)
+- `read:siteadmin` - View system timer status and configuration
+- `write:siteadmin` - Manually trigger timer functions
 
-```
-SITE_ADMIN_EMAILS=admin@example.com,superadmin@example.com
-```
+To grant a user site super admin access:
+1. Update the user's role in the Users table
+2. Set `Role` or `Roles` field to `site_super_admin`
+3. The user will gain all site admin permissions on next authentication
 
 ## Endpoints
 
@@ -23,6 +30,8 @@ SITE_ADMIN_EMAILS=admin@example.com,superadmin@example.com
 Get a list of all configured timer functions with their current status.
 
 **Endpoint:** `GET /siteadmin/timers`
+
+**Required Permission:** `read:siteadmin`
 
 **Response:**
 ```json
@@ -44,6 +53,7 @@ Get a list of all configured timer functions with their current status.
       "errorMsg": null,
       "manuallyTriggered": false,
       "manuallyTriggeredBy": null,
+      "manuallyTriggeredByRole": null,
       "manuallyTriggeredAt": null
     }
   ],
@@ -56,6 +66,8 @@ Get a list of all configured timer functions with their current status.
 Manually trigger a timer function to run immediately, bypassing the cron schedule.
 
 **Endpoint:** `POST /siteadmin/runtimer`
+
+**Required Permission:** `write:siteadmin`
 
 **Request Body:**
 ```json
@@ -74,7 +86,8 @@ Manually trigger a timer function to run immediately, bypassing the cron schedul
   "status": "Completed",
   "orchestratorId": null,
   "executedAt": "2026-01-18T13:45:00.000Z",
-  "executedBy": "admin@example.com"
+  "executedBy": "admin@example.com",
+  "executedByRole": "site_super_admin"
 }
 ```
 
@@ -96,20 +109,28 @@ Manually trigger a timer function to run immediately, bypassing the cron schedul
 }
 ```
 
-**Error Response - Unauthorized (403):**
+**Error Response - Forbidden (403):**
 ```json
 {
   "error": "Forbidden",
-  "message": "This endpoint requires site administrator privileges"
+  "message": "This endpoint requires write:siteadmin permission (site_super_admin role)",
+  "requiredPermission": "write:siteadmin",
+  "requiredRole": "site_super_admin"
 }
 ```
 
 ## Features
 
+### Role-Based Access Control
+- Uses existing permission system with `site_super_admin` role
+- Granular permissions: `read:siteadmin` and `write:siteadmin`
+- Integrates with user authentication context
+- Prevents privilege escalation
+
 ### Manual Timer Execution
 - Run any timer function immediately without waiting for the cron schedule
 - Prevents duplicate execution if an orchestrator is already running
-- Tracks who triggered the timer and when (audit trail)
+- Tracks who triggered the timer, their role, and when (audit trail)
 - Updates timer status with execution results
 
 ### Status Tracking
@@ -117,11 +138,14 @@ Manually trigger a timer function to run immediately, bypassing the cron schedul
 - See last and next occurrence times
 - View error messages for failed timers
 - Track manual vs. automatic executions
+- Audit trail includes user role information
 
 ### Security
-- Requires site administrator privileges (email whitelist)
-- All access attempts logged with user information
+- Requires site super admin role (`site_super_admin`)
+- Permission-based authorization (`read:siteadmin`, `write:siteadmin`)
+- All access attempts logged with user and role information
 - Unauthorized access attempts trigger security warnings
+- Integrates with existing JWT authentication
 
 ## Use Cases
 
@@ -130,11 +154,14 @@ Manually trigger a timer function to run immediately, bypassing the cron schedul
 3. **Maintenance Tasks** - Run cleanup timers on-demand
 4. **Troubleshooting** - Re-run failed timers immediately
 5. **Emergency Operations** - Trigger system tasks outside normal schedule
+6. **System Monitoring** - View real-time timer status and health
 
 ## Implementation Notes
 
-- Inspired by CIPP-API's scheduler functionality
+- Built on existing role/permission infrastructure
 - Uses same timer infrastructure as automatic cron scheduling
 - Integrates with existing LinkTomeTimers.json configuration
 - Maintains all timer status tracking and orchestrator management
 - Safe to use - includes duplicate run prevention
+- Full audit trail with user and role tracking
+- No environment variables needed - uses database roles
