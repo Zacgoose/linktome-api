@@ -189,7 +189,7 @@ function Start-AnalyticsAggregation {
             $RowKey = $Agg.Date
             
             # Try to get existing aggregate to merge
-            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -PartitionKey $PartitionKey -RowKey $RowKey -ErrorAction SilentlyContinue
+            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PartitionKey' and RowKey eq '$RowKey'" -ErrorAction SilentlyContinue | Select-Object -First 1
             
             # Merge with existing or create new
             $PageViewCount = [int]$Agg.PageViewCount
@@ -287,7 +287,7 @@ function Start-AnalyticsAggregation {
             $RowKey = "$($Agg.Date)-$($Agg.PageId)"
             
             # Try to get existing aggregate to merge
-            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -PartitionKey $PartitionKey -RowKey $RowKey -ErrorAction SilentlyContinue
+            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PartitionKey' and RowKey eq '$RowKey'" -ErrorAction SilentlyContinue | Select-Object -First 1
             
             # Merge with existing or create new
             $PageViewCount = [int]$Agg.PageViewCount
@@ -386,7 +386,7 @@ function Start-AnalyticsAggregation {
             $RowKey = "$($Agg.Date)-$($Agg.LinkId)"
             
             # Try to get existing aggregate to merge
-            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -PartitionKey $PartitionKey -RowKey $RowKey -ErrorAction SilentlyContinue
+            $ExistingAgg = Get-LinkToMeAzDataTableEntity @AggregatedTable -Filter "PartitionKey eq '$PartitionKey' and RowKey eq '$RowKey'" -ErrorAction SilentlyContinue | Select-Object -First 1
             
             # Merge with existing or create new
             $ClickCount = [int]$Agg.ClickCount
