@@ -23,10 +23,7 @@ function Invoke-SiteAdminListTimers {
         $TriggerMetadata
     )
 
-    try {
-        # Auth is handled by the entrypoint - just use the authenticated user
-        $User = $Request.AuthenticatedUser
-        
+    try {        
         # Load timer configuration
         $TimersJsonPath = Join-Path $PSScriptRoot '../../../LinkTomeTimers.json'
         if (-not (Test-Path $TimersJsonPath)) {
