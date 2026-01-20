@@ -81,7 +81,9 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Feature usage tracking and analytics
 - ✅ Automatic subscription expiration handling
 - ✅ Graceful degradation for expired subscriptions
+- ✅ Automatic feature cleanup on subscription downgrade
 - 📄 See [TIER_SYSTEM.md](./TIER_SYSTEM.md) for complete documentation
+- 📄 See [SUBSCRIPTION_CLEANUP.md](./SUBSCRIPTION_CLEANUP.md) for feature cleanup documentation
 
 ### Stripe Integration (Billing)
 - ✅ Stripe Checkout for subscription payments
@@ -90,7 +92,7 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Support for monthly and annual billing cycles
 - ✅ Automatic subscription sync and renewal monitoring
 - ✅ Cancel at period end (users keep access until billing period ends)
-- ✅ Payment failure handling
+- ✅ Payment failure handling with automatic feature cleanup
 - ✅ Secure webhook signature verification
 - 📄 See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for configuration guide
 
