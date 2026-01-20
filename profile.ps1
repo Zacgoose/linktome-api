@@ -22,6 +22,19 @@ foreach ($Module in $Modules) {
 $SwModules.Stop()
 $Timings['AllModules'] = $SwModules.Elapsed.TotalMilliseconds
 
+# Import Stripe sdk and dependency
+$SwStripe = [System.Diagnostics.Stopwatch]::StartNew()
+try {
+    Add-Type -Path (Join-Path $ModulesPath 'Newtonsoft.Json/13.0.4/lib/net6.0/Newtonsoft.Json.dll')
+    Add-Type -Path (Join-Path $ModulesPath 'Stripe.net/50.2.0/lib/net8.0/Stripe.net.dll')
+    $SwStripe.Stop()
+    $Timings['StripeSdk'] = $SwStripe.Elapsed.TotalMilliseconds
+} catch {
+    $SwStripe.Stop()
+    $Timings['StripeSdk'] = $SwStripe.Elapsed.TotalMilliseconds
+    Write-Error "Failed to load Stripe SDK: $($_.Exception.Message)"
+}
+
 $SwVersion = [System.Diagnostics.Stopwatch]::StartNew()
 $CurrentVersion = (Get-Content -Path (Join-Path $PSScriptRoot 'version_latest.txt') -Raw -ErrorAction SilentlyContinue).Trim()
 if (-not $CurrentVersion) { $CurrentVersion = '1.0.0' }
