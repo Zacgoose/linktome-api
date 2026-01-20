@@ -72,6 +72,10 @@ function Invoke-FeatureCleanup {
             $AppearanceTable = Get-LinkToMeTable -TableName 'Appearance'
             $Appearances = Get-LinkToMeAzDataTableEntity @AppearanceTable -Filter "PartitionKey eq '$SafeUserId'"
             
+            # Premium themes that require Pro+ tiers (should match frontend configuration)
+            # These are the themes that are not available on the free tier
+            $PremiumThemes = @('agate', 'astrid', 'aura', 'bloom', 'breeze')
+            
             foreach ($Appearance in $Appearances) {
                 $Updated = $false
                 
@@ -83,7 +87,6 @@ function Invoke-FeatureCleanup {
                 }
                 
                 # Reset premium theme to default
-                $PremiumThemes = @('agate', 'astrid', 'aura', 'bloom', 'breeze')
                 if ($Appearance.Theme -and $PremiumThemes -contains $Appearance.Theme) {
                     $Appearance.Theme = 'default'
                     $Updated = $true

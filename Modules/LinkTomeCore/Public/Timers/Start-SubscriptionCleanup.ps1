@@ -75,7 +75,7 @@ function Start-SubscriptionCleanup {
                     
                     # Set cancellation date if not already set
                     $NowString = $Now.ToString('yyyy-MM-ddTHH:mm:ssZ')
-                    if (-not $User.PSObject.Properties['CancelledAt'] -or -not $User.CancelledAt) {
+                    if (-not ($User.PSObject.Properties['CancelledAt'] -and $User.CancelledAt)) {
                         if (-not $User.PSObject.Properties['CancelledAt']) {
                             $User | Add-Member -NotePropertyName 'CancelledAt' -NotePropertyValue $NowString -Force
                         } else {
