@@ -218,11 +218,6 @@ All environment variables are configured in `local.settings.json`:
 | `STRIPE_PRICE_ID_ENTERPRISE` | Stripe price ID for Enterprise (monthly) | Required for Enterprise tier checkout |
 | `STRIPE_PRICE_ID_ENTERPRISE_ANNUAL` | Stripe price ID for Enterprise (annual) | Required for Enterprise annual checkout |
 | `FRONTEND_URL` | Frontend URL for redirect after checkout | `http://localhost:3000` |
-| `SMTP_SERVER` | SMTP server for 2FA emails | Required for email 2FA |
-| `SMTP_PORT` | SMTP port (usually 587) | Required for email 2FA |
-| `SMTP_USERNAME` | SMTP username | Required for email 2FA |
-| `SMTP_PASSWORD` | SMTP password | Required for email 2FA |
-| `SMTP_FROM` | Sender email address | Required for email 2FA |
 
 ## Testing
 
