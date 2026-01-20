@@ -94,11 +94,6 @@ function Invoke-PublicStripeWebhook {
                 $Processed = Handle-InvoiceFinalized -Invoice $Invoice
             }
             
-            'invoice.upcoming' {
-                $Invoice = $Event.Data.Object
-                $Processed = Handle-InvoiceUpcoming -Invoice $Invoice
-            }
-            
             'customer.subscription.trial_will_end' {
                 $Subscription = $Event.Data.Object
                 $Processed = Handle-SubscriptionTrialWillEnd -Subscription $Subscription
