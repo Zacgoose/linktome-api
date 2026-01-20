@@ -38,12 +38,10 @@ function Sync-UserSubscriptionFromStripe {
             return $false
         }
         
-        # Extract tier from metadata
+        # Extract tier from price ID (not from metadata)
         $Tier = 'free'
-        if ($StripeSubscription.Metadata -and $StripeSubscription.Metadata['tier']) {
-            $Tier = $StripeSubscription.Metadata['tier']
-        } elseif ($StripeSubscription.Items -and $StripeSubscription.Items.Data.Count -gt 0) {
-            # Try to map from price ID if metadata not available
+        if ($StripeSubscription.Items -and $StripeSubscription.Items.Data.Count -gt 0) {
+            # Always map from price ID
             $PriceId = $StripeSubscription.Items.Data[0].Price.Id
             $Tier = Get-TierFromPriceId -PriceId $PriceId
         }
