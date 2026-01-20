@@ -100,10 +100,22 @@ function Sync-UserSubscriptionFromStripe {
         }
         
         # Update subscription dates
+        # Try to get CurrentPeriodEnd from top level first, then fall back to subscription items
+        $PeriodEnd = $StripeSubscription.CurrentPeriodEnd
+        
+        # If not at top level, try to get from subscription items (this is where Stripe puts it in some webhook events)
+        if (-not $PeriodEnd -or $PeriodEnd -eq 0) {
+            if ($StripeSubscription.Items -and $StripeSubscription.Items.Data -and $StripeSubscription.Items.Data.Count -gt 0) {
+                $PeriodEnd = $StripeSubscription.Items.Data[0].CurrentPeriodEnd
+                Write-Information "Using CurrentPeriodEnd from subscription item: $PeriodEnd"
+            }
+        }
+        
+        Write-Information "Subscription CurrentPeriodEnd value: $PeriodEnd"
+        
         # Only set NextBillingDate if CurrentPeriodEnd is valid (non-zero Unix timestamp)
-        Write-Information "Subscription CurrentPeriodEnd value: $($StripeSubscription.CurrentPeriodEnd)"
-        if ($StripeSubscription.CurrentPeriodEnd -and $StripeSubscription.CurrentPeriodEnd -gt 0) {
-            $CurrentPeriodEnd = [DateTime]::UnixEpoch.AddSeconds($StripeSubscription.CurrentPeriodEnd).ToString('yyyy-MM-ddTHH:mm:ssZ')
+        if ($PeriodEnd -and $PeriodEnd -gt 0) {
+            $CurrentPeriodEnd = [DateTime]::UnixEpoch.AddSeconds($PeriodEnd).ToString('yyyy-MM-ddTHH:mm:ssZ')
             Write-Information "Converted NextBillingDate: $CurrentPeriodEnd"
             if (-not $UserData.PSObject.Properties['NextBillingDate']) {
                 $UserData | Add-Member -NotePropertyName 'NextBillingDate' -NotePropertyValue $CurrentPeriodEnd -Force
@@ -111,7 +123,7 @@ function Sync-UserSubscriptionFromStripe {
                 $UserData.NextBillingDate = $CurrentPeriodEnd
             }
         } else {
-            Write-Warning "CurrentPeriodEnd is zero or null, skipping NextBillingDate update"
+            Write-Warning "CurrentPeriodEnd is zero or null even after checking subscription items, skipping NextBillingDate update"
         }
         
         # Update last renewal if this is a payment success
