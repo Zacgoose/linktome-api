@@ -71,15 +71,33 @@ Go to **Settings** → **Billing** → **Customer Portal**
 
 ✅ **Update payment method**: Allow customers to update cards  
 ✅ **Cancel subscription**: Allow customers to cancel  
-✅ **Update subscription**: Allow tier changes  
+✅ **Update subscription**: Allow tier changes (upgrade/downgrade)
 ✅ **View invoice history**: Show past invoices
 
-### 2.3 Configure Cancellation Flow
+### 2.3 Configure Subscription Updates
+
+To enable users to switch between tiers (Pro ↔ Premium ↔ Enterprise) and billing cycles (Monthly ↔ Annual):
+
+1. In **Customer Portal Settings**, under **Products**:
+   - Click "**Add products**"
+   - Select all your products: Pro Plan, Premium Plan, Enterprise Plan
+   - For each product, ensure BOTH monthly and annual prices are selected
+
+2. Under **Update subscription** settings:
+   - ✅ **Allow switching plans**: Enable
+   - ✅ **Allow switching between monthly and annual billing**: Enable
+   - **Proration behavior**: "Always invoice immediately" (recommended)
+
+3. **Save** the configuration
+
+**Note**: The API automatically directs users to the subscription update flow when they have an active subscription.
+
+### 2.4 Configure Cancellation Flow
 
 - **Cancellation behavior**: Cancel at end of billing period (recommended)
 - This ensures users keep access until their paid period ends
 
-### 2.4 Set Branding
+### 2.5 Set Branding
 
 - Upload your logo
 - Set brand colors to match your application
