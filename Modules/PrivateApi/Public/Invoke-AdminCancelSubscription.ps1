@@ -43,11 +43,39 @@ function Invoke-AdminCancelSubscription {
             }
         }
         
+        # If user has a Stripe subscription, cancel it through Stripe
+        if ($UserData.PSObject.Properties['StripeSubscriptionId'] -and $UserData.StripeSubscriptionId) {
+            # Initialize Stripe
+            $StripeInitialized = Initialize-StripeClient
+            if ($StripeInitialized) {
+                try {
+                    # Cancel the subscription at period end (user keeps access until billing period ends)
+                    $SubscriptionService = [Stripe.SubscriptionService]::new()
+                    $UpdateOptions = [Stripe.SubscriptionUpdateOptions]::new()
+                    $UpdateOptions.CancelAtPeriodEnd = $true
+                    
+                    $CancelledSubscription = $SubscriptionService.Update($UserData.StripeSubscriptionId, $UpdateOptions)
+                    Write-Information "Cancelled Stripe subscription $($UserData.StripeSubscriptionId) at period end"
+                    
+                    # Sync the updated subscription data
+                    Sync-UserSubscriptionFromStripe -UserId $UserId -StripeSubscription $CancelledSubscription
+                    
+                    # Reload user data after sync
+                    $UserData = Get-LinkToMeAzDataTableEntity @Table -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+                    
+                } catch {
+                    Write-Warning "Failed to cancel Stripe subscription: $($_.Exception.Message). Proceeding with local cancellation."
+                }
+            } else {
+                Write-Warning "Stripe not configured, proceeding with local cancellation only"
+            }
+        }
+        
         # Get current timestamp
         $Now = (Get-Date).ToUniversalTime()
         $NowString = $Now.ToString('yyyy-MM-ddTHH:mm:ssZ')
         
-        # Mark subscription as cancelled
+        # Mark subscription as cancelled (if not already done by Stripe sync)
         $UserData.SubscriptionStatus = 'cancelled'
         
         # Set cancellation timestamp
