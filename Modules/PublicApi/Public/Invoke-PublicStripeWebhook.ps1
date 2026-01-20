@@ -41,23 +41,10 @@ function Invoke-PublicStripeWebhook {
             }
         }
 
+        # Use the exact raw body for signature verification
+        $RawPayload = $Request.RawBody
+        $Event = Test-StripeWebhookSignature -Payload $RawPayload -Signature $Signature -WebhookSecret $WebhookSecret
 
-        # Get raw body - webhook signature verification requires the raw JSON
-        if ($Request.Body -is [string]) {
-            $Payload = $Request.Body
-            Write-Information "Payload is a string."
-        } else {
-            Write-Warning "Request.Body is not a string. Type: $($Request.Body.GetType().FullName)"
-            $Payload = $Request.Body | ConvertTo-Json -Depth 20 -Compress
-        }
-
-        Write-Information "Received Stripe webhook with payload: $Payload"
-        Write-Information "Stripe-Signature header: $Signature"
-        Write-Information "Headers: $($Request.Headers | ConvertTo-Json -Compress)"
-
-        # Verify webhook signature and construct event
-        $Event = Test-StripeWebhookSignature -Payload $Payload -Signature $Signature -WebhookSecret $WebhookSecret
-        
         if (-not $Event) {
             Write-Warning "Webhook signature verification failed"
             return [HttpResponseContext]@{
