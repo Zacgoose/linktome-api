@@ -106,16 +106,35 @@ function Sync-UserSubscriptionFromStripe {
             $PeriodEnd = $StripeSubscription.Items.Data[0].CurrentPeriodEnd
         }
         
-        Write-Information "Subscription CurrentPeriodEnd value from items: $PeriodEnd"
+        Write-Information "Subscription CurrentPeriodEnd value from items: $PeriodEnd (Type: $($PeriodEnd.GetType().Name))"
         
-        # Only set NextBillingDate if CurrentPeriodEnd is valid (non-zero Unix timestamp)
-        if ($PeriodEnd -and $PeriodEnd -gt 0) {
-            $CurrentPeriodEnd = [DateTime]::UnixEpoch.AddSeconds($PeriodEnd).ToString('yyyy-MM-ddTHH:mm:ssZ')
-            Write-Information "Converted NextBillingDate: $CurrentPeriodEnd"
-            if (-not $UserData.PSObject.Properties['NextBillingDate']) {
-                $UserData | Add-Member -NotePropertyName 'NextBillingDate' -NotePropertyValue $CurrentPeriodEnd -Force
-            } else {
-                $UserData.NextBillingDate = $CurrentPeriodEnd
+        # Convert to DateTime string for NextBillingDate
+        if ($PeriodEnd) {
+            try {
+                # Check if it's already a DateTime object (Stripe.net SDK converts it automatically)
+                if ($PeriodEnd -is [DateTime]) {
+                    $CurrentPeriodEnd = $PeriodEnd.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+                    Write-Information "Using DateTime directly: $CurrentPeriodEnd"
+                }
+                # If it's a Unix timestamp (long/int), convert it
+                elseif ($PeriodEnd -is [long] -or $PeriodEnd -is [int] -or $PeriodEnd -is [double]) {
+                    $CurrentPeriodEnd = [DateTime]::UnixEpoch.AddSeconds($PeriodEnd).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                    Write-Information "Converted from Unix timestamp: $CurrentPeriodEnd"
+                }
+                else {
+                    Write-Warning "CurrentPeriodEnd has unexpected type: $($PeriodEnd.GetType().FullName)"
+                    $CurrentPeriodEnd = $null
+                }
+                
+                if ($CurrentPeriodEnd) {
+                    if (-not $UserData.PSObject.Properties['NextBillingDate']) {
+                        $UserData | Add-Member -NotePropertyName 'NextBillingDate' -NotePropertyValue $CurrentPeriodEnd -Force
+                    } else {
+                        $UserData.NextBillingDate = $CurrentPeriodEnd
+                    }
+                }
+            } catch {
+                Write-Warning "Failed to process CurrentPeriodEnd: $($_.Exception.Message)"
             }
         } else {
             Write-Warning "CurrentPeriodEnd not found in subscription items, skipping NextBillingDate update"
