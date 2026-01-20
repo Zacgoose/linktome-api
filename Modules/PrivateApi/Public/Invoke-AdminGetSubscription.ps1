@@ -66,6 +66,10 @@ function Invoke-AdminGetSubscription {
         if ($Subscription.AccessUntil) {
             $Results.accessUntil = $Subscription.AccessUntil
         }
+        # Add cancelation info for scheduled cancelation
+        if ($Subscription.CancelAt) {
+            $Results.cancelAt = $Subscription.CancelAt
+        }
         
         $StatusCode = [HttpStatusCode]::OK
         

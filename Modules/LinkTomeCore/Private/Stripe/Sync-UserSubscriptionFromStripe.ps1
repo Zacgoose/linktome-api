@@ -183,6 +183,22 @@ function Sync-UserSubscriptionFromStripe {
                 Write-Information "Cleared CancelledAt for user $UserId (subscription active)"
             }
         }
+
+        # Store cancel_at
+        $CancelAt = $null
+        if ($StripeSubscription.PSObject.Properties['CancelAt']) {
+            $CancelAtRaw = $StripeSubscription.CancelAt
+            if ($CancelAtRaw -is [DateTime]) {
+                $CancelAt = $CancelAtRaw.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+            } elseif ($CancelAtRaw -is [long] -or $CancelAtRaw -is [int] -or $CancelAtRaw -is [double]) {
+                $CancelAt = [DateTime]::UnixEpoch.AddSeconds($CancelAtRaw).ToString('yyyy-MM-ddTHH:mm:ssZ')
+            }
+        }
+        if (-not $UserData.PSObject.Properties['CancelAt']) {
+            $UserData | Add-Member -NotePropertyName 'CancelAt' -NotePropertyValue $CancelAt -Force
+        } else {
+            $UserData.CancelAt = $CancelAt
+        }
         
         # Save changes
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
