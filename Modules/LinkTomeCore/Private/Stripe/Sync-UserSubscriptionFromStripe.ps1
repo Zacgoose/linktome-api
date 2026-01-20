@@ -148,13 +148,41 @@ function Sync-UserSubscriptionFromStripe {
             $UserData.LastStripeRenewal = $Now
         }
         
-        # Store cancellation date if subscription is cancelled
-        if ($StripeSubscription.CanceledAt) {
-            $CancelledAt = [DateTime]::UnixEpoch.AddSeconds($StripeSubscription.CanceledAt).ToString('yyyy-MM-ddTHH:mm:ssZ')
-            if (-not $UserData.PSObject.Properties['CancelledAt']) {
-                $UserData | Add-Member -NotePropertyName 'CancelledAt' -NotePropertyValue $CancelledAt -Force
+        # Handle CancelledAt field based on subscription state
+        # Set CancelledAt only when subscription is marked for cancellation at period end
+        # Clear it when subscription is active/updated and not cancelled
+        if ($StripeSubscription.CancelAtPeriodEnd -or $StripeSubscription.Status -eq 'canceled') {
+            # Subscription is cancelled or will be cancelled
+            if ($StripeSubscription.CanceledAt) {
+                # Use the actual cancelled timestamp if available
+                $CancelledAtValue = $null
+                if ($StripeSubscription.CanceledAt -is [DateTime]) {
+                    $CancelledAtValue = $StripeSubscription.CanceledAt.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+                } elseif ($StripeSubscription.CanceledAt -is [long] -or $StripeSubscription.CanceledAt -is [int]) {
+                    $CancelledAtValue = [DateTime]::UnixEpoch.AddSeconds($StripeSubscription.CanceledAt).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                }
+                
+                if ($CancelledAtValue) {
+                    if (-not $UserData.PSObject.Properties['CancelledAt']) {
+                        $UserData | Add-Member -NotePropertyName 'CancelledAt' -NotePropertyValue $CancelledAtValue -Force
+                    } else {
+                        $UserData.CancelledAt = $CancelledAtValue
+                    }
+                }
             } else {
-                $UserData.CancelledAt = $CancelledAt
+                # No CanceledAt timestamp yet, but subscription is marked for cancellation
+                # Set it to now
+                if (-not $UserData.PSObject.Properties['CancelledAt']) {
+                    $UserData | Add-Member -NotePropertyName 'CancelledAt' -NotePropertyValue $Now -Force
+                } else {
+                    $UserData.CancelledAt = $Now
+                }
+            }
+        } else {
+            # Subscription is active/updated and not cancelled - clear CancelledAt
+            if ($UserData.PSObject.Properties['CancelledAt']) {
+                $UserData.CancelledAt = $null
+                Write-Information "Cleared CancelledAt for user $UserId (subscription active)"
             }
         }
         
