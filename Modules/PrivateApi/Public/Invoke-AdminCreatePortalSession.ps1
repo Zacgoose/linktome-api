@@ -58,7 +58,7 @@ function Invoke-AdminCreatePortalSession {
         # Configure flow to enable subscription updates if user has active subscription
         if ($UserData.PSObject.Properties['StripeSubscriptionId'] -and $UserData.StripeSubscriptionId) {
             $FlowData = [Stripe.BillingPortal.SessionFlowDataOptions]::new()
-            $FlowData.Type = [Stripe.BillingPortal.SessionFlowDataType]::SubscriptionUpdate
+            $FlowData.Type = "subscription_update"
             
             # Configure subscription update options
             $SubscriptionUpdate = [Stripe.BillingPortal.SessionFlowDataSubscriptionUpdateOptions]::new()
