@@ -55,19 +55,6 @@ function Invoke-AdminCreatePortalSession {
         $FrontendUrl = $env:FRONTEND_URL ?? 'http://localhost:3000'
         $SessionOptions.ReturnUrl = "$FrontendUrl/admin/subscription"
         
-        # Configure flow to enable subscription updates if user has active subscription
-        if ($UserData.PSObject.Properties['StripeSubscriptionId'] -and $UserData.StripeSubscriptionId) {
-            $FlowData = [Stripe.BillingPortal.SessionFlowDataOptions]::new()
-            $FlowData.Type = "subscription_update"
-            
-            # Configure subscription update options
-            $SubscriptionUpdate = [Stripe.BillingPortal.SessionFlowDataSubscriptionUpdateOptions]::new()
-            $SubscriptionUpdate.Subscription = $UserData.StripeSubscriptionId
-            
-            $FlowData.SubscriptionUpdate = $SubscriptionUpdate
-            $SessionOptions.FlowData = $FlowData
-        }
-        
         # Create the session
         $Session = $SessionService.Create($SessionOptions)
         
