@@ -26,7 +26,7 @@ function Handle-SubscriptionCreated {
         $Result = Sync-UserSubscriptionFromStripe -UserId $UserId -StripeSubscription $Subscription
         
         if ($Result) {
-            Write-SecurityEvent -EventType 'SubscriptionCreated' -UserId $UserId -Details "Subscription: $($Subscription.Id)"
+            Write-SecurityEvent -EventType 'SubscriptionCreated' -UserId $UserId -Reason "Subscription: $($Subscription.Id)"
         }
         
         return $Result
