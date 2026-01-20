@@ -61,6 +61,19 @@ function Invoke-AdminCreateCheckoutSession {
             }
         }
 
+        # Check if user already has an active subscription
+        $Subscription = Get-UserSubscription -User $UserData
+        if ($Subscription.IsPaid -and $Subscription.IsActive) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ 
+                    error = "User already has an active subscription"
+                    currentTier = $Subscription.Tier
+                    currentStatus = $Subscription.Status
+                }
+            }
+        }
+
         # Get price ID based on tier and billing cycle
         $PriceId = switch ($Body.tier) {
             'pro' { 
