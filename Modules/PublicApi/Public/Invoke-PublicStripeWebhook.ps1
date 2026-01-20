@@ -89,6 +89,21 @@ function Invoke-PublicStripeWebhook {
                 $Processed = Handle-InvoicePaymentFailed -Invoice $Invoice
             }
             
+            'invoice.finalized' {
+                $Invoice = $Event.Data.Object
+                $Processed = Handle-InvoiceFinalized -Invoice $Invoice
+            }
+            
+            'invoice.upcoming' {
+                $Invoice = $Event.Data.Object
+                $Processed = Handle-InvoiceUpcoming -Invoice $Invoice
+            }
+            
+            'customer.subscription.trial_will_end' {
+                $Subscription = $Event.Data.Object
+                $Processed = Handle-SubscriptionTrialWillEnd -Subscription $Subscription
+            }
+            
             default {
                 Write-Information "Unhandled webhook event type: $($Event.Type)"
                 $Processed = $true  # Return success for unhandled events
