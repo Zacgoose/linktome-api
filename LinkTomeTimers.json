@@ -56,7 +56,7 @@
     "Id": "a7b8c9d0-e1f2-3456-1234-567890123456",
     "Command": "Start-TwoFactorSessionCleanup",
     "Description": "Timer to cleanup expired 2FA sessions",
-    "Cron": "0 */15 * * * *",
+    "Cron": "0 */30 * * * *",
     "Priority": 6,
     "RunOnProcessor": true,
     "IsSystem": true
