@@ -32,12 +32,6 @@ The Stripe integration for subscription billing has been successfully implemente
   - Updates subscription data in real-time
   - Handles: checkout completion, subscription changes, payment success/failure
 
-#### Enhanced Existing
-- **POST /admin/cancelSubscription**
-  - Now integrates with Stripe
-  - Cancels subscription at period end (user keeps access)
-  - Syncs cancellation with Stripe
-
 ### 3. Automatic Billing Monitoring
 - **Billing Orchestrator Timer** (runs every 15 minutes)
   - Finds subscriptions needing renewal confirmation

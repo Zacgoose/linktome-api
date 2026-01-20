@@ -131,8 +131,7 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 #### Subscription & Billing Endpoints (Requires JWT Authentication)
 - `GET /admin/getSubscription` - Get current subscription details
 - `POST /admin/createCheckoutSession` - Create Stripe Checkout session for subscription upgrade
-- `POST /admin/createPortalSession` - Create Stripe Customer Portal session for subscription management
-- `POST /admin/cancelSubscription` - Cancel subscription (keeps access until period end)
+- `POST /admin/createPortalSession` - Create Stripe Customer Portal session (manage subscription, cancel, update payment method, view invoices)
 - `POST /admin/upgradeSubscription` - Manually upgrade subscription (for internal/admin use)
 
 ## Local Development Setup

@@ -229,19 +229,6 @@ Visit the returned `portalUrl` to test:
 - Cancel subscription
 - View invoices
 
-### 5.4 Test Cancellation
-
-```bash
-curl -X POST http://localhost:7071/api/admin/cancelSubscription \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json"
-```
-
-Verify:
-- Subscription marked as cancelled
-- User keeps access until period end
-- Webhook received and processed
-
 ## Step 6: Frontend Integration
 
 ### 6.1 Subscribe Button
@@ -390,9 +377,6 @@ The API includes an automatic billing orchestrator that runs every 15 minutes:
 
 3. **GET /api/admin/getSubscription**
    - Output: Current subscription details including tier, status, billing dates
-
-4. **POST /api/admin/cancelSubscription**
-   - Output: Cancellation confirmation with access until date
 
 ### Frontend Tasks:
 - [ ] Create subscription selection page
