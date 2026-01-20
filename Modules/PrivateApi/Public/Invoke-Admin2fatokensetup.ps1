@@ -34,46 +34,28 @@ function Invoke-Admin2fatokensetup {
         "setup" {
             # === Setup 2FA for authenticated user ===
             try {
-                # Get full user record from database
                 $UsersTable = Get-LinkToMeTable -TableName 'Users'
                 $UserRecord = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$UserId'" | Select-Object -First 1
-                
                 if (-not $UserRecord) {
                     return [HttpResponseContext]@{
                         StatusCode = [HttpStatusCode]::NotFound
                         Body = @{ error = "User not found" }
                     }
                 }
-                
-                # Check if setup type is specified (email, totp, or both)
                 $SetupType = $Body.type
-                if (-not $SetupType) {
-                    $SetupType = "totp"  # Default to TOTP
-                }
-                
+                if (-not $SetupType) { $SetupType = "totp" }
                 $Response = @{}
-                
                 # Setup TOTP if requested
                 if ($SetupType -eq "totp" -or $SetupType -eq "both") {
-                    # Generate TOTP secret
                     $TotpSecret = New-TotpSecret
-                    
-                    # Encrypt the secret
                     $EncryptedSecret = Protect-TotpSecret -PlainText $TotpSecret
-                    
-                    # Generate QR code data
                     $QRData = New-TotpQRCode -Secret $TotpSecret -AccountName $UserRecord.PartitionKey
-                    
-                    # Generate backup codes
                     $BackupCodes = New-BackupCodes -Count 10
-                    
-                    # Store encrypted secret and backup codes
                     if (-not $UserRecord.PSObject.Properties['TotpSecret']) {
                         $UserRecord | Add-Member -NotePropertyName TotpSecret -NotePropertyValue $EncryptedSecret -Force
                     } else {
                         $UserRecord.TotpSecret = $EncryptedSecret
                     }
-
                     $SaveResult = Save-BackupCodes -UserId $UserId -PlainTextCodes $BackupCodes
                     if (-not $SaveResult) {
                         Write-Error "Failed to save backup codes"
@@ -82,12 +64,7 @@ function Invoke-Admin2fatokensetup {
                             Body = @{ error = "Failed to save backup codes" }
                         }
                     }
-                    
-                    # Don't enable yet - user needs to verify it works first
-                    # That will happen in a separate "enable" action
-                    
                     Add-LinkToMeAzDataTableEntity @UsersTable -OperationType 'UpsertMerge' -Entity $UserRecord
-                    
                     $Response.totp = @{
                         secret = $TotpSecret
                         qrCodeUri = $QRData.uri
@@ -96,28 +73,24 @@ function Invoke-Admin2fatokensetup {
                         accountName = $QRData.accountName
                     }
                 }
-                
-                # Setup email 2FA if requested
+                # Setup email 2FA if requested (session-based)
                 if ($SetupType -eq "email" -or $SetupType -eq "both") {
-                    # Email 2FA doesn't require setup - just enable it
+                    $Email2FACode = New-TwoFactorCode
+                    $Session = New-TwoFactorSession -UserId $UserId -Method 'email' -EmailCode $Email2FACode
+                    Send-TwoFactorEmail -Email $UserRecord.PartitionKey -Code $Email2FACode | Out-Null
                     $Response.email = @{
                         ready = $true
                         accountEmail = $UserRecord.PartitionKey
                     }
                 }
-                
                 Write-SecurityEvent -EventType '2FASetupInitiated' -UserId $UserId -Email $UserRecord.PartitionKey -Username $UserRecord.Username -IpAddress $ClientIP -Endpoint 'admin/2fatokensetup' -Reason "Type:$SetupType"
-                
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::OK
                     Body = @{
-                        message = "2FA setup initiated"
                         type = $SetupType
                         data = $Response
-                        note = "Please verify TOTP code before enabling. Use action=enable to complete setup."
                     }
                 }
-                
             } catch {
                 Write-Error "2FA setup error: $($_.Exception.Message)"
                 $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Setup failed"
@@ -198,13 +171,26 @@ function Invoke-Admin2fatokensetup {
                     }
                 }
                 
-                # Email doesn't need token verification for enable
+                # Email 2FA: verify the code using session for the authenticated user
                 if ($EnableType -eq "email") {
-                    $TokenValid = $true
-                    if (-not $UserRecord.PSObject.Properties['TwoFactorEmailEnabled']) {
-                        $UserRecord | Add-Member -NotePropertyName TwoFactorEmailEnabled -NotePropertyValue $true -Force
-                    } else {
-                        $UserRecord.TwoFactorEmailEnabled = $true
+                    $TokenValid = $false
+                    $SessionsTable = Get-LinkToMeTable -TableName 'TwoFactorSessions'
+                    $Sessions = Get-LinkToMeAzDataTableEntity @SessionsTable -Filter "RowKey eq '$UserId' and Method eq 'email'" | Sort-Object -Property ExpiresAt -Descending
+                    $Session = $Sessions | Where-Object { $_.ExpiresAt -gt (Get-Date).ToUniversalTime() -and $_.AttemptsRemaining -gt 0 } | Select-Object -First 1
+                    if ($Session) {
+                        $HashedToken = Get-StringHash -InputString $Body.token
+                        if ($Session.EmailCodeHash -eq $HashedToken) {
+                            $TokenValid = $true
+                            if (-not $UserRecord.PSObject.Properties['TwoFactorEmailEnabled']) {
+                                $UserRecord | Add-Member -NotePropertyName TwoFactorEmailEnabled -NotePropertyValue $true -Force
+                            } else {
+                                $UserRecord.TwoFactorEmailEnabled = $true
+                            }
+                            Remove-TwoFactorSession -SessionId $Session.PartitionKey
+                        } else {
+                            $Session.AttemptsRemaining--
+                            Add-LinkToMeAzDataTableEntity -Entity $Session -TableName 'TwoFactorSessions' -Force
+                        }
                     }
                 }
                 
@@ -232,7 +218,6 @@ function Invoke-Admin2fatokensetup {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::OK
                     Body = @{
-                        message = "Two-factor authentication enabled successfully"
                         type = $EnableType
                         emailEnabled = $UserRecord.TwoFactorEmailEnabled -eq $true
                         totpEnabled = $UserRecord.TwoFactorTotpEnabled -eq $true
@@ -294,7 +279,6 @@ function Invoke-Admin2fatokensetup {
                 return [HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::OK
                     Body = @{
-                        message = "Two-factor authentication disabled successfully"
                         emailEnabled = $false
                         totpEnabled = $false
                     }
