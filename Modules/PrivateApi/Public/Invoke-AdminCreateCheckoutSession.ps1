@@ -135,8 +135,8 @@ function Invoke-AdminCreateCheckoutSession {
         
         # Set success and cancel URLs
         $FrontendUrl = $env:FRONTEND_URL ?? 'http://localhost:3000'
-        $SessionOptions.SuccessUrl = "$FrontendUrl/subscription/success?session_id={CHECKOUT_SESSION_ID}"
-        $SessionOptions.CancelUrl = "$FrontendUrl/subscription/cancel"
+        $SessionOptions.SuccessUrl = "$FrontendUrl/admin/subscription/success?session_id={CHECKOUT_SESSION_ID}"
+        $SessionOptions.CancelUrl = "$FrontendUrl/admin/subscription/cancel"
         
         # Add metadata to session
         $MetadataDict = New-Object 'System.Collections.Generic.Dictionary[string,string]'
