@@ -100,11 +100,14 @@ function Sync-UserSubscriptionFromStripe {
         }
         
         # Update subscription dates
-        $CurrentPeriodEnd = [DateTime]::UnixEpoch.AddSeconds($StripeSubscription.CurrentPeriodEnd).ToString('yyyy-MM-ddTHH:mm:ssZ')
-        if (-not $UserData.PSObject.Properties['NextBillingDate']) {
-            $UserData | Add-Member -NotePropertyName 'NextBillingDate' -NotePropertyValue $CurrentPeriodEnd -Force
-        } else {
-            $UserData.NextBillingDate = $CurrentPeriodEnd
+        # Only set NextBillingDate if CurrentPeriodEnd is valid (non-zero Unix timestamp)
+        if ($StripeSubscription.CurrentPeriodEnd -and $StripeSubscription.CurrentPeriodEnd -gt 0) {
+            $CurrentPeriodEnd = [DateTime]::UnixEpoch.AddSeconds($StripeSubscription.CurrentPeriodEnd).ToString('yyyy-MM-ddTHH:mm:ssZ')
+            if (-not $UserData.PSObject.Properties['NextBillingDate']) {
+                $UserData | Add-Member -NotePropertyName 'NextBillingDate' -NotePropertyValue $CurrentPeriodEnd -Force
+            } else {
+                $UserData.NextBillingDate = $CurrentPeriodEnd
+            }
         }
         
         # Update last renewal if this is a payment success
