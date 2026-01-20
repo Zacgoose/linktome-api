@@ -96,7 +96,14 @@ function Get-UserSubscription {
     } else {
         $null
     }
-    
+
+    # Get cancel_at
+    $CancelAt = if ($User.PSObject.Properties['CancelAt'] -and $User.CancelAt) { 
+        $User.CancelAt
+    } else { 
+        $null 
+    }
+
     # Get payment information
     $Amount = if ($User.PSObject.Properties['SubscriptionAmount'] -and $User.SubscriptionAmount) {
         $User.SubscriptionAmount
@@ -105,7 +112,7 @@ function Get-UserSubscription {
     }
     
     # Default currency constant
-    $DefaultCurrency = 'USD'
+    $DefaultCurrency = 'AUD'
     $Currency = if ($User.PSObject.Properties['SubscriptionCurrency'] -and $User.SubscriptionCurrency) {
         $User.SubscriptionCurrency
     } else {
@@ -191,6 +198,8 @@ function Get-UserSubscription {
         CancelledAt = $CancelledAt
         AccessUntil = $AccessUntil
         
+        # Cancelation info
+        CancelAt = $CancelAt
         # Feature access helpers
         IsFree = ($EffectiveTier -eq 'free')
         IsPro = ($EffectiveTier -eq 'pro')

@@ -10,6 +10,15 @@
     "SMTP_PORT": "587",
     "SMTP_USERNAME": "noreply@linktome.example",
     "SMTP_PASSWORD": "your-smtp-password-here",
-    "SMTP_FROM": "noreply@linktome.example"
+    "SMTP_FROM": "noreply@linktome.example",
+    "STRIPE_API_KEY": "sk_test_your_stripe_test_key_here",
+    "STRIPE_WEBHOOK_SECRET": "whsec_your_webhook_secret_here",
+    "STRIPE_PRICE_ID_PRO": "price_pro_monthly_id",
+    "STRIPE_PRICE_ID_PRO_ANNUAL": "price_pro_annual_id",
+    "STRIPE_PRICE_ID_PREMIUM": "price_premium_monthly_id",
+    "STRIPE_PRICE_ID_PREMIUM_ANNUAL": "price_premium_annual_id",
+    "STRIPE_PRICE_ID_ENTERPRISE": "price_enterprise_monthly_id",
+    "STRIPE_PRICE_ID_ENTERPRISE_ANNUAL": "price_enterprise_annual_id",
+    "FRONTEND_URL": "http://localhost:3000"
   }
 }

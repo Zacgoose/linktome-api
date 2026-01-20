@@ -83,6 +83,17 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - ✅ Graceful degradation for expired subscriptions
 - 📄 See [TIER_SYSTEM.md](./TIER_SYSTEM.md) for complete documentation
 
+### Stripe Integration (Billing)
+- ✅ Stripe Checkout for subscription payments
+- ✅ Stripe Customer Portal for subscription management
+- ✅ Webhook handling for automatic subscription updates
+- ✅ Support for monthly and annual billing cycles
+- ✅ Automatic subscription sync and renewal monitoring
+- ✅ Cancel at period end (users keep access until billing period ends)
+- ✅ Payment failure handling
+- ✅ Secure webhook signature verification
+- 📄 See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for configuration guide
+
 ### Customization
 - ✅ Appearance customization (theme: light/dark)
 - ✅ Button style options (rounded, square, pill)
@@ -99,6 +110,7 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - `GET /public/getUserProfile?username={username}` - Get public profile and links (auto-tracks page view)
 - `POST /public/trackLinkClick` - Track link click analytics (requires username and linkId)
 - `GET /public/l?slug={slug}` - Redirect short link to target URL (auto-tracks redirect analytics)
+- `POST /public/stripeWebhook` - Handle Stripe webhook events (signature verified)
 
 #### Admin Endpoints (Requires JWT Authentication)
 - `GET /admin/getProfile` - Get authenticated user's profile
@@ -115,6 +127,12 @@ LinkTome API is an Azure Function App built with PowerShell 7.4 that provides:
 - `POST /admin/2fatokensetup?action=setup` - Setup 2FA (generates TOTP secret, QR code, backup codes)
 - `POST /admin/2fatokensetup?action=enable` - Enable 2FA after verification
 - `POST /admin/2fatokensetup?action=disable` - Disable 2FA
+
+#### Subscription & Billing Endpoints (Requires JWT Authentication)
+- `GET /admin/getSubscription` - Get current subscription details
+- `POST /admin/createCheckoutSession` - Create Stripe Checkout session for subscription upgrade
+- `POST /admin/createPortalSession` - Create Stripe Customer Portal session (manage subscription, cancel, update payment method, view invoices)
+- `POST /admin/upgradeSubscription` - Manually upgrade subscription (for internal/admin use)
 
 ## Local Development Setup
 
@@ -190,6 +208,15 @@ All environment variables are configured in `local.settings.json`:
 | `SMTP_USERNAME` | SMTP username | Required for email 2FA |
 | `SMTP_PASSWORD` | SMTP password | Required for email 2FA |
 | `SMTP_FROM` | Sender email address | Required for email 2FA |
+| `STRIPE_API_KEY` | Stripe API key | **Required for Stripe integration** |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | **Required for webhook verification** |
+| `STRIPE_PRICE_ID_PRO` | Stripe price ID for Pro (monthly) | Required for Pro tier checkout |
+| `STRIPE_PRICE_ID_PRO_ANNUAL` | Stripe price ID for Pro (annual) | Required for Pro annual checkout |
+| `STRIPE_PRICE_ID_PREMIUM` | Stripe price ID for Premium (monthly) | Required for Premium tier checkout |
+| `STRIPE_PRICE_ID_PREMIUM_ANNUAL` | Stripe price ID for Premium (annual) | Required for Premium annual checkout |
+| `STRIPE_PRICE_ID_ENTERPRISE` | Stripe price ID for Enterprise (monthly) | Required for Enterprise tier checkout |
+| `STRIPE_PRICE_ID_ENTERPRISE_ANNUAL` | Stripe price ID for Enterprise (annual) | Required for Enterprise annual checkout |
+| `FRONTEND_URL` | Frontend URL for redirect after checkout | `http://localhost:3000` |
 
 ## Testing
 
