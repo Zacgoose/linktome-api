@@ -36,7 +36,7 @@ function Handle-SubscriptionDeleted {
         # Save changes
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
-        Write-SecurityEvent -EventType 'SubscriptionDeleted' -UserId $UserId -Details "Subscription: $($Subscription.Id)"
+        Write-SecurityEvent -EventType 'SubscriptionDeleted' -UserId $UserId -Reason "Subscription: $($Subscription.Id)"
         
         return $true
         

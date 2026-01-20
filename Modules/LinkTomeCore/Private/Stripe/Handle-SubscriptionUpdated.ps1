@@ -24,7 +24,7 @@ function Handle-SubscriptionUpdated {
         $Result = Sync-UserSubscriptionFromStripe -UserId $UserId -StripeSubscription $Subscription
         
         if ($Result) {
-            Write-SecurityEvent -EventType 'SubscriptionUpdated' -UserId $UserId -Details "Subscription: $($Subscription.Id), Status: $($Subscription.Status)"
+            Write-SecurityEvent -EventType 'SubscriptionUpdated' -UserId $UserId -Reason "Subscription: $($Subscription.Id), Status: $($Subscription.Status)"
         }
         
         return $Result

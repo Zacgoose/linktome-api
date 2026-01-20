@@ -58,7 +58,7 @@ function Handle-CheckoutSessionCompleted {
         $Result = Sync-UserSubscriptionFromStripe -UserId $UserId -StripeSubscription $Subscription -StripeCustomerId $Session.Customer
         
         if ($Result) {
-            Write-SecurityEvent -EventType 'SubscriptionCheckoutCompleted' -UserId $UserId -Details "Session: $($Session.Id), Subscription: $SubscriptionId"
+            Write-SecurityEvent -EventType 'SubscriptionCheckoutCompleted' -UserId $UserId -Reason "Session: $($Session.Id), Subscription: $SubscriptionId"
         }
         
         return $Result

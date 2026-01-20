@@ -28,7 +28,7 @@ function Handle-InvoicePaymentFailed {
         # Save changes
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
-        Write-SecurityEvent -EventType 'SubscriptionPaymentFailed' -UserId $UserId -Details "Invoice: $($Invoice.Id), Subscription: $SubscriptionId"
+        Write-SecurityEvent -EventType 'SubscriptionPaymentFailed' -UserId $UserId -Reason "Invoice: $($Invoice.Id), Subscription: $SubscriptionId"
         Write-Warning "Payment failed for user $UserId, subscription marked as suspended"
         
         return $true
