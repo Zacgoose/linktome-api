@@ -100,18 +100,13 @@ function Sync-UserSubscriptionFromStripe {
         }
         
         # Update subscription dates
-        # Try to get CurrentPeriodEnd from top level first, then fall back to subscription items
-        $PeriodEnd = $StripeSubscription.CurrentPeriodEnd
-        
-        # If not at top level, try to get from subscription items (this is where Stripe puts it in some webhook events)
-        if (-not $PeriodEnd -or $PeriodEnd -eq 0) {
-            if ($StripeSubscription.Items -and $StripeSubscription.Items.Data -and $StripeSubscription.Items.Data.Count -gt 0) {
-                $PeriodEnd = $StripeSubscription.Items.Data[0].CurrentPeriodEnd
-                Write-Information "Using CurrentPeriodEnd from subscription item: $PeriodEnd"
-            }
+        # Read CurrentPeriodEnd from subscription items (this is where Stripe stores it)
+        $PeriodEnd = $null
+        if ($StripeSubscription.Items -and $StripeSubscription.Items.Data -and $StripeSubscription.Items.Data.Count -gt 0) {
+            $PeriodEnd = $StripeSubscription.Items.Data[0].CurrentPeriodEnd
         }
         
-        Write-Information "Subscription CurrentPeriodEnd value: $PeriodEnd"
+        Write-Information "Subscription CurrentPeriodEnd value from items: $PeriodEnd"
         
         # Only set NextBillingDate if CurrentPeriodEnd is valid (non-zero Unix timestamp)
         if ($PeriodEnd -and $PeriodEnd -gt 0) {
@@ -123,7 +118,7 @@ function Sync-UserSubscriptionFromStripe {
                 $UserData.NextBillingDate = $CurrentPeriodEnd
             }
         } else {
-            Write-Warning "CurrentPeriodEnd is zero or null even after checking subscription items, skipping NextBillingDate update"
+            Write-Warning "CurrentPeriodEnd not found in subscription items, skipping NextBillingDate update"
         }
         
         # Update last renewal if this is a payment success
