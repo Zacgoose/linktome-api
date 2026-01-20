@@ -3,7 +3,7 @@ function Invoke-AdminCreatePortalSession {
     .FUNCTIONALITY
         Entrypoint
     .ROLE
-        read:subscription
+        write:subscription
     .SYNOPSIS
         Create a Stripe Customer Portal session for subscription management
     #>
@@ -53,7 +53,7 @@ function Invoke-AdminCreatePortalSession {
         
         # Set return URL
         $FrontendUrl = $env:FRONTEND_URL ?? 'http://localhost:3000'
-        $SessionOptions.ReturnUrl = "$FrontendUrl/subscription"
+        $SessionOptions.ReturnUrl = "$FrontendUrl/admin/subscription"
         
         # Create the session
         $Session = $SessionService.Create($SessionOptions)
