@@ -175,16 +175,18 @@ function Invoke-FeatureCleanup {
         }
         
         # Log cleanup event
-        Write-SecurityEvent -EventType 'FeatureCleanup' -UserId $UserId -Reason "Downgraded to $NewTier tier, cleaned up: $($Results.cleanupActions.Count) items"
+        $CleanupCount = $Results.cleanupActions.Count
+        Write-SecurityEvent -EventType 'FeatureCleanup' -UserId $UserId -Reason "Downgraded to $NewTier tier, cleaned up $CleanupCount items"
         
-        Write-Information "Feature cleanup completed for user $UserId: $($Results.cleanupActions.Count) actions taken"
+        Write-Information "Feature cleanup completed for user ${UserId}: $CleanupCount actions taken"
         return $Results
         
     } catch {
-        Write-Error "Feature cleanup failed for user $UserId: $($_.Exception.Message)"
+        $ErrorMessage = $_.Exception.Message
+        Write-Error "Feature cleanup failed for user ${UserId}: $ErrorMessage"
         return @{
             success = $false
-            error = $_.Exception.Message
+            error = $ErrorMessage
             tier = $NewTier
             cleanupActions = @()
         }
