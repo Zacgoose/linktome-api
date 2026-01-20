@@ -62,6 +62,7 @@ function Get-EndpointPermissions {
         'admin/upgradeSubscription' = @('write:subscription')
         'admin/cancelSubscription' = @('write:subscription')
         'admin/purchaseUserPack' = @('write:subscription')
+        'admin/CreateCheckoutSession' = @('write:subscription')
 
         # Sub-account endpoints
         'admin/getSubAccounts' = @('manage:subaccounts')

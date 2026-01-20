@@ -102,10 +102,10 @@ function Invoke-AdminCreateCheckoutSession {
             $CustomerService = [Stripe.CustomerService]::new()
             $CustomerOptions = [Stripe.CustomerCreateOptions]::new()
             $CustomerOptions.Email = $UserData.Email
-            $CustomerOptions.Metadata = @{
-                user_id = $UserId
-                username = $UserData.Username
-            }
+            $CustomerMetadataDict = New-Object 'System.Collections.Generic.Dictionary[string,string]'
+            $CustomerMetadataDict.Add('user_id', [string]$UserId)
+            $CustomerMetadataDict.Add('username', [string]$UserData.Username)
+            $CustomerOptions.Metadata = $CustomerMetadataDict
             
             $Customer = $CustomerService.Create($CustomerOptions)
             $CustomerId = $Customer.Id
@@ -138,12 +138,12 @@ function Invoke-AdminCreateCheckoutSession {
         $SessionOptions.SuccessUrl = "$FrontendUrl/subscription/success?session_id={CHECKOUT_SESSION_ID}"
         $SessionOptions.CancelUrl = "$FrontendUrl/subscription/cancel"
         
-        # Add metadata
-        $SessionOptions.Metadata = @{
-            user_id = $UserId
-            tier = $Body.tier
-            billing_cycle = $BillingCycle
-        }
+        # Add metadata using a .NET Dictionary
+        $MetadataDict = New-Object 'System.Collections.Generic.Dictionary[string,string]'
+        $MetadataDict.Add('user_id', [string]$UserId)
+        $MetadataDict.Add('tier', [string]$Body.tier)
+        $MetadataDict.Add('billing_cycle', [string]$BillingCycle)
+        $SessionOptions.Metadata = $MetadataDict
         
         # Allow promotion codes
         $SessionOptions.AllowPromotionCodes = $true
@@ -153,7 +153,7 @@ function Invoke-AdminCreateCheckoutSession {
         
         # Log security event
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-SecurityEvent -EventType 'CheckoutSessionCreated' -UserId $UserId -IpAddress $ClientIP -Endpoint 'admin/createCheckoutSession' -Details "Tier: $($Body.tier), Cycle: $BillingCycle"
+        Write-SecurityEvent -EventType 'CheckoutSessionCreated' -UserId $UserId -IpAddress $ClientIP -Endpoint 'admin/createCheckoutSession' -Reason "Tier: $($Body.tier), Cycle: $BillingCycle"
         
         $Results = @{
             sessionId = $Session.Id
