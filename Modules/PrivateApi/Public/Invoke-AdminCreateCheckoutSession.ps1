@@ -138,12 +138,21 @@ function Invoke-AdminCreateCheckoutSession {
         $SessionOptions.SuccessUrl = "$FrontendUrl/subscription/success?session_id={CHECKOUT_SESSION_ID}"
         $SessionOptions.CancelUrl = "$FrontendUrl/subscription/cancel"
         
-        # Add metadata using a .NET Dictionary
+        # Add metadata to session
         $MetadataDict = New-Object 'System.Collections.Generic.Dictionary[string,string]'
         $MetadataDict.Add('user_id', [string]$UserId)
         $MetadataDict.Add('tier', [string]$Body.tier)
         $MetadataDict.Add('billing_cycle', [string]$BillingCycle)
         $SessionOptions.Metadata = $MetadataDict
+        
+        # IMPORTANT: Add metadata to the subscription that will be created
+        # This ensures the subscription has the user_id in metadata
+        $SessionOptions.SubscriptionData = [Stripe.Checkout.SessionSubscriptionDataOptions]::new()
+        $SubscriptionMetadataDict = New-Object 'System.Collections.Generic.Dictionary[string,string]'
+        $SubscriptionMetadataDict.Add('user_id', [string]$UserId)
+        $SubscriptionMetadataDict.Add('tier', [string]$Body.tier)
+        $SubscriptionMetadataDict.Add('billing_cycle', [string]$BillingCycle)
+        $SessionOptions.SubscriptionData.Metadata = $SubscriptionMetadataDict
         
         # Allow promotion codes
         $SessionOptions.AllowPromotionCodes = $true
