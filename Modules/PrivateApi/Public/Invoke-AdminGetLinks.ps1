@@ -81,6 +81,20 @@ function Invoke-AdminGetLinks {
                 if ($_.LockMessage) { $linkObj.lock.message = $_.LockMessage }
             }
             
+            # Add tier exceeds flags for admin awareness
+            if ($_.PSObject.Properties['LayoutExceedsTier']) {
+                $linkObj.layoutExceedsTier = [bool]$_.LayoutExceedsTier
+            }
+            if ($_.PSObject.Properties['AnimationExceedsTier']) {
+                $linkObj.animationExceedsTier = [bool]$_.AnimationExceedsTier
+            }
+            if ($_.PSObject.Properties['ScheduleExceedsTier']) {
+                $linkObj.scheduleExceedsTier = [bool]$_.ScheduleExceedsTier
+            }
+            if ($_.PSObject.Properties['LockExceedsTier']) {
+                $linkObj.lockExceedsTier = [bool]$_.LockExceedsTier
+            }
+            
             $linkObj
         } | Sort-Object order)
         

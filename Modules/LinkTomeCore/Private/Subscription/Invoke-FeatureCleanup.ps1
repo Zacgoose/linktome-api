@@ -209,6 +209,86 @@ function Invoke-FeatureCleanup {
             }
         }
         
+        # 5b. Mark links with premium features that exceed tier limits (preserve data)
+        try {
+            $LinksTable = Get-LinkToMeTable -TableName 'Links'
+            $AllLinks = @(Get-LinkToMeAzDataTableEntity @LinksTable -Filter "PartitionKey eq '$SafeUserId'")
+            
+            foreach ($Link in $AllLinks) {
+                $Updated = $false
+                
+                # Check custom layouts (non-classic layouts)
+                if (-not $Limits.customLayouts -and $Link.Layout -and $Link.Layout -ne 'classic') {
+                    if (-not $Link.PSObject.Properties['LayoutExceedsTier']) {
+                        $Link | Add-Member -NotePropertyName 'LayoutExceedsTier' -NotePropertyValue $true -Force
+                    } else {
+                        $Link.LayoutExceedsTier = $true
+                    }
+                    $Updated = $true
+                }
+                
+                # Check link animations (non-none animations)
+                if (-not $Limits.linkAnimations -and $Link.Animation -and $Link.Animation -ne 'none') {
+                    if (-not $Link.PSObject.Properties['AnimationExceedsTier']) {
+                        $Link | Add-Member -NotePropertyName 'AnimationExceedsTier' -NotePropertyValue $true -Force
+                    } else {
+                        $Link.AnimationExceedsTier = $true
+                    }
+                    $Updated = $true
+                }
+                
+                # Check link scheduling
+                if (-not $Limits.linkScheduling -and $Link.PSObject.Properties['ScheduleEnabled'] -and $Link.ScheduleEnabled -eq $true) {
+                    if (-not $Link.PSObject.Properties['ScheduleExceedsTier']) {
+                        $Link | Add-Member -NotePropertyName 'ScheduleExceedsTier' -NotePropertyValue $true -Force
+                    } else {
+                        $Link.ScheduleExceedsTier = $true
+                    }
+                    $Updated = $true
+                }
+                
+                # Check link locking
+                if (-not $Limits.linkLocking -and $Link.PSObject.Properties['LockEnabled'] -and $Link.LockEnabled -eq $true) {
+                    if (-not $Link.PSObject.Properties['LockExceedsTier']) {
+                        $Link | Add-Member -NotePropertyName 'LockExceedsTier' -NotePropertyValue $true -Force
+                    } else {
+                        $Link.LockExceedsTier = $true
+                    }
+                    $Updated = $true
+                }
+                
+                # Clear flags if tier now allows features
+                if ($Limits.customLayouts -and $Link.PSObject.Properties['LayoutExceedsTier'] -and $Link.LayoutExceedsTier -eq $true) {
+                    $Link.LayoutExceedsTier = $false
+                    $Updated = $true
+                }
+                if ($Limits.linkAnimations -and $Link.PSObject.Properties['AnimationExceedsTier'] -and $Link.AnimationExceedsTier -eq $true) {
+                    $Link.AnimationExceedsTier = $false
+                    $Updated = $true
+                }
+                if ($Limits.linkScheduling -and $Link.PSObject.Properties['ScheduleExceedsTier'] -and $Link.ScheduleExceedsTier -eq $true) {
+                    $Link.ScheduleExceedsTier = $false
+                    $Updated = $true
+                }
+                if ($Limits.linkLocking -and $Link.PSObject.Properties['LockExceedsTier'] -and $Link.LockExceedsTier -eq $true) {
+                    $Link.LockExceedsTier = $false
+                    $Updated = $true
+                }
+                
+                if ($Updated) {
+                    try {
+                        Add-LinkToMeAzDataTableEntity @LinksTable -Entity $Link -Force
+                        $Results.cleanupActions += "Marked premium features on link: $($Link.Title)"
+                        Write-Information "Marked premium features as exceeding tier for link $($Link.RowKey)"
+                    } catch {
+                        Write-Warning "Failed to mark link features $($Link.RowKey): $($_.Exception.Message)"
+                    }
+                }
+            }
+        } catch {
+            Write-Warning "Failed to mark link premium features: $($_.Exception.Message)"
+        }
+        
         # 6. Mark excess short links as exceeding limit (preserve data)
         try {
             # Get short link limit from tier features

@@ -42,6 +42,12 @@ function Invoke-PublicGetUserProfile {
         } else {
             $SafeUserId = Protect-TableQueryValue -Value $User.RowKey
             
+            # Get user subscription info to check tier
+            $UserSubscription = Get-UserSubscription -User $User
+            $UserTier = $UserSubscription.EffectiveTier
+            $TierFeatures = Get-TierFeatures -Tier $UserTier
+            $TierLimits = $TierFeatures.limits
+            
             # Get the page to display (by slug or default)
             $PagesTable = Get-LinkToMeTable -TableName 'Pages'
             $Page = $null
@@ -115,16 +121,22 @@ function Invoke-PublicGetUserProfile {
                 # Must be active
                 if (-not [bool]$_.Active) { return $false }
                 
-                # Check schedule if enabled
+                # Check schedule if enabled (and if tier allows scheduling)
                 if ([bool]$_.ScheduleEnabled) {
-                    if ($_.ScheduleStartDate) {
-                        $startDate = [DateTime]::Parse($_.ScheduleStartDate)
-                        if ($CurrentTime -lt $startDate) { return $false }
+                    $ScheduleExceedsTier = $_.PSObject.Properties['ScheduleExceedsTier'] -and [bool]$_.ScheduleExceedsTier
+                    
+                    # Only apply schedule filtering if tier allows it
+                    if (-not $ScheduleExceedsTier -and $TierLimits.linkScheduling) {
+                        if ($_.ScheduleStartDate) {
+                            $startDate = [DateTime]::Parse($_.ScheduleStartDate)
+                            if ($CurrentTime -lt $startDate) { return $false }
+                        }
+                        if ($_.ScheduleEndDate) {
+                            $endDate = [DateTime]::Parse($_.ScheduleEndDate)
+                            if ($CurrentTime -gt $endDate) { return $false }
+                        }
                     }
-                    if ($_.ScheduleEndDate) {
-                        $endDate = [DateTime]::Parse($_.ScheduleEndDate)
-                        if ($CurrentTime -gt $endDate) { return $false }
-                    }
+                    # If schedule exceeds tier, ignore scheduling (link always visible)
                 }
                 
                 return $true
@@ -140,17 +152,42 @@ function Invoke-PublicGetUserProfile {
                 if ($_.Icon) { $linkObj.icon = $_.Icon }
                 if ($_.Thumbnail) { $linkObj.thumbnail = $_.Thumbnail }
                 if ($_.ThumbnailType) { $linkObj.thumbnailType = $_.ThumbnailType }
-                if ($_.Layout) { $linkObj.layout = $_.Layout }
-                if ($_.Animation) { $linkObj.animation = $_.Animation }
+                
+                # Include layout only if tier allows or not flagged
+                if ($_.Layout) {
+                    $LayoutExceedsTier = $_.PSObject.Properties['LayoutExceedsTier'] -and [bool]$_.LayoutExceedsTier
+                    if (-not $LayoutExceedsTier -and ($TierLimits.customLayouts -or $_.Layout -eq 'classic')) {
+                        $linkObj.layout = $_.Layout
+                    } else {
+                        # Fallback to classic layout if premium layout not allowed
+                        $linkObj.layout = 'classic'
+                    }
+                }
+                
+                # Include animation only if tier allows or not flagged
+                if ($_.Animation) {
+                    $AnimationExceedsTier = $_.PSObject.Properties['AnimationExceedsTier'] -and [bool]$_.AnimationExceedsTier
+                    if (-not $AnimationExceedsTier -and ($TierLimits.linkAnimations -or $_.Animation -eq 'none')) {
+                        $linkObj.animation = $_.Animation
+                    } else {
+                        # Fallback to no animation if not allowed
+                        $linkObj.animation = 'none'
+                    }
+                }
+                
                 if ($_.GroupId) { $linkObj.groupId = $_.GroupId }
                 
-                # Include lock info (but not the actual code) for UI to show lock state
+                # Include lock info only if tier allows or not flagged
                 if ([bool]$_.LockEnabled) {
-                    $linkObj.lock = @{
-                        enabled = $true
-                        type = $_.LockType
+                    $LockExceedsTier = $_.PSObject.Properties['LockExceedsTier'] -and [bool]$_.LockExceedsTier
+                    if (-not $LockExceedsTier -and $TierLimits.linkLocking) {
+                        $linkObj.lock = @{
+                            enabled = $true
+                            type = $_.LockType
+                        }
+                        if ($_.LockMessage) { $linkObj.lock.message = $_.LockMessage }
                     }
-                    if ($_.LockMessage) { $linkObj.lock.message = $_.LockMessage }
+                    # If lock exceeds tier, don't include lock info (link behaves as unlocked)
                 }
                 
                 $linkObj
