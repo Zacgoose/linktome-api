@@ -55,6 +55,14 @@ function Invoke-PublicL {
             }
         }
         
+        # Check if link exceeds tier limit (user downgraded)
+        if ($ShortLink.PSObject.Properties['ExceedsTierLimit'] -and [bool]$ShortLink.ExceedsTierLimit) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::Forbidden
+                Body = @{ error = "This short link is not available on the user's current plan" }
+            }
+        }
+        
         # Track analytics for the redirect
         $ClientIP = Get-ClientIPAddress -Request $Request
         $UserAgent = $Request.Headers.'User-Agent'

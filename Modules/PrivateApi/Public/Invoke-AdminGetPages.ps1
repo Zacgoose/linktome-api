@@ -24,7 +24,7 @@ function Invoke-AdminGetPages {
         
         # Transform and sort pages
         $PageResults = @($Pages | ForEach-Object {
-            @{
+            $result = @{
                 id = $_.RowKey
                 userId = $_.PartitionKey
                 slug = $_.Slug
@@ -33,6 +33,11 @@ function Invoke-AdminGetPages {
                 createdAt = $_.CreatedAt
                 updatedAt = $_.UpdatedAt
             }
+            # Add flag if page exceeds tier limit
+            if ($_.PSObject.Properties['ExceedsTierLimit']) {
+                $result.exceedsTierLimit = [bool]$_.ExceedsTierLimit
+            }
+            $result
         } | Sort-Object @{Expression={-([bool]$_.isDefault)}}, @{Expression={$_.createdAt}})
         
         $Results = @{

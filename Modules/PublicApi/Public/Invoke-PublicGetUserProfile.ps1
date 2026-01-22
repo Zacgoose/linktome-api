@@ -59,6 +59,16 @@ function Invoke-PublicGetUserProfile {
                         Body = $Results
                     }
                 }
+                
+                # Check if page exceeds tier limit (user downgraded)
+                if ($Page.PSObject.Properties['ExceedsTierLimit'] -and [bool]$Page.ExceedsTierLimit) {
+                    $StatusCode = [HttpStatusCode]::Forbidden
+                    $Results = @{ error = "This page is not available on the user's current plan" }
+                    return [HttpResponseContext]@{
+                        StatusCode = $StatusCode
+                        Body = $Results
+                    }
+                }
             } else {
                 # Get default page
                 $Page = Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId' and IsDefault eq true" | Select-Object -First 1
@@ -167,9 +177,13 @@ function Invoke-PublicGetUserProfile {
             
             # Build appearance object with new structure
             # Use AppearanceData if exists, otherwise use defaults
+            # Check tier limits for custom themes and video backgrounds
+            $ThemeExceedsLimit = $AppearanceData -and $AppearanceData.PSObject.Properties['ExceedsTierLimit'] -and [bool]$AppearanceData.ExceedsTierLimit
+            $VideoExceedsLimit = $AppearanceData -and $AppearanceData.PSObject.Properties['VideoExceedsTierLimit'] -and [bool]$AppearanceData.VideoExceedsTierLimit
+            
             $Appearance = @{
-                # Theme
-                theme = if ($AppearanceData.Theme) { $AppearanceData.Theme } else { 'custom' }
+                # Theme - use default if exceeds tier limit
+                theme = if ($ThemeExceedsLimit) { 'default' } elseif ($AppearanceData.Theme) { $AppearanceData.Theme } else { 'custom' }
                 
                 # Header
                 header = @{
@@ -178,9 +192,9 @@ function Invoke-PublicGetUserProfile {
                     displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
                 }
                 
-                # Wallpaper/Background
+                # Wallpaper/Background - reset video type if exceeds tier limit
                 wallpaper = @{
-                    type = if ($AppearanceData.WallpaperType) { $AppearanceData.WallpaperType } else { 'fill' }
+                    type = if ($VideoExceedsLimit -and $AppearanceData.WallpaperType -eq 'video') { 'fill' } elseif ($AppearanceData.WallpaperType) { $AppearanceData.WallpaperType } else { 'fill' }
                     color = if ($AppearanceData.WallpaperColor) { $AppearanceData.WallpaperColor } else { '#ffffff' }
                 }
                 
@@ -229,7 +243,8 @@ function Invoke-PublicGetUserProfile {
             if ($AppearanceData.WallpaperPatternType) { $Appearance.wallpaper.patternType = $AppearanceData.WallpaperPatternType }
             if ($AppearanceData.WallpaperPatternColor) { $Appearance.wallpaper.patternColor = $AppearanceData.WallpaperPatternColor }
             if ($AppearanceData.WallpaperImageUrl) { $Appearance.wallpaper.imageUrl = $AppearanceData.WallpaperImageUrl }
-            if ($AppearanceData.WallpaperVideoUrl) { $Appearance.wallpaper.videoUrl = $AppearanceData.WallpaperVideoUrl }
+            # Only include video URL if it doesn't exceed tier limit
+            if ($AppearanceData.WallpaperVideoUrl -and -not $VideoExceedsLimit) { $Appearance.wallpaper.videoUrl = $AppearanceData.WallpaperVideoUrl }
             if ($AppearanceData.WallpaperBlur) { $Appearance.wallpaper.blur = [int]$AppearanceData.WallpaperBlur }
             if ($AppearanceData.WallpaperOpacity) { $Appearance.wallpaper.opacity = [double]$AppearanceData.WallpaperOpacity }
             
