@@ -211,15 +211,8 @@ function Invoke-FeatureCleanup {
         
         # 6. Mark excess short links as exceeding limit (preserve data)
         try {
-            # Define short link limits per tier
-            $ShortLinkLimits = @{
-                'free' = 0          # Free tier: no short links
-                'pro' = 5           # Pro tier: 5 short links
-                'premium' = 20      # Premium tier: 20 short links
-                'enterprise' = -1   # Enterprise: unlimited
-            }
-            
-            $MaxShortLinks = $ShortLinkLimits[$NewTier]
+            # Get short link limit from tier features
+            $MaxShortLinks = $Limits.maxShortLinks
             
             if ($MaxShortLinks -ne -1) {
                 $ShortLinksTable = Get-LinkToMeTable -TableName 'ShortLinks'

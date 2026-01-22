@@ -47,16 +47,7 @@ function Invoke-AdminUpdateShortLinks {
         # Get tier features to check short link limit
         $UserTier = if ($User.SubscriptionTier) { $User.SubscriptionTier } else { 'free' }
         $TierInfo = Get-TierFeatures -Tier $UserTier
-        
-        # Define short link limits per tier
-        $ShortLinkLimits = @{
-            'free' = 0          # Free tier: no short links
-            'pro' = 5           # Pro tier: 5 short links
-            'premium' = 20      # Premium tier: 20 short links
-            'enterprise' = -1   # Enterprise: unlimited
-        }
-        
-        $MaxShortLinks = $ShortLinkLimits[$UserTier]
+        $MaxShortLinks = $TierInfo.limits.maxShortLinks
         
         # Get existing short links to check total count
         $ExistingLinks = @(Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'")
