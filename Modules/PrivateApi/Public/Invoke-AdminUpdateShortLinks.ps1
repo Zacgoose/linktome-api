@@ -252,6 +252,7 @@ function Invoke-AdminUpdateShortLinks {
 
         $Results = @{ 
             success = $true
+            message = "Successfully updated short links"
             created = $CreatedShortLinks
         }
         $StatusCode = [HttpStatusCode]::OK

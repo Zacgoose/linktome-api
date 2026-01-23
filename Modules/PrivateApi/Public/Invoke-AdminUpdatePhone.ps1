@@ -20,6 +20,16 @@ function Invoke-AdminUpdatePhone {
                 Body = @{ error = $LengthCheck.Message }
             }
         }
+
+        # Validate E.164 or local format (E.164: +[country][number], local: digits, optional spaces/hyphens)
+        $PhonePatternE164 = '^\+[1-9]\d{1,14}$'
+        $PhonePatternLocal = '^(0\d{9,10}|\d{8,12})$'
+        if ($Body.phoneNumber -notmatch $PhonePatternE164 -and $Body.phoneNumber -notmatch $PhonePatternLocal) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ error = "Phone number must be in local or E.164 format (e.g. +61412345678 or 0412345678)" }
+            }
+        }
     }
 
     try {

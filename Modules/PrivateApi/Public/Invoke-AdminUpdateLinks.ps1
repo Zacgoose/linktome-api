@@ -580,12 +580,15 @@ function Invoke-AdminUpdateLinks {
             }
         }
 
-        $Results = @{ success = $true }
+        $Results = @{
+            success = $true
+            message = "Successfully updated link/group"
+        }
         $StatusCode = [HttpStatusCode]::OK
 
     } catch {
         Write-Error "Update links error: $($_.Exception.Message)"
-        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update links"
+        $Results = Get-SafeErrorResponse -ErrorRecord $_ -GenericMessage "Failed to update link/group"
         $StatusCode = [HttpStatusCode]::InternalServerError
     }
 
