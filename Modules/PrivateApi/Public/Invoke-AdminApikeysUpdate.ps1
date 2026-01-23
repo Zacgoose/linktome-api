@@ -12,6 +12,11 @@ function Invoke-AdminApikeysUpdate {
     $Body = $Request.Body
     $KeyId = $Request.Query.keyId
 
+    # Get user object to check tier
+    $UsersTable = Get-LinkToMeTable -TableName 'Users'
+    $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+    $UserData = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+    
     # Check if user has API access
     $UserTier = $UserData.SubscriptionTier
     $TierInfo = Get-TierFeatures -Tier $UserTier
