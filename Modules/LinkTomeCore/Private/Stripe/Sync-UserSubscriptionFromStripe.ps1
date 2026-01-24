@@ -96,6 +96,18 @@ function Sync-UserSubscriptionFromStripe {
         } else {
             $UserData.BillingCycle = $BillingCycle
         }
+
+        # Store subscription quantity (total users)
+        $Quantity = 1
+        if ($StripeSubscription.Items -and $StripeSubscription.Items.Data.Count -gt 0) {
+            $Quantity = $StripeSubscription.Items.Data[0].Quantity
+        }
+
+        if (-not $UserData.PSObject.Properties['SubscriptionQuantity']) {
+            $UserData | Add-Member -NotePropertyName 'SubscriptionQuantity' -NotePropertyValue $Quantity -Force
+        } else {
+            $UserData.SubscriptionQuantity = $Quantity
+        }
         
         # Update subscription dates
         # Read CurrentPeriodEnd from subscription items (this is where Stripe stores it)

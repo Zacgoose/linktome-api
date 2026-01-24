@@ -72,6 +72,16 @@ function Get-UserSubscription {
     } else {
         $null
     }
+
+    # Get subscription quantity (total users allowed)
+    $SubscriptionQuantity = if ($User.PSObject.Properties['SubscriptionQuantity'] -and $User.SubscriptionQuantity) {
+        [int]$User.SubscriptionQuantity
+    } else {
+        1
+    }
+
+    # Calculate sub-account limit (quantity - 1 for main account)
+    $SubAccountLimit = [Math]::Max(0, $SubscriptionQuantity - 1)
     
     # Get subscription started date
     $SubscriptionStartedAt = if ($User.PSObject.Properties['SubscriptionStartedAt'] -and $User.SubscriptionStartedAt) {
@@ -200,6 +210,11 @@ function Get-UserSubscription {
         
         # Cancelation info
         CancelAt = $CancelAt
+
+        # Quantity info
+        SubscriptionQuantity = $SubscriptionQuantity
+        SubAccountLimit = $SubAccountLimit
+        
         # Feature access helpers
         IsFree = ($EffectiveTier -eq 'free')
         IsPro = ($EffectiveTier -eq 'pro')

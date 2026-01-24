@@ -34,6 +34,8 @@ function Invoke-AdminGetSubscription {
             status = $Subscription.Status
             isTrial = $Subscription.IsTrial
             hasAccess = $Subscription.HasAccess
+            SubscriptionQuantity = $Subscription.SubscriptionQuantity
+            SubAccountLimit = $Subscription.SubAccountLimit
         }
         
         # Add subscription started date
