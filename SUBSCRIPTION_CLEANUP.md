@@ -159,8 +159,8 @@ Feature flagging is automatically triggered by the following events:
 
 ### Webhook Handlers
 
-#### Handle-SubscriptionDeleted
-**Location:** `Modules/LinkTomeCore/Private/Stripe/Handle-SubscriptionDeleted.ps1`
+#### Sync-SubscriptionDeleted
+**Location:** `Modules/LinkTomeCore/Private/Stripe/Sync-SubscriptionDeleted.ps1`
 
 When a subscription is deleted:
 1. Downgrade user to 'free' tier
@@ -169,8 +169,8 @@ When a subscription is deleted:
 4. Set cancellation timestamp
 5. Call `Invoke-FeatureCleanup` to mark excess features
 
-#### Handle-InvoicePaymentFailed
-**Location:** `Modules/LinkTomeCore/Private/Stripe/Handle-InvoicePaymentFailed.ps1`
+#### Sync-InvoicePaymentFailed
+**Location:** `Modules/LinkTomeCore/Private/Stripe/Sync-InvoicePaymentFailed.ps1`
 
 When a payment fails:
 1. Set subscription status to 'suspended'

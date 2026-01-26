@@ -1,4 +1,4 @@
-function Handle-SubscriptionDeleted {
+function Sync-SubscriptionDeleted {
     param($Subscription)
     
     try {

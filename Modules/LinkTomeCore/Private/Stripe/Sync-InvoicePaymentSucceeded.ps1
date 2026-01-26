@@ -1,4 +1,4 @@
-function Handle-InvoicePaymentSucceeded {
+function Sync-InvoicePaymentSucceeded {
     param($Invoice)
     
     try {
