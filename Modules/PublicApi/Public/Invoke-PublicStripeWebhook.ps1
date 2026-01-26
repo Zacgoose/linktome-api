@@ -61,42 +61,42 @@ function Invoke-PublicStripeWebhook {
         switch ($Event.Type) {
             'checkout.session.completed' {
                 $Session = $Event.Data.Object
-                $Processed = Handle-CheckoutSessionCompleted -Session $Session
+                $Processed = Sync-CheckoutSessionCompleted -Session $Session
             }
             
             'customer.subscription.created' {
                 $Subscription = $Event.Data.Object
-                $Processed = Handle-SubscriptionCreated -Subscription $Subscription
+                $Processed = Sync-SubscriptionCreated -Subscription $Subscription
             }
             
             'customer.subscription.updated' {
                 $Subscription = $Event.Data.Object
-                $Processed = Handle-SubscriptionUpdated -Subscription $Subscription
+                $Processed = Sync-SubscriptionUpdated -Subscription $Subscription
             }
             
             'customer.subscription.deleted' {
                 $Subscription = $Event.Data.Object
-                $Processed = Handle-SubscriptionDeleted -Subscription $Subscription
+                $Processed = Sync-SubscriptionDeleted -Subscription $Subscription
             }
             
             'invoice.payment_succeeded' {
                 $Invoice = $Event.Data.Object
-                $Processed = Handle-InvoicePaymentSucceeded -Invoice $Invoice
+                $Processed = Sync-InvoicePaymentSucceeded -Invoice $Invoice
             }
             
             'invoice.payment_failed' {
                 $Invoice = $Event.Data.Object
-                $Processed = Handle-InvoicePaymentFailed -Invoice $Invoice
+                $Processed = Sync-InvoicePaymentFailed -Invoice $Invoice
             }
             
             'invoice.finalized' {
                 $Invoice = $Event.Data.Object
-                $Processed = Handle-InvoiceFinalized -Invoice $Invoice
+                $Processed = Sync-InvoiceFinalized -Invoice $Invoice
             }
             
             'customer.subscription.trial_will_end' {
                 $Subscription = $Event.Data.Object
-                $Processed = Handle-SubscriptionTrialWillEnd -Subscription $Subscription
+                $Processed = Sync-SubscriptionTrialWillEnd -Subscription $Subscription
             }
             
             default {

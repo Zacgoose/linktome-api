@@ -56,47 +56,37 @@ function Invoke-AdminCreateSubAccount {
             }
         }
         
-        # Check user pack limit
-        $UserPackLimit = if ($ParentUser.PSObject.Properties['UserPackLimit'] -and $ParentUser.UserPackLimit) {
-            [int]$ParentUser.UserPackLimit
-        } else {
-            0
-        }
-        
-        # Check if user pack is expired
-        if ($ParentUser.PSObject.Properties['UserPackExpiresAt'] -and $ParentUser.UserPackExpiresAt) {
-            try {
-                $ExpiryDate = [DateTime]::Parse($ParentUser.UserPackExpiresAt, [System.Globalization.CultureInfo]::InvariantCulture)
-                $Now = (Get-Date).ToUniversalTime()
-                if ($ExpiryDate -lt $Now) {
-                    return [HttpResponseContext]@{
-                        StatusCode = [HttpStatusCode]::Forbidden
-                        Body = @{ error = "User pack has expired. Please renew to create sub-accounts." }
-                    }
-                }
-            } catch {
-                Write-Warning "Failed to parse UserPackExpiresAt date"
-            }
-        }
-        
-        if ($UserPackLimit -le 0) {
+        # Get subscription info to check sub-account limits
+        $ParentSubscription = Get-UserSubscription -User $ParentUser
+        $SubAccountLimit = $ParentSubscription.SubAccountLimit
+
+        # Check if subscription has expired or is cancelled without access
+        if (-not $ParentSubscription.HasAccess) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Forbidden
-                Body = @{ error = "No user pack available. Please purchase a user pack to create sub-accounts." }
+                Body = @{ error = "Subscription expired. Please renew to create sub-accounts." }
             }
         }
-        
+
+        # Check if subscription allows sub-accounts
+        if ($SubAccountLimit -le 0) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::Forbidden
+                Body = @{ error = "Your current plan does not include sub-accounts. Please upgrade to create sub-accounts." }
+            }
+        }
+                
         # Count existing sub-accounts
         $ExistingSubAccounts = Get-LinkToMeAzDataTableEntity @SubAccountsTable -Filter "PartitionKey eq '$SafeParentId'"
         $CurrentCount = ($ExistingSubAccounts | Measure-Object).Count
-        
-        if ($CurrentCount -ge $UserPackLimit) {
+
+        if ($CurrentCount -ge $SubAccountLimit) {
             return [HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Forbidden
                 Body = @{ 
-                    error = "Sub-account limit reached. Current: $CurrentCount, Max: $UserPackLimit"
+                    error = "Sub-account limit reached. Current: $CurrentCount, Max: $SubAccountLimit"
                     currentCount = $CurrentCount
-                    maxAllowed = $UserPackLimit
+                    maxAllowed = $SubAccountLimit
                 }
             }
         }
@@ -115,9 +105,6 @@ function Invoke-AdminCreateSubAccount {
         # Generate sub-account user ID with "sub-" prefix for easy identification
         $SubAccountUserId = "sub-" + (New-Guid).ToString()
         
-        # Get parent subscription for inheritance
-        $ParentSubscription = Get-UserSubscription -User $ParentUser
-        
         # Create sub-account user entity
         # Note: Sub-accounts do not have email addresses - notifications go to parent
         $SubAccountUser = @{
@@ -128,8 +115,6 @@ function Invoke-AdminCreateSubAccount {
             Role = 'sub_account_user'
             IsSubAccount = $true
             AuthDisabled = $true
-            SubscriptionTier = $ParentSubscription.EffectiveTier
-            SubscriptionStatus = 'active'
             PasswordHash = ''  # No password for sub-accounts
             PasswordSalt = ''
         }

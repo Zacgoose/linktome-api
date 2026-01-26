@@ -40,7 +40,24 @@ function Invoke-PublicGetUserProfile {
             $StatusCode = [HttpStatusCode]::NotFound
             $Results = @{ error = "Profile not found" }
         } else {
+            # Check if this is a disabled sub-account
+            if ($User.PSObject.Properties['IsSubAccount'] -and [bool]$User.IsSubAccount -eq $true -and
+                $User.PSObject.Properties['Disabled'] -and [bool]$User.Disabled -eq $true) {
+                $StatusCode = [HttpStatusCode]::Forbidden
+                $Results = @{ error = "This account is currently disabled" }
+                return [HttpResponseContext]@{
+                    StatusCode = $StatusCode
+                    Body = $Results
+                }
+            }
+            
             $SafeUserId = Protect-TableQueryValue -Value $User.RowKey
+            
+            # Get user subscription info to check tier
+            $UserSubscription = Get-UserSubscription -User $User
+            $UserTier = $UserSubscription.EffectiveTier
+            $TierFeatures = Get-TierFeatures -Tier $UserTier
+            $TierLimits = $TierFeatures.limits
             
             # Get the page to display (by slug or default)
             $PagesTable = Get-LinkToMeTable -TableName 'Pages'
@@ -54,6 +71,16 @@ function Invoke-PublicGetUserProfile {
                 if (-not $Page) {
                     $StatusCode = [HttpStatusCode]::NotFound
                     $Results = @{ error = "Page not found" }
+                    return [HttpResponseContext]@{
+                        StatusCode = $StatusCode
+                        Body = $Results
+                    }
+                }
+                
+                # Check if page exceeds tier limit (user downgraded)
+                if ($Page.PSObject.Properties['ExceedsTierLimit'] -and [bool]$Page.ExceedsTierLimit) {
+                    $StatusCode = [HttpStatusCode]::Forbidden
+                    $Results = @{ error = "This page is not available on the user's current plan" }
                     return [HttpResponseContext]@{
                         StatusCode = $StatusCode
                         Body = $Results
@@ -105,16 +132,22 @@ function Invoke-PublicGetUserProfile {
                 # Must be active
                 if (-not [bool]$_.Active) { return $false }
                 
-                # Check schedule if enabled
+                # Check schedule if enabled (and if tier allows scheduling)
                 if ([bool]$_.ScheduleEnabled) {
-                    if ($_.ScheduleStartDate) {
-                        $startDate = [DateTime]::Parse($_.ScheduleStartDate)
-                        if ($CurrentTime -lt $startDate) { return $false }
+                    $ScheduleExceedsTier = $_.PSObject.Properties['ScheduleExceedsTier'] -and [bool]$_.ScheduleExceedsTier
+                    
+                    # Only apply schedule filtering if tier allows it
+                    if (-not $ScheduleExceedsTier -and $TierLimits.linkScheduling) {
+                        if ($_.ScheduleStartDate) {
+                            $startDate = [DateTime]::Parse($_.ScheduleStartDate)
+                            if ($CurrentTime -lt $startDate) { return $false }
+                        }
+                        if ($_.ScheduleEndDate) {
+                            $endDate = [DateTime]::Parse($_.ScheduleEndDate)
+                            if ($CurrentTime -gt $endDate) { return $false }
+                        }
                     }
-                    if ($_.ScheduleEndDate) {
-                        $endDate = [DateTime]::Parse($_.ScheduleEndDate)
-                        if ($CurrentTime -gt $endDate) { return $false }
-                    }
+                    # If schedule exceeds tier, ignore scheduling (link always visible)
                 }
                 
                 return $true
@@ -130,17 +163,42 @@ function Invoke-PublicGetUserProfile {
                 if ($_.Icon) { $linkObj.icon = $_.Icon }
                 if ($_.Thumbnail) { $linkObj.thumbnail = $_.Thumbnail }
                 if ($_.ThumbnailType) { $linkObj.thumbnailType = $_.ThumbnailType }
-                if ($_.Layout) { $linkObj.layout = $_.Layout }
-                if ($_.Animation) { $linkObj.animation = $_.Animation }
+                
+                # Include layout only if tier allows or not flagged
+                if ($_.Layout) {
+                    $LayoutExceedsTier = $_.PSObject.Properties['LayoutExceedsTier'] -and [bool]$_.LayoutExceedsTier
+                    if (-not $LayoutExceedsTier -and ($TierLimits.customLayouts -or $_.Layout -eq 'classic')) {
+                        $linkObj.layout = $_.Layout
+                    } else {
+                        # Fallback to classic layout if premium layout not allowed
+                        $linkObj.layout = 'classic'
+                    }
+                }
+                
+                # Include animation only if tier allows or not flagged
+                if ($_.Animation) {
+                    $AnimationExceedsTier = $_.PSObject.Properties['AnimationExceedsTier'] -and [bool]$_.AnimationExceedsTier
+                    if (-not $AnimationExceedsTier -and ($TierLimits.linkAnimations -or $_.Animation -eq 'none')) {
+                        $linkObj.animation = $_.Animation
+                    } else {
+                        # Fallback to no animation if not allowed
+                        $linkObj.animation = 'none'
+                    }
+                }
+                
                 if ($_.GroupId) { $linkObj.groupId = $_.GroupId }
                 
-                # Include lock info (but not the actual code) for UI to show lock state
+                # Include lock info only if tier allows or not flagged
                 if ([bool]$_.LockEnabled) {
-                    $linkObj.lock = @{
-                        enabled = $true
-                        type = $_.LockType
+                    $LockExceedsTier = $_.PSObject.Properties['LockExceedsTier'] -and [bool]$_.LockExceedsTier
+                    if (-not $LockExceedsTier -and $TierLimits.linkLocking) {
+                        $linkObj.lock = @{
+                            enabled = $true
+                            type = $_.LockType
+                        }
+                        if ($_.LockMessage) { $linkObj.lock.message = $_.LockMessage }
                     }
-                    if ($_.LockMessage) { $linkObj.lock.message = $_.LockMessage }
+                    # If lock exceeds tier, don't include lock info (link behaves as unlocked)
                 }
                 
                 $linkObj
@@ -167,9 +225,13 @@ function Invoke-PublicGetUserProfile {
             
             # Build appearance object with new structure
             # Use AppearanceData if exists, otherwise use defaults
+            # Check tier limits for custom themes and video backgrounds
+            $ThemeExceedsLimit = $AppearanceData -and $AppearanceData.PSObject.Properties['ExceedsTierLimit'] -and [bool]$AppearanceData.ExceedsTierLimit
+            $VideoExceedsLimit = $AppearanceData -and $AppearanceData.PSObject.Properties['VideoExceedsTierLimit'] -and [bool]$AppearanceData.VideoExceedsTierLimit
+            
             $Appearance = @{
-                # Theme
-                theme = if ($AppearanceData.Theme) { $AppearanceData.Theme } else { 'custom' }
+                # Theme - use default if exceeds tier limit
+                theme = if ($ThemeExceedsLimit) { 'default' } elseif ($AppearanceData.Theme) { $AppearanceData.Theme } else { 'custom' }
                 
                 # Header
                 header = @{
@@ -178,9 +240,9 @@ function Invoke-PublicGetUserProfile {
                     displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
                 }
                 
-                # Wallpaper/Background
+                # Wallpaper/Background - reset video type if exceeds tier limit
                 wallpaper = @{
-                    type = if ($AppearanceData.WallpaperType) { $AppearanceData.WallpaperType } else { 'fill' }
+                    type = if ($VideoExceedsLimit -and $AppearanceData.WallpaperType -eq 'video') { 'fill' } elseif ($AppearanceData.WallpaperType) { $AppearanceData.WallpaperType } else { 'fill' }
                     color = if ($AppearanceData.WallpaperColor) { $AppearanceData.WallpaperColor } else { '#ffffff' }
                 }
                 
@@ -229,7 +291,8 @@ function Invoke-PublicGetUserProfile {
             if ($AppearanceData.WallpaperPatternType) { $Appearance.wallpaper.patternType = $AppearanceData.WallpaperPatternType }
             if ($AppearanceData.WallpaperPatternColor) { $Appearance.wallpaper.patternColor = $AppearanceData.WallpaperPatternColor }
             if ($AppearanceData.WallpaperImageUrl) { $Appearance.wallpaper.imageUrl = $AppearanceData.WallpaperImageUrl }
-            if ($AppearanceData.WallpaperVideoUrl) { $Appearance.wallpaper.videoUrl = $AppearanceData.WallpaperVideoUrl }
+            # Only include video URL if it doesn't exceed tier limit
+            if ($AppearanceData.WallpaperVideoUrl -and -not $VideoExceedsLimit) { $Appearance.wallpaper.videoUrl = $AppearanceData.WallpaperVideoUrl }
             if ($AppearanceData.WallpaperBlur) { $Appearance.wallpaper.blur = [int]$AppearanceData.WallpaperBlur }
             if ($AppearanceData.WallpaperOpacity) { $Appearance.wallpaper.opacity = [double]$AppearanceData.WallpaperOpacity }
             

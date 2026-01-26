@@ -1,4 +1,4 @@
-function Handle-CheckoutSessionCompleted {
+function Sync-CheckoutSessionCompleted {
     param($Session)
     
     try {

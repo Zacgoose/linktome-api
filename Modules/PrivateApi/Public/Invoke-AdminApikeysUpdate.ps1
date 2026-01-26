@@ -11,6 +11,25 @@ function Invoke-AdminApikeysUpdate {
     $User = $Request.AuthenticatedUser
     $Body = $Request.Body
     $KeyId = $Request.Query.keyId
+
+    # Get user object to check tier
+    $UsersTable = Get-LinkToMeTable -TableName 'Users'
+    $SafeUserId = Protect-TableQueryValue -Value $User.UserId
+    $UserData = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeUserId'" | Select-Object -First 1
+    
+    # Check if user has API access
+    $UserTier = $UserData.SubscriptionTier
+    $TierInfo = Get-TierFeatures -Tier $UserTier
+    
+    if (-not $TierInfo.limits.apiAccess) {
+        $ClientIP = Get-ClientIPAddress -Request $Request
+        Write-FeatureUsageEvent -UserId $User.UserId -Feature 'apiAccess' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/ApikeysUpdate'
+        
+        return [HttpResponseContext]@{
+            StatusCode = [HttpStatusCode]::Forbidden
+            Body = @{ error = "API access requires Pro tier or higher. Upgrade to manage and use API keys." }
+        }
+    }
     
     if (-not $KeyId) {
         return [HttpResponseContext]@{

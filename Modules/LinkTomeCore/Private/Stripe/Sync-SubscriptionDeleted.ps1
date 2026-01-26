@@ -1,4 +1,4 @@
-function Handle-SubscriptionDeleted {
+function Sync-SubscriptionDeleted {
     param($Subscription)
     
     try {
@@ -37,6 +37,14 @@ function Handle-SubscriptionDeleted {
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
         
         Write-SecurityEvent -EventType 'SubscriptionDeleted' -UserId $UserId -Reason "Subscription: $($Subscription.Id)"
+        
+        # Clean up features that are no longer available on free tier
+        try {
+            $CleanupResult = Start-FeatureCleanup -UserId $UserId -NewTier 'free'
+            Write-Information "Feature cleanup completed: $($CleanupResult.cleanupActions.Count) actions taken"
+        } catch {
+            Write-Warning "Feature cleanup failed but subscription was still cancelled: $($_.Exception.Message)"
+        }
         
         return $true
         

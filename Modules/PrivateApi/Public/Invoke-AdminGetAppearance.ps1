@@ -143,6 +143,14 @@ function Invoke-AdminGetAppearance {
             }
         }
         
+        # Add tier limit flags for admin awareness
+        if ($AppearanceData -and $AppearanceData.PSObject.Properties['ExceedsTierLimit']) {
+            $Results.exceedsTierLimit = [bool]$AppearanceData.ExceedsTierLimit
+        }
+        if ($AppearanceData -and $AppearanceData.PSObject.Properties['VideoExceedsTierLimit']) {
+            $Results.videoExceedsTierLimit = [bool]$AppearanceData.VideoExceedsTierLimit
+        }
+        
         $StatusCode = [HttpStatusCode]::OK
         
     } catch {

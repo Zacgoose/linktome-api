@@ -83,6 +83,6 @@ function Invoke-AdminUserManagerInvite {
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Body       = @{}
+        Body       = @{message = "Invite sent successfully"}
     }
 }

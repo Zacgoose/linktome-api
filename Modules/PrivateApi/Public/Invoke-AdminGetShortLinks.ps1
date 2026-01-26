@@ -23,7 +23,7 @@ function Invoke-AdminGetShortLinks {
         $ShortLinks = Get-LinkToMeAzDataTableEntity @Table -Filter "PartitionKey eq '$SafeUserId'"
         
         $LinkResults = @($ShortLinks | ForEach-Object {
-            @{
+            $result = @{
                 slug = $_.RowKey
                 targetUrl = $_.TargetUrl
                 title = $_.Title
@@ -32,6 +32,11 @@ function Invoke-AdminGetShortLinks {
                 createdAt = if ($_.CreatedAt) { $_.CreatedAt.ToString('o') } else { $null }
                 lastClickedAt = if ($_.LastClickedAt) { $_.LastClickedAt.ToString('o') } else { $null }
             }
+            # Add flag if short link exceeds tier limit
+            if ($_.PSObject.Properties['ExceedsTierLimit']) {
+                $result.exceedsTierLimit = [bool]$_.ExceedsTierLimit
+            }
+            $result
         } | Sort-Object { -$_.clicks })
         
         $Results = @{

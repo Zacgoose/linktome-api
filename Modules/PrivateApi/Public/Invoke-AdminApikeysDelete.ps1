@@ -23,7 +23,7 @@ function Invoke-AdminApikeysDelete {
     if ($Result.Success) {
         $ClientIP = Get-ClientIPAddress -Request $Request
         Write-SecurityEvent -EventType 'ApiKeyDeleted' -UserId $User.UserId -IpAddress $ClientIP `
-            -Endpoint 'admin/apikeys/delete' -Reason "KeyId: $KeyId"
+            -Endpoint 'admin/apikeysdelete' -Reason "KeyId: $KeyId"
         
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::OK

@@ -65,6 +65,6 @@ function Invoke-AdminUserManagerRemove {
 
     return [HttpResponseContext]@{
         StatusCode = $StatusCode
-        Body = @{}
+        Body = @{message = "User management relationship removed successfully"}
     }
 }

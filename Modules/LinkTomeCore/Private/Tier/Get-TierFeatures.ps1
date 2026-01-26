@@ -34,6 +34,9 @@ function Get-TierFeatures {
                 linkScheduling = $false
                 linkLocking = $false
                 
+                # Short link features
+                maxShortLinks = 0  # Free tier: no short links
+                
                 # Appearance features
                 customThemes = $false  # Premium themes (agate, astrid, aura, bloom, breeze)
                 premiumFonts = $false
@@ -81,6 +84,9 @@ function Get-TierFeatures {
                 linkAnimations = $true
                 linkScheduling = $true
                 linkLocking = $true
+                
+                # Short link features
+                maxShortLinks = 5  # Pro tier: 5 short links
                 
                 # Appearance features
                 customThemes = $true
@@ -131,6 +137,9 @@ function Get-TierFeatures {
                 linkAnimations = $true
                 linkScheduling = $true
                 linkLocking = $true
+                
+                # Short link features
+                maxShortLinks = 20  # Premium tier: 20 short links
                 
                 # Appearance features
                 customThemes = $true
@@ -183,6 +192,9 @@ function Get-TierFeatures {
                 linkAnimations = $true
                 linkScheduling = $true
                 linkLocking = $true
+                
+                # Short link features
+                maxShortLinks = -1  # Enterprise: unlimited short links
                 
                 # Appearance features
                 customThemes = $true

@@ -29,7 +29,7 @@ function Invoke-AdminApikeysCreate {
     
     if (-not $TierInfo.limits.apiAccess) {
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-FeatureUsageEvent -UserId $User.UserId -Feature 'apiAccess' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/apikeys/create'
+        Write-FeatureUsageEvent -UserId $User.UserId -Feature 'apiAccess' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/apikeyscreate'
         
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::Forbidden
@@ -50,7 +50,7 @@ function Invoke-AdminApikeysCreate {
     
     if ($MaxKeys -ne -1 -and $ExistingKeys.Count -ge $MaxKeys) {
         $ClientIP = Get-ClientIPAddress -Request $Request
-        Write-FeatureUsageEvent -UserId $User.UserId -Feature 'apiKeysLimit_exceeded' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/apikeys/create'
+        Write-FeatureUsageEvent -UserId $User.UserId -Feature 'apiKeysLimit_exceeded' -Allowed $false -Tier $UserTier -IpAddress $ClientIP -Endpoint 'admin/apikeyscreate'
         
         return [HttpResponseContext]@{
             StatusCode = [HttpStatusCode]::Forbidden

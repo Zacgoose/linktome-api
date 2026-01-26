@@ -140,8 +140,8 @@ function Invoke-AdminUpdateAppearance {
         $urlRegex = '^https?://'
         
         # Valid enum values
-        $validThemes = @('custom', 'air', 'blocks', 'lake', 'mineral', 'agate', 'astrid', 'aura', 'bloom', 'breeze', 'light', 'dark', 'sunset', 'ocean', 'forest', 'honeycomb')
-        $premiumThemes = @('agate', 'astrid', 'aura', 'bloom', 'breeze')
+        $validThemes = @('custom', 'air', 'blocks', 'lake', 'mineral', 'agate', 'astrid', 'aura', 'bloom', 'breeze', 'honeycomb')
+        $premiumThemes = @('agate', 'astrid', 'aura', 'bloom', 'breeze', 'honeycomb')
         $validProfileImageLayouts = @('classic', 'hero')
         $validTitleStyles = @('text', 'logo')
         $validWallpaperTypes = @('fill', 'gradient', 'blur', 'pattern', 'image', 'video')
@@ -151,7 +151,7 @@ function Invoke-AdminUpdateAppearance {
         $validShadows = @('none', 'subtle', 'strong', 'hard')
         $validHoverEffects = @('none', 'lift', 'glow', 'fill')
         $validTitleSizes = @('small', 'large')
-        $validFonts = @('inter', 'space-mono', 'poppins', 'roboto', 'playfair', 'oswald', 'lato', 'montserrat', 'raleway', 'dm-sans', 'default', 'serif', 'mono')
+        $validFonts = @('inter', 'space-mono', 'poppins', 'roboto', 'playfair', 'oswald', 'lato', 'montserrat', 'raleway', 'dm-sans')
         $validButtonStyles = @('rounded', 'square', 'pill')
         $validLayoutStyles = @('centered', 'card')
         
@@ -690,8 +690,7 @@ function Invoke-AdminUpdateAppearance {
         
         # Return success with current appearance
         $Results = @{ 
-            success = $true
-            pageId = $PageId
+            message = 'Appearance updated successfully'
         }
         $StatusCode = [HttpStatusCode]::OK
         

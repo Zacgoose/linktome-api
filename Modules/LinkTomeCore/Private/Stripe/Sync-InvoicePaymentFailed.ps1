@@ -1,4 +1,4 @@
-function Handle-InvoicePaymentFailed {
+function Sync-InvoicePaymentFailed {
     param($Invoice)
     
     try {
@@ -30,6 +30,15 @@ function Handle-InvoicePaymentFailed {
         
         Write-SecurityEvent -EventType 'SubscriptionPaymentFailed' -UserId $UserId -Reason "Invoice: $($Invoice.Id), Subscription: $SubscriptionId"
         Write-Warning "Payment failed for user $UserId, subscription marked as suspended"
+        
+        # Clean up features since subscription is now suspended
+        # Note: User might still have access if they update payment method quickly
+        try {
+            $CleanupResult = Start-FeatureCleanup -UserId $UserId -NewTier 'free'
+            Write-Information "Feature cleanup after payment failure: $($CleanupResult.cleanupActions.Count) actions taken"
+        } catch {
+            Write-Warning "Feature cleanup failed after payment failure: $($_.Exception.Message)"
+        }
         
         return $true
         

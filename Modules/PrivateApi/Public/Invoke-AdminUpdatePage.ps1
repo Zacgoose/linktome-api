@@ -37,6 +37,13 @@ function Invoke-AdminUpdatePage {
                 Body = @{ error = "Page not found" }
             }
         }
+
+        if ($Page.ExceedsTierLimit -eq $true) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::Forbidden
+                Body = @{ error = "Unable to edit page as it exceeds your account limits" }
+            }
+        }
         
         # Update slug if provided
         if ($Body.slug -and $Body.slug -ne $Page.Slug) {

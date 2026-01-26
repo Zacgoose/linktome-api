@@ -38,32 +38,9 @@ function Invoke-AdminGetSubAccounts {
             }
         }
         
-        # Get user pack limits
-        $UserPackType = if ($ParentUser.PSObject.Properties['UserPackType'] -and $ParentUser.UserPackType) {
-            $ParentUser.UserPackType
-        } else {
-            'none'
-        }
-        
-        $UserPackLimit = if ($ParentUser.PSObject.Properties['UserPackLimit'] -and $ParentUser.UserPackLimit) {
-            [int]$ParentUser.UserPackLimit
-        } else {
-            0
-        }
-        
-        # Check if user pack is expired
-        $UserPackExpired = $false
-        if ($ParentUser.PSObject.Properties['UserPackExpiresAt'] -and $ParentUser.UserPackExpiresAt) {
-            try {
-                $ExpiryDate = [DateTime]::Parse($ParentUser.UserPackExpiresAt, [System.Globalization.CultureInfo]::InvariantCulture)
-                $Now = (Get-Date).ToUniversalTime()
-                if ($ExpiryDate -lt $Now) {
-                    $UserPackExpired = $true
-                }
-            } catch {
-                Write-Warning "Failed to parse UserPackExpiresAt date"
-            }
-        }
+        $ParentSubscription = Get-UserSubscription -User $ParentUser
+        $SubAccountLimit = $ParentSubscription.SubAccountLimit
+        $HasAccess = $ParentSubscription.HasAccess
         
         # Get all sub-accounts for this parent (PartitionKey = ParentUserId)
         $SubAccountRelationships = Get-LinkToMeAzDataTableEntity @SubAccountsTable -Filter "PartitionKey eq '$SafeParentId'"
@@ -78,7 +55,7 @@ function Invoke-AdminGetSubAccounts {
             $SubAccountUser = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeSubId'" -ErrorAction SilentlyContinue | Select-Object -First 1
             
             if ($SubAccountUser) {
-                $SubAccountsList += [PSCustomObject]@{
+                $subAccountObj = [PSCustomObject]@{
                     userId = $SubAccountUser.RowKey
                     username = $SubAccountUser.Username
                     displayName = $SubAccountUser.DisplayName
@@ -86,12 +63,24 @@ function Invoke-AdminGetSubAccounts {
                     status = if ($relationship.PSObject.Properties['Status'] -and $relationship.Status) { $relationship.Status } else { 'active' }
                     createdAt = if ($relationship.PSObject.Properties['CreatedAt'] -and $relationship.CreatedAt) { $relationship.CreatedAt } else { $relationship.Timestamp }
                 }
+                
+                # Add disabled flag if present
+                if ($SubAccountUser.PSObject.Properties['Disabled']) {
+                    $subAccountObj | Add-Member -NotePropertyName 'disabled' -NotePropertyValue ([bool]$SubAccountUser.Disabled) -Force
+                }
+                
+                # Add disabled reason if present
+                if ($SubAccountUser.PSObject.Properties['DisabledReason'] -and $SubAccountUser.DisabledReason) {
+                    $subAccountObj | Add-Member -NotePropertyName 'disabledReason' -NotePropertyValue $SubAccountUser.DisabledReason -Force
+                }
+                
+                $SubAccountsList += $subAccountObj
             }
         }
         
         # Calculate quota
         $usedSubAccounts = $SubAccountsList.Count
-        $maxSubAccounts = if ($UserPackExpired) { 0 } else { $UserPackLimit }
+        $maxSubAccounts = if ($HasAccess) { $SubAccountLimit } else { 0 }
         $remainingSubAccounts = [Math]::Max(0, $maxSubAccounts - $usedSubAccounts)
         
         # Build response
@@ -102,8 +91,8 @@ function Invoke-AdminGetSubAccounts {
                 maxSubAccounts = $maxSubAccounts
                 usedSubAccounts = $usedSubAccounts
                 remainingSubAccounts = $remainingSubAccounts
-                userPackType = $UserPackType
-                userPackExpired = $UserPackExpired
+                subscriptionQuantity = $ParentSubscription.SubscriptionQuantity
+                hasAccess = $HasAccess
             }
         }
         

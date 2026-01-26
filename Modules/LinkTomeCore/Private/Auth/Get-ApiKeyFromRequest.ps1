@@ -43,6 +43,12 @@ function Get-ApiKeyFromRequest {
         return @{ Valid = $false; Error = 'Invalid API key' }
     }
     
+    # Check if key is active
+    if ($KeyRecord.PSObject.Properties['Active'] -and $KeyRecord.Active -eq $false) {
+        $Reason = if ($KeyRecord.PSObject.Properties['DisabledReason']) { $KeyRecord.DisabledReason } else { 'API key is disabled' }
+        return @{ Valid = $false; Error = $Reason }
+    }
+    
     # Get user
     $UserTable = Get-LinkToMeTable -TableName 'Users'
     $User = Get-LinkToMeAzDataTableEntity @UserTable -Filter "RowKey eq '$($KeyRecord.PartitionKey)'" | Select-Object -First 1

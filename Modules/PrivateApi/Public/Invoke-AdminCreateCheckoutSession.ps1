@@ -40,6 +40,15 @@ function Invoke-AdminCreateCheckoutSession {
             }
         }
 
+        # Validate quantity (default to 1 if not specified)
+        $Quantity = if ($Body.quantity) { [int]$Body.quantity } else { 1 }
+        if ($Quantity -lt 1 -or $Quantity -gt 50) {
+            return [HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+                Body = @{ error = "Quantity must be between 1 and 50" }
+            }
+        }
+
         # Initialize Stripe
         $StripeInitialized = Initialize-StripeClient
         if (-not $StripeInitialized) {
@@ -143,7 +152,14 @@ function Invoke-AdminCreateCheckoutSession {
         
         $LineItem = [Stripe.Checkout.SessionLineItemOptions]::new()
         $LineItem.Price = $PriceId
-        $LineItem.Quantity = 1
+        $LineItem.Quantity = $Quantity
+
+        # Add adjustable quantity option
+        $AdjustableQuantity = [Stripe.Checkout.SessionLineItemAdjustableQuantityOptions]::new()
+        $AdjustableQuantity.Enabled = $true
+        $AdjustableQuantity.Minimum = 1
+        $AdjustableQuantity.Maximum = 50
+        $LineItem.AdjustableQuantity = $AdjustableQuantity
         $SessionOptions.LineItems.Add($LineItem)
         
         # Set success and cancel URLs

@@ -1,4 +1,4 @@
-function Handle-SubscriptionUpdated {
+function Sync-SubscriptionUpdated {
     param($Subscription)
     
     try {
