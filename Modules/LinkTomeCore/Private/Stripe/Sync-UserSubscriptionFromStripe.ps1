@@ -214,6 +214,8 @@ function Sync-UserSubscriptionFromStripe {
         
         # Save changes
         Add-LinkToMeAzDataTableEntity @Table -Entity $UserData -Force
+
+        Start-FeatureCleanup -UserId $UserId -NewTier $Tier
         
         Write-Information "Successfully synced subscription for user $UserId $Tier ($Status)"
         return $true
