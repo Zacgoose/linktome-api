@@ -413,13 +413,13 @@ if (totalRestrictions > 0) {
 
 ```
 User downgrades: Pro → Free
-├─ Invoke-FeatureCleanup runs
+├─ Start-FeatureCleanup runs
 ├─ Flags set: ExceedsTierLimit = true on pages 2-3
 ├─ User data preserved in database
 └─ Public API enforces restrictions
 
 User upgrades: Free → Pro
-├─ Invoke-FeatureCleanup runs with new tier
+├─ Start-FeatureCleanup runs with new tier
 ├─ Flags cleared: ExceedsTierLimit = false
 ├─ Features immediately accessible
 └─ No data loss, no re-configuration needed

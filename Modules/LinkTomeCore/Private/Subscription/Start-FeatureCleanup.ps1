@@ -1,4 +1,4 @@
-function Invoke-FeatureCleanup {
+function Start-FeatureCleanup {
     <#
     .SYNOPSIS
         Mark features that exceed tier limits when a user's subscription is downgraded

@@ -40,7 +40,7 @@ function Sync-SubscriptionDeleted {
         
         # Clean up features that are no longer available on free tier
         try {
-            $CleanupResult = Invoke-FeatureCleanup -UserId $UserId -NewTier 'free'
+            $CleanupResult = Start-FeatureCleanup -UserId $UserId -NewTier 'free'
             Write-Information "Feature cleanup completed: $($CleanupResult.cleanupActions.Count) actions taken"
         } catch {
             Write-Warning "Feature cleanup failed but subscription was still cancelled: $($_.Exception.Message)"

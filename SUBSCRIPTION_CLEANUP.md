@@ -112,9 +112,9 @@ Feature flagging is automatically triggered by the following events:
 
 ## Implementation Details
 
-### Core Function: `Invoke-FeatureCleanup`
+### Core Function: `Start-FeatureCleanup`
 
-**Location:** `Modules/LinkTomeCore/Private/Subscription/Invoke-FeatureCleanup.ps1`
+**Location:** `Modules/LinkTomeCore/Private/Subscription/Start-FeatureCleanup.ps1`
 
 **Parameters:**
 - `UserId` - The user ID to process features for
@@ -167,7 +167,7 @@ When a subscription is deleted:
 2. Set status to 'expired'
 3. Clear Stripe IDs
 4. Set cancellation timestamp
-5. Call `Invoke-FeatureCleanup` to mark excess features
+5. Call `Start-FeatureCleanup` to mark excess features
 
 #### Sync-InvoicePaymentFailed
 **Location:** `Modules/LinkTomeCore/Private/Stripe/Sync-InvoicePaymentFailed.ps1`
@@ -175,7 +175,7 @@ When a subscription is deleted:
 When a payment fails:
 1. Set subscription status to 'suspended'
 2. Log security event
-3. Call `Invoke-FeatureCleanup` to mark features exceeding new limits
+3. Call `Start-FeatureCleanup` to mark features exceeding new limits
 4. User can restore access by updating payment method
 
 ### Public API Checks
@@ -236,7 +236,7 @@ Admin APIs include the flags so users can see which features are affected:
    - Expired status → downgrade and mark features
    - Suspended (payment failed) → downgrade and mark features
 4. Update user record to free tier
-5. Call `Invoke-FeatureCleanup` for each downgraded user
+5. Call `Start-FeatureCleanup` for each downgraded user
 6. Log security events
 
 **Returns:**
@@ -254,7 +254,7 @@ Admin APIs include the flags so users can see which features are affected:
 When a user upgrades their subscription:
 
 1. **Automatic Restoration:**
-   - `Invoke-FeatureCleanup` is called with the new tier
+   - `Start-FeatureCleanup` is called with the new tier
    - Flags are removed from features now within limits
    - Example: User upgrades from Free to Pro
      - First 3 pages have `ExceedsTierLimit` set to false

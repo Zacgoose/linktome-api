@@ -51,7 +51,7 @@ function Start-SubscriptionCleanup {
 
                 # Always enforce correct features for current tier
                 try {
-                    $CleanupResult = Invoke-FeatureCleanup -UserId $User.RowKey -NewTier $TierToEnforce
+                    $CleanupResult = Start-FeatureCleanup -UserId $User.RowKey -NewTier $TierToEnforce
                     Write-Information "Feature cleanup for $($User.RowKey): $($CleanupResult.cleanupActions.Count) actions (tier: $TierToEnforce)"
                 } catch {
                     Write-Warning "Feature cleanup failed for $($User.RowKey): $($_.Exception.Message)"
