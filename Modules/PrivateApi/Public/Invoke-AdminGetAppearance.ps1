@@ -61,6 +61,9 @@ function Invoke-AdminGetAppearance {
         } | Sort-Object order)
         
         # Build appearance response with new structure
+        # For curated themes, merge with theme defaults
+        $MergedAppearance = Get-MergedAppearance -AppearanceData $AppearanceData
+        
         # Use AppearanceData if exists, otherwise use defaults
         $Results = @{
             pageId = $PageId
@@ -78,9 +81,16 @@ function Invoke-AdminGetAppearance {
             }
             profileImageUrl = $AppearanceData.Avatar
             socialIcons = $SocialIcons
-            
-            # Wallpaper/Background
-            wallpaper = @{
+        }
+        
+        # If curated theme, use merged appearance; otherwise use stored data
+        if ($MergedAppearance) {
+            $Results.wallpaper = $MergedAppearance.wallpaper
+            $Results.buttons = $MergedAppearance.buttons
+            $Results.text = $MergedAppearance.text
+        } else {
+            # Wallpaper/Background - use stored data for custom themes
+            $Results.wallpaper = @{
                 type = if ($AppearanceData.WallpaperType) { $AppearanceData.WallpaperType } else { 'fill' }
                 color = if ($AppearanceData.WallpaperColor) { $AppearanceData.WallpaperColor } else { '#ffffff' }
                 gradientStart = $AppearanceData.WallpaperGradientStart
@@ -94,8 +104,8 @@ function Invoke-AdminGetAppearance {
                 opacity = if ($AppearanceData.WallpaperOpacity) { [double]$AppearanceData.WallpaperOpacity } else { 1.0 }
             }
             
-            # Buttons
-            buttons = @{
+            # Buttons - use stored data for custom themes
+            $Results.buttons = @{
                 type = if ($AppearanceData.ButtonType) { $AppearanceData.ButtonType } else { 'solid' }
                 cornerRadius = if ($AppearanceData.ButtonCornerRadius) { $AppearanceData.ButtonCornerRadius } else { 'rounded' }
                 shadow = if ($AppearanceData.ButtonShadow) { $AppearanceData.ButtonShadow } else { 'none' }
@@ -105,29 +115,29 @@ function Invoke-AdminGetAppearance {
                 hoverEffect = if ($AppearanceData.ButtonHoverEffect) { $AppearanceData.ButtonHoverEffect } else { 'none' }
             }
             
-            # Text/Fonts
-            text = @{
+            # Text/Fonts - use stored data for custom themes
+            $Results.text = @{
                 titleFont = if ($AppearanceData.TitleFont) { $AppearanceData.TitleFont } else { 'inter' }
                 titleColor = if ($AppearanceData.TitleColor) { $AppearanceData.TitleColor } else { '#010101' }
                 titleSize = if ($AppearanceData.TitleSize) { $AppearanceData.TitleSize } else { 'small' }
                 bodyFont = if ($AppearanceData.BodyFont) { $AppearanceData.BodyFont } else { 'inter' }
                 pageTextColor = if ($AppearanceData.PageTextColor) { $AppearanceData.PageTextColor } else { '#010101' }
             }
-            
-            # Footer
-            hideFooter = if ($AppearanceData) { [bool]$AppearanceData.HideFooter } else { $false }
-            
-            # Legacy support (for backwards compatibility with old clients)
-            buttonStyle = if ($AppearanceData.ButtonStyle) { $AppearanceData.ButtonStyle } else { 'rounded' }
-            fontFamily = if ($AppearanceData.FontFamily) { $AppearanceData.FontFamily } else { 'default' }
-            layoutStyle = if ($AppearanceData.LayoutStyle) { $AppearanceData.LayoutStyle } else { 'centered' }
-            colors = @{
-                primary = if ($AppearanceData.ColorPrimary) { $AppearanceData.ColorPrimary } else { '#000000' }
-                secondary = if ($AppearanceData.ColorSecondary) { $AppearanceData.ColorSecondary } else { '#666666' }
-                background = if ($AppearanceData.ColorBackground) { $AppearanceData.ColorBackground } else { '#ffffff' }
-                buttonBackground = if ($AppearanceData.ColorButtonBackground) { $AppearanceData.ColorButtonBackground } else { '#000000' }
-                buttonText = if ($AppearanceData.ColorButtonText) { $AppearanceData.ColorButtonText } else { '#ffffff' }
-            }
+        }
+        
+        # Footer
+        $Results.hideFooter = if ($AppearanceData) { [bool]$AppearanceData.HideFooter } else { $false }
+        
+        # Legacy support (for backwards compatibility with old clients)
+        $Results.buttonStyle = if ($AppearanceData.ButtonStyle) { $AppearanceData.ButtonStyle } else { 'rounded' }
+        $Results.fontFamily = if ($AppearanceData.FontFamily) { $AppearanceData.FontFamily } else { 'default' }
+        $Results.layoutStyle = if ($AppearanceData.LayoutStyle) { $AppearanceData.LayoutStyle } else { 'centered' }
+        $Results.colors = @{
+            primary = if ($AppearanceData.ColorPrimary) { $AppearanceData.ColorPrimary } else { '#000000' }
+            secondary = if ($AppearanceData.ColorSecondary) { $AppearanceData.ColorSecondary } else { '#666666' }
+            background = if ($AppearanceData.ColorBackground) { $AppearanceData.ColorBackground } else { '#ffffff' }
+            buttonBackground = if ($AppearanceData.ColorButtonBackground) { $AppearanceData.ColorButtonBackground } else { '#000000' }
+            buttonText = if ($AppearanceData.ColorButtonText) { $AppearanceData.ColorButtonText } else { '#ffffff' }
         }
         
         # Add header logo URL if it exists

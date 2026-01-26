@@ -273,6 +273,9 @@ function Invoke-AdminUpdateAppearance {
             Set-EntityProperty -Entity $AppearanceData -PropertyName 'Avatar' -Value $Body.profileImageUrl
         }
         
+        # Determine if this is a curated theme (limited customization)
+        $IsCuratedTheme = $Body.PSObject.Properties.Match('customTheme').Count -gt 0 -and [bool]$Body.customTheme -eq $false
+        
         # === Wallpaper ===
         if ($Body.wallpaper) {
             if ($Body.wallpaper.type) {
@@ -282,7 +285,10 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Wallpaper type must be 'fill', 'gradient', 'blur', 'pattern', 'image', or 'video'" }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperType' -Value $Body.wallpaper.type
+                # For curated themes, do NOT store wallpaper type (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperType' -Value $Body.wallpaper.type
+                }
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('color').Count -gt 0) {
@@ -333,7 +339,10 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Pattern type must be 'grid', 'dots', 'lines', 'waves', 'geometric' or 'honey'" }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperPatternType' -Value $Body.wallpaper.patternType
+                # For curated themes, do NOT store pattern type (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'WallpaperPatternType' -Value $Body.wallpaper.patternType
+                }
             }
             
             if ($Body.wallpaper.PSObject.Properties.Match('patternColor').Count -gt 0) {
@@ -421,7 +430,10 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Button type must be 'solid', 'glass', or 'outline'" }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonType' -Value $Body.buttons.type
+                # For curated themes, do NOT store button type (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonType' -Value $Body.buttons.type
+                }
             }
             
             if ($Body.buttons.cornerRadius) {
@@ -431,7 +443,10 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Corner radius must be 'square', 'rounded', or 'pill'" }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonCornerRadius' -Value $Body.buttons.cornerRadius
+                # For curated themes, do NOT store corner radius (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonCornerRadius' -Value $Body.buttons.cornerRadius
+                }
             }
             
             if ($Body.buttons.shadow) {
@@ -441,7 +456,10 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Shadow must be 'none', 'subtle', 'strong', or 'hard'" }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonShadow' -Value $Body.buttons.shadow
+                # For curated themes, do NOT store shadow (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'ButtonShadow' -Value $Body.buttons.shadow
+                }
             }
             
             if ($Body.buttons.PSObject.Properties.Match('backgroundColor').Count -gt 0) {
@@ -494,7 +512,10 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Invalid title font" }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleFont' -Value $Body.text.titleFont
+                # For curated themes, do NOT store title font (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleFont' -Value $Body.text.titleFont
+                }
             }
             
             if ($Body.text.PSObject.Properties.Match('titleColor').Count -gt 0) {
@@ -525,7 +546,10 @@ function Invoke-AdminUpdateAppearance {
                         }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleSize' -Value $Body.text.titleSize
+                # For curated themes, do NOT store title size (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'TitleSize' -Value $Body.text.titleSize
+                }
             }
             
             if ($Body.text.bodyFont) {
@@ -535,7 +559,10 @@ function Invoke-AdminUpdateAppearance {
                         Body = @{ error = "Invalid body font" }
                     }
                 }
-                Set-EntityProperty -Entity $AppearanceData -PropertyName 'BodyFont' -Value $Body.text.bodyFont
+                # For curated themes, do NOT store body font (use theme default)
+                if (-not $IsCuratedTheme) {
+                    Set-EntityProperty -Entity $AppearanceData -PropertyName 'BodyFont' -Value $Body.text.bodyFont
+                }
             }
             
             if ($Body.text.PSObject.Properties.Match('pageTextColor').Count -gt 0) {
