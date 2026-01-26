@@ -6,15 +6,20 @@ function Get-MergedAppearance {
         For custom themes, returns stored data as-is.
         For curated themes, merges stored customizations (colors) with theme defaults (types, fonts, etc).
     .PARAMETER AppearanceData
-        The stored appearance data from the database.
+        The stored appearance data from the database. Can be null.
     .OUTPUTS
         Hashtable containing the complete appearance configuration ready for API response.
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
+        [Parameter()]
         $AppearanceData
     )
+    
+    # If no appearance data, return null (caller should use defaults)
+    if (-not $AppearanceData) {
+        return $null
+    }
     
     # Determine if this is a custom theme (full customization) or curated theme (limited customization)
     $IsCustomTheme = if ($AppearanceData -and $AppearanceData.PSObject.Properties['CustomTheme']) {
