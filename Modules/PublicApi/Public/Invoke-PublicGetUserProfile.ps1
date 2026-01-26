@@ -224,9 +224,7 @@ function Invoke-PublicGetUserProfile {
             $AppearanceData = Get-LinkToMeAzDataTableEntity @AppearanceTable -Filter "PartitionKey eq '$SafeUserId' and PageId eq '$SafePageId'" | Select-Object -First 1
             
             # Build appearance object with new structure
-            # For curated themes, merge with theme defaults
-            $MergedAppearance = Get-MergedAppearance -AppearanceData $AppearanceData
-            
+            # Use AppearanceData if exists, otherwise use defaults
             # Check tier limits for custom themes and video backgrounds
             $ThemeExceedsLimit = $AppearanceData -and $AppearanceData.PSObject.Properties['ExceedsTierLimit'] -and [bool]$AppearanceData.ExceedsTierLimit
             $VideoExceedsLimit = $AppearanceData -and $AppearanceData.PSObject.Properties['VideoExceedsTierLimit'] -and [bool]$AppearanceData.VideoExceedsTierLimit
@@ -242,24 +240,14 @@ function Invoke-PublicGetUserProfile {
                     displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($User.Username)" }
                 }
                 
-                # Footer
-                hideFooter = if ($AppearanceData) { [bool]$AppearanceData.HideFooter } else { $false }
-            }
-            
-            # If curated theme, use merged appearance; otherwise use stored data
-            if ($MergedAppearance) {
-                $Appearance.wallpaper = $MergedAppearance.wallpaper
-                $Appearance.buttons = $MergedAppearance.buttons
-                $Appearance.text = $MergedAppearance.text
-            } else {
                 # Wallpaper/Background - reset video type if exceeds tier limit
-                $Appearance.wallpaper = @{
+                wallpaper = @{
                     type = if ($VideoExceedsLimit -and $AppearanceData.WallpaperType -eq 'video') { 'fill' } elseif ($AppearanceData.WallpaperType) { $AppearanceData.WallpaperType } else { 'fill' }
                     color = if ($AppearanceData.WallpaperColor) { $AppearanceData.WallpaperColor } else { '#ffffff' }
                 }
                 
                 # Buttons
-                $Appearance.buttons = @{
+                buttons = @{
                     type = if ($AppearanceData.ButtonType) { $AppearanceData.ButtonType } else { 'solid' }
                     cornerRadius = if ($AppearanceData.ButtonCornerRadius) { $AppearanceData.ButtonCornerRadius } else { 'rounded' }
                     shadow = if ($AppearanceData.ButtonShadow) { $AppearanceData.ButtonShadow } else { 'none' }
@@ -268,50 +256,49 @@ function Invoke-PublicGetUserProfile {
                 }
                 
                 # Text/Fonts
-                $Appearance.text = @{
+                text = @{
                     titleFont = if ($AppearanceData.TitleFont) { $AppearanceData.TitleFont } else { 'inter' }
                     titleColor = if ($AppearanceData.TitleColor) { $AppearanceData.TitleColor } else { '#010101' }
                     titleSize = if ($AppearanceData.TitleSize) { $AppearanceData.TitleSize } else { 'small' }
                     bodyFont = if ($AppearanceData.BodyFont) { $AppearanceData.BodyFont } else { 'inter' }
                     pageTextColor = if ($AppearanceData.PageTextColor) { $AppearanceData.PageTextColor } else { '#010101' }
                 }
-            }
-            
-            # Legacy support
-            $Appearance.buttonStyle = if ($AppearanceData.ButtonStyle) { $AppearanceData.ButtonStyle } else { 'rounded' }
-            $Appearance.fontFamily = if ($AppearanceData.FontFamily) { $AppearanceData.FontFamily } else { 'default' }
-            $Appearance.layoutStyle = if ($AppearanceData.LayoutStyle) { $AppearanceData.LayoutStyle } else { 'centered' }
-            $Appearance.colors = @{
-                primary = if ($AppearanceData.ColorPrimary) { $AppearanceData.ColorPrimary } else { '#000000' }
-                secondary = if ($AppearanceData.ColorSecondary) { $AppearanceData.ColorSecondary } else { '#666666' }
-                background = if ($AppearanceData.ColorBackground) { $AppearanceData.ColorBackground } else { '#ffffff' }
-                buttonBackground = if ($AppearanceData.ColorButtonBackground) { $AppearanceData.ColorButtonBackground } else { '#000000' }
-                buttonText = if ($AppearanceData.ColorButtonText) { $AppearanceData.ColorButtonText } else { '#ffffff' }
+                
+                # Footer
+                hideFooter = if ($AppearanceData) { [bool]$AppearanceData.HideFooter } else { $false }
+                
+                # Legacy support
+                buttonStyle = if ($AppearanceData.ButtonStyle) { $AppearanceData.ButtonStyle } else { 'rounded' }
+                fontFamily = if ($AppearanceData.FontFamily) { $AppearanceData.FontFamily } else { 'default' }
+                layoutStyle = if ($AppearanceData.LayoutStyle) { $AppearanceData.LayoutStyle } else { 'centered' }
+                colors = @{
+                    primary = if ($AppearanceData.ColorPrimary) { $AppearanceData.ColorPrimary } else { '#000000' }
+                    secondary = if ($AppearanceData.ColorSecondary) { $AppearanceData.ColorSecondary } else { '#666666' }
+                    background = if ($AppearanceData.ColorBackground) { $AppearanceData.ColorBackground } else { '#ffffff' }
+                    buttonBackground = if ($AppearanceData.ColorButtonBackground) { $AppearanceData.ColorButtonBackground } else { '#000000' }
+                    buttonText = if ($AppearanceData.ColorButtonText) { $AppearanceData.ColorButtonText } else { '#ffffff' }
+                }
             }
             
             # Add optional header properties
             if ($AppearanceData.LogoUrl) { $Appearance.header.logoUrl = $AppearanceData.LogoUrl }
             if ($AppearanceData.Bio) { $Appearance.header.bio = $AppearanceData.Bio }
             
-            # Add optional wallpaper properties (only for custom themes or if not already set by merge)
-            if (-not $MergedAppearance) {
-                if ($AppearanceData.WallpaperGradientStart) { $Appearance.wallpaper.gradientStart = $AppearanceData.WallpaperGradientStart }
-                if ($AppearanceData.WallpaperGradientEnd) { $Appearance.wallpaper.gradientEnd = $AppearanceData.WallpaperGradientEnd }
-                if ($AppearanceData.WallpaperGradientDirection) { $Appearance.wallpaper.gradientDirection = [int]$AppearanceData.WallpaperGradientDirection }
-                if ($AppearanceData.WallpaperPatternType) { $Appearance.wallpaper.patternType = $AppearanceData.WallpaperPatternType }
-                if ($AppearanceData.WallpaperPatternColor) { $Appearance.wallpaper.patternColor = $AppearanceData.WallpaperPatternColor }
-                if ($AppearanceData.WallpaperImageUrl) { $Appearance.wallpaper.imageUrl = $AppearanceData.WallpaperImageUrl }
-                # Only include video URL if it doesn't exceed tier limit
-                if ($AppearanceData.WallpaperVideoUrl -and -not $VideoExceedsLimit) { $Appearance.wallpaper.videoUrl = $AppearanceData.WallpaperVideoUrl }
-                if ($AppearanceData.WallpaperBlur) { $Appearance.wallpaper.blur = [int]$AppearanceData.WallpaperBlur }
-                if ($AppearanceData.WallpaperOpacity) { $Appearance.wallpaper.opacity = [double]$AppearanceData.WallpaperOpacity }
-            }
+            # Add optional wallpaper properties
+            if ($AppearanceData.WallpaperGradientStart) { $Appearance.wallpaper.gradientStart = $AppearanceData.WallpaperGradientStart }
+            if ($AppearanceData.WallpaperGradientEnd) { $Appearance.wallpaper.gradientEnd = $AppearanceData.WallpaperGradientEnd }
+            if ($AppearanceData.WallpaperGradientDirection) { $Appearance.wallpaper.gradientDirection = [int]$AppearanceData.WallpaperGradientDirection }
+            if ($AppearanceData.WallpaperPatternType) { $Appearance.wallpaper.patternType = $AppearanceData.WallpaperPatternType }
+            if ($AppearanceData.WallpaperPatternColor) { $Appearance.wallpaper.patternColor = $AppearanceData.WallpaperPatternColor }
+            if ($AppearanceData.WallpaperImageUrl) { $Appearance.wallpaper.imageUrl = $AppearanceData.WallpaperImageUrl }
+            # Only include video URL if it doesn't exceed tier limit
+            if ($AppearanceData.WallpaperVideoUrl -and -not $VideoExceedsLimit) { $Appearance.wallpaper.videoUrl = $AppearanceData.WallpaperVideoUrl }
+            if ($AppearanceData.WallpaperBlur) { $Appearance.wallpaper.blur = [int]$AppearanceData.WallpaperBlur }
+            if ($AppearanceData.WallpaperOpacity) { $Appearance.wallpaper.opacity = [double]$AppearanceData.WallpaperOpacity }
             
-            # Add optional button properties (only for custom themes or if not already set by merge)
-            if (-not $MergedAppearance) {
-                if ($AppearanceData.ButtonBorderColor) { $Appearance.buttons.borderColor = $AppearanceData.ButtonBorderColor }
-                if ($AppearanceData.ButtonHoverEffect) { $Appearance.buttons.hoverEffect = $AppearanceData.ButtonHoverEffect }
-            }
+            # Add optional button properties
+            if ($AppearanceData.ButtonBorderColor) { $Appearance.buttons.borderColor = $AppearanceData.ButtonBorderColor }
+            if ($AppearanceData.ButtonHoverEffect) { $Appearance.buttons.hoverEffect = $AppearanceData.ButtonHoverEffect }
             
             # Add legacy customGradient if it exists
             if ($AppearanceData.CustomGradientStart -and $AppearanceData.CustomGradientEnd) {
