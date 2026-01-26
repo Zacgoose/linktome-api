@@ -27,12 +27,14 @@ function Get-UserApiKeys {
         
         return @($KeysArray | ForEach-Object {
             @{
-                keyId       = $_.RowKey
-                name        = $_.Name
-                permissions = @(($_.Permissions | ConvertFrom-Json -ErrorAction SilentlyContinue) ?? @())
-                createdAt   = $_.CreatedAt
-                lastUsedAt  = $_.LastUsedAt
-                lastUsedIP  = $_.LastUsedIP
+                keyId          = $_.RowKey
+                name           = $_.Name
+                permissions    = @(($_.Permissions | ConvertFrom-Json -ErrorAction SilentlyContinue) ?? @())
+                active         = if ($_.PSObject.Properties['Active']) { [bool]$_.Active } else { $true }
+                disabledReason = if ($_.PSObject.Properties['DisabledReason']) { $_.DisabledReason } else { $null }
+                createdAt      = $_.CreatedAt
+                lastUsedAt     = $_.LastUsedAt
+                lastUsedIP     = $_.LastUsedIP
             }
         })
     }

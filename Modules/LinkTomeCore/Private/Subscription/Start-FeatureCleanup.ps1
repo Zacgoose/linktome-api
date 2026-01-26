@@ -199,14 +199,17 @@ function Start-FeatureCleanup {
             }
         }
         
-        # 4. Disable excess API keys if limit changed
-        if ($Limits.apiKeysLimit -ge 0) {
-            try {
-                $ApiKeysTable = Get-LinkToMeTable -TableName 'ApiKeys'
-                $ApiKeys = @(Get-LinkToMeAzDataTableEntity @ApiKeysTable -Filter "PartitionKey eq '$SafeUserId' and Active eq true" | Sort-Object CreatedAt)
+        # 4. Disable excess API keys if limit changed OR re-enable if tier allows
+        try {
+            $ApiKeysTable = Get-LinkToMeTable -TableName 'ApiKeys'
+            $AllApiKeys = @(Get-LinkToMeAzDataTableEntity @ApiKeysTable -Filter "PartitionKey eq '$SafeUserId'" | Sort-Object CreatedAt)
+            
+            if ($Limits.apiKeysLimit -ge 0) {
+                $ActiveApiKeys = @($AllApiKeys | Where-Object { -not $_.PSObject.Properties['Active'] -or $_.Active -eq $true })
                 
-                if ($ApiKeys.Count -gt $Limits.apiKeysLimit) {
-                    $KeysToDisable = $ApiKeys | Select-Object -Skip $Limits.apiKeysLimit
+                if ($ActiveApiKeys.Count -gt $Limits.apiKeysLimit) {
+                    # User has more active keys than allowed - disable excess
+                    $KeysToDisable = $ActiveApiKeys | Select-Object -Skip $Limits.apiKeysLimit
                     foreach ($Key in $KeysToDisable) {
                         $Key.Active = $false
                         $Key.DisabledReason = 'Subscription downgraded'
@@ -219,11 +222,61 @@ function Start-FeatureCleanup {
                             Write-Warning "Failed to disable API key $($Key.RowKey): $($_.Exception.Message)"
                         }
                     }
+                    
+                    # Ensure allowed keys are marked as active
+                    $AllowedKeys = $ActiveApiKeys | Select-Object -First $Limits.apiKeysLimit
+                    foreach ($Key in $AllowedKeys) {
+                        if ($Key.PSObject.Properties['Active'] -and $Key.Active -eq $false -and $Key.PSObject.Properties['DisabledReason'] -and $Key.DisabledReason -eq 'Subscription downgraded') {
+                            $Key.Active = $true
+                            $Key.DisabledReason = $null
+                            try {
+                                Add-LinkToMeAzDataTableEntity @ApiKeysTable -Entity $Key -Force
+                                $Results.cleanupActions += "Re-enabled API key: $($Key.Name)"
+                                Write-Information "Re-enabled API key $($Key.RowKey) for user $UserId"
+                            } catch {
+                                Write-Warning "Failed to re-enable API key $($Key.RowKey): $($_.Exception.Message)"
+                            }
+                        }
+                    }
+                } else {
+                    # User has keys within limit or unlimited tier - re-enable any that were disabled by tier restrictions
+                    foreach ($Key in $AllApiKeys) {
+                        if ($Key.PSObject.Properties['Active'] -and $Key.Active -eq $false -and $Key.PSObject.Properties['DisabledReason'] -and $Key.DisabledReason -eq 'Subscription downgraded') {
+                            # Only re-enable if within new limit
+                            if ($Limits.apiKeysLimit -eq -1 -or $ActiveApiKeys.Count -lt $Limits.apiKeysLimit) {
+                                $Key.Active = $true
+                                $Key.DisabledReason = $null
+                                try {
+                                    Add-LinkToMeAzDataTableEntity @ApiKeysTable -Entity $Key -Force
+                                    $Results.cleanupActions += "Re-enabled API key: $($Key.Name)"
+                                    Write-Information "Re-enabled API key $($Key.RowKey) for user $UserId"
+                                    $ActiveApiKeys += $Key
+                                } catch {
+                                    Write-Warning "Failed to re-enable API key $($Key.RowKey): $($_.Exception.Message)"
+                                }
+                            }
+                        }
+                    }
                 }
-            } catch {
-                # ApiKeys table might not exist
-                Write-Information "ApiKeys table not found or accessible, skipping API key cleanup"
+            } elseif ($Limits.apiKeysLimit -eq -1) {
+                # Unlimited tier - re-enable all keys that were disabled by tier restrictions
+                foreach ($Key in $AllApiKeys) {
+                    if ($Key.PSObject.Properties['Active'] -and $Key.Active -eq $false -and $Key.PSObject.Properties['DisabledReason'] -and $Key.DisabledReason -eq 'Subscription downgraded') {
+                        $Key.Active = $true
+                        $Key.DisabledReason = $null
+                        try {
+                            Add-LinkToMeAzDataTableEntity @ApiKeysTable -Entity $Key -Force
+                            $Results.cleanupActions += "Re-enabled API key: $($Key.Name)"
+                            Write-Information "Re-enabled API key $($Key.RowKey) for user $UserId"
+                        } catch {
+                            Write-Warning "Failed to re-enable API key $($Key.RowKey): $($_.Exception.Message)"
+                        }
+                    }
+                }
             }
+        } catch {
+            # ApiKeys table might not exist
+            Write-Information "ApiKeys table not found or accessible, skipping API key cleanup"
         }
         
         # 5. Mark excess links as inactive if over new limit
