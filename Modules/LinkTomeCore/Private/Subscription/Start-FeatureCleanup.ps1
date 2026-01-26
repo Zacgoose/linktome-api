@@ -49,11 +49,12 @@ function Start-FeatureCleanup {
         $SafeUserId = Protect-TableQueryValue -Value $UserId
         
         # 1. Mark excess pages (preserve data, hide from public)
-        if ($Limits.maxPages -gt 0) {
-            $PagesTable = Get-LinkToMeTable -TableName 'Pages'
-            $Pages = @(Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId'" | Sort-Object @{Expression={-([bool]$_.IsDefault)}}, CreatedAt)
-            
-            if ($Pages.Count -gt $Limits.maxPages) {
+        $PagesTable = Get-LinkToMeTable -TableName 'Pages'
+        $Pages = @(Get-LinkToMeAzDataTableEntity @PagesTable -Filter "PartitionKey eq '$SafeUserId'" | Sort-Object @{Expression={-([bool]$_.IsDefault)}}, CreatedAt)
+        
+        if ($Limits.maxPages -gt 0 -or $Limits.maxPages -eq -1) {
+            if ($Pages.Count -gt $Limits.maxPages -and $Limits.maxPages -ne -1) {
+                # User has more pages than allowed - mark excess
                 $AllowedPages = $Pages | Select-Object -First $Limits.maxPages
                 $ExcessPages = $Pages | Select-Object -Skip $Limits.maxPages
                 
@@ -80,6 +81,22 @@ function Start-FeatureCleanup {
                         $Page.ExceedsTierLimit = $false
                         try {
                             Add-LinkToMeAzDataTableEntity @PagesTable -Entity $Page -Force
+                            $Results.cleanupActions += "Unlocked page: $($Page.Name) (id: $($Page.RowKey))"
+                            Write-Information "Cleared ExceedsTierLimit flag for page $($Page.RowKey)"
+                        } catch {
+                            Write-Warning "Failed to update page $($Page.RowKey): $($_.Exception.Message)"
+                        }
+                    }
+                }
+            } else {
+                # User has pages within limit or unlimited tier - clear all restriction flags
+                foreach ($Page in $Pages) {
+                    if ($Page.PSObject.Properties['ExceedsTierLimit'] -and $Page.ExceedsTierLimit -eq $true) {
+                        $Page.ExceedsTierLimit = $false
+                        try {
+                            Add-LinkToMeAzDataTableEntity @PagesTable -Entity $Page -Force
+                            $Results.cleanupActions += "Unlocked page: $($Page.Name) (id: $($Page.RowKey))"
+                            Write-Information "Cleared ExceedsTierLimit flag for page $($Page.RowKey)"
                         } catch {
                             Write-Warning "Failed to update page $($Page.RowKey): $($_.Exception.Message)"
                         }
@@ -89,17 +106,17 @@ function Start-FeatureCleanup {
         }
         
         # 2. Mark custom themes as exceeding limit if not allowed (preserve data)
-        if (-not $Limits.customThemes) {
-            $AppearanceTable = Get-LinkToMeTable -TableName 'Appearance'
-            $Appearances = Get-LinkToMeAzDataTableEntity @AppearanceTable -Filter "PartitionKey eq '$SafeUserId'"
+        $AppearanceTable = Get-LinkToMeTable -TableName 'Appearance'
+        $Appearances = Get-LinkToMeAzDataTableEntity @AppearanceTable -Filter "PartitionKey eq '$SafeUserId'"
+        
+        # Premium themes that require Pro+ tiers (should match frontend configuration)
+        # These are the themes that are not available on the free tier
+        $PremiumThemes = @('agate', 'astrid', 'aura', 'bloom', 'breeze')
+        
+        foreach ($Appearance in $Appearances) {
+            $Updated = $false
             
-            # Premium themes that require Pro+ tiers (should match frontend configuration)
-            # These are the themes that are not available on the free tier
-            $PremiumThemes = @('agate', 'astrid', 'aura', 'bloom', 'breeze')
-            
-            foreach ($Appearance in $Appearances) {
-                $Updated = $false
-                
+            if (-not $Limits.customThemes) {
                 # Mark custom theme as exceeding limit (preserve data)
                 if ($Appearance.CustomTheme -eq $true) {
                     if (-not $Appearance.PSObject.Properties['ExceedsTierLimit']) {
@@ -119,40 +136,65 @@ function Start-FeatureCleanup {
                     }
                     $Updated = $true
                 }
-                
-                if ($Updated) {
-                    try {
-                        Add-LinkToMeAzDataTableEntity @AppearanceTable -Entity $Appearance -Force
+            } else {
+                # Clear theme restriction flag if tier now allows custom themes
+                if ($Appearance.PSObject.Properties['ExceedsTierLimit'] -and $Appearance.ExceedsTierLimit -eq $true) {
+                    $Appearance.ExceedsTierLimit = $false
+                    $Updated = $true
+                }
+            }
+            
+            if ($Updated) {
+                try {
+                    Add-LinkToMeAzDataTableEntity @AppearanceTable -Entity $Appearance -Force
+                    if (-not $Limits.customThemes) {
                         $Results.cleanupActions += "Marked custom theme as exceeding limit for page: $($Appearance.PageId)"
                         Write-Information "Marked theme as exceeding limit for appearance $($Appearance.RowKey)"
-                    } catch {
-                        Write-Warning "Failed to update appearance $($Appearance.RowKey): $($_.Exception.Message)"
+                    } else {
+                        $Results.cleanupActions += "Cleared theme restriction for page: $($Appearance.PageId)"
+                        Write-Information "Cleared theme restriction for appearance $($Appearance.RowKey)"
                     }
+                } catch {
+                    Write-Warning "Failed to update appearance $($Appearance.RowKey): $($_.Exception.Message)"
                 }
             }
         }
         
         # 3. Mark video backgrounds as exceeding limit if not allowed (preserve data)
-        if (-not $Limits.videoBackgrounds) {
-            $AppearanceTable = Get-LinkToMeTable -TableName 'Appearance'
-            $Appearances = Get-LinkToMeAzDataTableEntity @AppearanceTable -Filter "PartitionKey eq '$SafeUserId'"
+        # Note: We already loaded appearances in step 2, so we'll reuse that data
+        foreach ($Appearance in $Appearances) {
+            $Updated = $false
             
-            foreach ($Appearance in $Appearances) {
+            if (-not $Limits.videoBackgrounds) {
+                # Mark video background as exceeding limit if user has one (preserve URL)
                 if ($Appearance.WallpaperType -eq 'video' -or $Appearance.WallpaperVideoUrl) {
-                    # Mark video background as exceeding limit (preserve URL)
                     if (-not $Appearance.PSObject.Properties['VideoExceedsTierLimit']) {
                         $Appearance | Add-Member -NotePropertyName 'VideoExceedsTierLimit' -NotePropertyValue $true -Force
                     } else {
                         $Appearance.VideoExceedsTierLimit = $true
                     }
-                    
-                    try {
-                        Add-LinkToMeAzDataTableEntity @AppearanceTable -Entity $Appearance -Force
+                    $Updated = $true
+                }
+            } else {
+                # Clear video restriction flag if tier now allows video backgrounds
+                if ($Appearance.PSObject.Properties['VideoExceedsTierLimit'] -and $Appearance.VideoExceedsTierLimit -eq $true) {
+                    $Appearance.VideoExceedsTierLimit = $false
+                    $Updated = $true
+                }
+            }
+            
+            if ($Updated) {
+                try {
+                    Add-LinkToMeAzDataTableEntity @AppearanceTable -Entity $Appearance -Force
+                    if (-not $Limits.videoBackgrounds) {
                         $Results.cleanupActions += "Marked video background as exceeding limit for page: $($Appearance.PageId)"
                         Write-Information "Marked video background as exceeding limit for appearance $($Appearance.RowKey)"
-                    } catch {
-                        Write-Warning "Failed to mark video background $($Appearance.RowKey): $($_.Exception.Message)"
+                    } else {
+                        $Results.cleanupActions += "Cleared video background restriction for page: $($Appearance.PageId)"
+                        Write-Information "Cleared video background restriction for appearance $($Appearance.RowKey)"
                     }
+                } catch {
+                    Write-Warning "Failed to update appearance $($Appearance.RowKey): $($_.Exception.Message)"
                 }
             }
         }
@@ -293,41 +335,55 @@ function Start-FeatureCleanup {
         try {
             # Get short link limit from tier features
             $MaxShortLinks = $Limits.maxShortLinks
+            $ShortLinksTable = Get-LinkToMeTable -TableName 'ShortLinks'
+            $ShortLinks = @(Get-LinkToMeAzDataTableEntity @ShortLinksTable -Filter "PartitionKey eq '$SafeUserId'" | Sort-Object CreatedAt)
             
-            if ($MaxShortLinks -ne -1) {
-                $ShortLinksTable = Get-LinkToMeTable -TableName 'ShortLinks'
-                $ShortLinks = @(Get-LinkToMeAzDataTableEntity @ShortLinksTable -Filter "PartitionKey eq '$SafeUserId'" | Sort-Object CreatedAt)
+            if ($MaxShortLinks -ne -1 -and $ShortLinks.Count -gt $MaxShortLinks) {
+                # User has more short links than allowed - mark excess
+                $AllowedShortLinks = $ShortLinks | Select-Object -First $MaxShortLinks
+                $ExcessShortLinks = $ShortLinks | Select-Object -Skip $MaxShortLinks
                 
-                if ($ShortLinks.Count -gt $MaxShortLinks) {
-                    $AllowedShortLinks = $ShortLinks | Select-Object -First $MaxShortLinks
-                    $ExcessShortLinks = $ShortLinks | Select-Object -Skip $MaxShortLinks
-                    
-                    foreach ($ShortLink in $ExcessShortLinks) {
-                        # Mark as exceeding tier limit (preserve data)
-                        if (-not $ShortLink.PSObject.Properties['ExceedsTierLimit']) {
-                            $ShortLink | Add-Member -NotePropertyName 'ExceedsTierLimit' -NotePropertyValue $true -Force
-                        } else {
-                            $ShortLink.ExceedsTierLimit = $true
-                        }
-                        
-                        try {
-                            Add-LinkToMeAzDataTableEntity @ShortLinksTable -Entity $ShortLink -Force
-                            $Results.cleanupActions += "Marked excess short link as exceeding limit: $($ShortLink.RowKey)"
-                            Write-Information "Marked short link $($ShortLink.RowKey) as exceeding tier limit"
-                        } catch {
-                            Write-Warning "Failed to mark short link $($ShortLink.RowKey): $($_.Exception.Message)"
-                        }
+                foreach ($ShortLink in $ExcessShortLinks) {
+                    # Mark as exceeding tier limit (preserve data)
+                    if (-not $ShortLink.PSObject.Properties['ExceedsTierLimit']) {
+                        $ShortLink | Add-Member -NotePropertyName 'ExceedsTierLimit' -NotePropertyValue $true -Force
+                    } else {
+                        $ShortLink.ExceedsTierLimit = $true
                     }
                     
-                    # Ensure allowed short links are not marked as exceeding limit
-                    foreach ($ShortLink in $AllowedShortLinks) {
-                        if ($ShortLink.PSObject.Properties['ExceedsTierLimit'] -and $ShortLink.ExceedsTierLimit -eq $true) {
-                            $ShortLink.ExceedsTierLimit = $false
-                            try {
-                                Add-LinkToMeAzDataTableEntity @ShortLinksTable -Entity $ShortLink -Force
-                            } catch {
-                                Write-Warning "Failed to update short link $($ShortLink.RowKey): $($_.Exception.Message)"
-                            }
+                    try {
+                        Add-LinkToMeAzDataTableEntity @ShortLinksTable -Entity $ShortLink -Force
+                        $Results.cleanupActions += "Marked excess short link as exceeding limit: $($ShortLink.RowKey)"
+                        Write-Information "Marked short link $($ShortLink.RowKey) as exceeding tier limit"
+                    } catch {
+                        Write-Warning "Failed to mark short link $($ShortLink.RowKey): $($_.Exception.Message)"
+                    }
+                }
+                
+                # Ensure allowed short links are not marked as exceeding limit
+                foreach ($ShortLink in $AllowedShortLinks) {
+                    if ($ShortLink.PSObject.Properties['ExceedsTierLimit'] -and $ShortLink.ExceedsTierLimit -eq $true) {
+                        $ShortLink.ExceedsTierLimit = $false
+                        try {
+                            Add-LinkToMeAzDataTableEntity @ShortLinksTable -Entity $ShortLink -Force
+                            $Results.cleanupActions += "Unlocked short link: $($ShortLink.RowKey)"
+                            Write-Information "Cleared ExceedsTierLimit flag for short link $($ShortLink.RowKey)"
+                        } catch {
+                            Write-Warning "Failed to update short link $($ShortLink.RowKey): $($_.Exception.Message)"
+                        }
+                    }
+                }
+            } elseif ($MaxShortLinks -eq -1 -or $ShortLinks.Count -le $MaxShortLinks) {
+                # User has short links within limit or unlimited tier - clear all restriction flags
+                foreach ($ShortLink in $ShortLinks) {
+                    if ($ShortLink.PSObject.Properties['ExceedsTierLimit'] -and $ShortLink.ExceedsTierLimit -eq $true) {
+                        $ShortLink.ExceedsTierLimit = $false
+                        try {
+                            Add-LinkToMeAzDataTableEntity @ShortLinksTable -Entity $ShortLink -Force
+                            $Results.cleanupActions += "Unlocked short link: $($ShortLink.RowKey)"
+                            Write-Information "Cleared ExceedsTierLimit flag for short link $($ShortLink.RowKey)"
+                        } catch {
+                            Write-Warning "Failed to update short link $($ShortLink.RowKey): $($_.Exception.Message)"
                         }
                     }
                 }
