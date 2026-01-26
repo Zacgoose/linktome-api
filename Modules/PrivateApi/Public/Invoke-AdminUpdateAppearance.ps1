@@ -690,8 +690,7 @@ function Invoke-AdminUpdateAppearance {
         
         # Return success with current appearance
         $Results = @{ 
-            success = $true
-            pageId = $PageId
+            message = 'Appearance updated successfully'
         }
         $StatusCode = [HttpStatusCode]::OK
         
