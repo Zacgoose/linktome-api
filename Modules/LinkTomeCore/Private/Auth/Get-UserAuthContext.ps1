@@ -108,6 +108,7 @@ function Get-UserAuthContext {
                         permissions = $SubAccountPermissions
                         type = if ($relationship.PSObject.Properties['Type'] -and $relationship.Type) { $relationship.Type } else { 'client' }
                         status = if ($relationship.PSObject.Properties['Status'] -and $relationship.Status) { $relationship.Status } else { 'active' }
+                        disabled = if ($SubAccountUser.PSObject.Properties['Disabled'] -and $SubAccountUser.Disabled) { $true } else { $false }
                     }
                 }
             }
