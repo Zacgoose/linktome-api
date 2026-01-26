@@ -105,9 +105,6 @@ function Invoke-AdminCreateSubAccount {
         # Generate sub-account user ID with "sub-" prefix for easy identification
         $SubAccountUserId = "sub-" + (New-Guid).ToString()
         
-        # Get parent subscription for inheritance
-        $ParentSubscription = Get-UserSubscription -User $ParentUser
-        
         # Create sub-account user entity
         # Note: Sub-accounts do not have email addresses - notifications go to parent
         $SubAccountUser = @{
@@ -118,8 +115,6 @@ function Invoke-AdminCreateSubAccount {
             Role = 'sub_account_user'
             IsSubAccount = $true
             AuthDisabled = $true
-            SubscriptionTier = $ParentSubscription.EffectiveTier
-            SubscriptionStatus = 'active'
             PasswordHash = ''  # No password for sub-accounts
             PasswordSalt = ''
         }
