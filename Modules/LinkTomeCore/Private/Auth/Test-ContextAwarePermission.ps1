@@ -24,12 +24,16 @@ function Test-ContextAwarePermission {
     if ($UserId) {
         Write-Verbose "[Auth] Checking user management context permissions for UserId: $UserId"
         
-        # Check if UserId starts with "sub-" prefix (sub-account)
+        # Check if UserId starts with "sub-" prefix (sub-account), then check the disabled status of the sub-account and deny if disabled
         if ($UserId -like "sub-*") {
             Write-Verbose "[Auth] Detected sub-account ID (sub- prefix). Checking subAccounts array."
             $subAccounts = $User.subAccounts
             if (-not $subAccounts) {
                 Write-Warning "[Auth] No subAccounts found for user."
+                return $false
+            }
+            if ($subAccounts | Where-Object { $_.UserId -eq $UserId -and $_.disabled -eq $true }) {
+                Write-Warning "[Auth] Sub-account $UserId is disabled."
                 return $false
             }
             $management = $subAccounts | Where-Object { $_.UserId -eq $UserId } | Select-Object -First 1
