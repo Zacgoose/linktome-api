@@ -47,6 +47,22 @@ function Invoke-PublicL {
             }
         }
         
+        # Check if the owner is a disabled sub-account
+        if ($ShortLink.PartitionKey) {
+            $UsersTable = Get-LinkToMeTable -TableName 'Users'
+            $SafeOwnerId = Protect-TableQueryValue -Value $ShortLink.PartitionKey
+            $Owner = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeOwnerId'" -ErrorAction SilentlyContinue | Select-Object -First 1
+            
+            if ($Owner -and 
+                $Owner.PSObject.Properties['IsSubAccount'] -and [bool]$Owner.IsSubAccount -eq $true -and
+                $Owner.PSObject.Properties['Disabled'] -and [bool]$Owner.Disabled -eq $true) {
+                return [HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Forbidden
+                    Body = @{ error = "This short link is not available" }
+                }
+            }
+        }
+        
         # Check if link is active
         if (-not [bool]$ShortLink.Active) {
             return [HttpResponseContext]@{

@@ -40,6 +40,17 @@ function Invoke-PublicGetUserProfile {
             $StatusCode = [HttpStatusCode]::NotFound
             $Results = @{ error = "Profile not found" }
         } else {
+            # Check if this is a disabled sub-account
+            if ($User.PSObject.Properties['IsSubAccount'] -and [bool]$User.IsSubAccount -eq $true -and
+                $User.PSObject.Properties['Disabled'] -and [bool]$User.Disabled -eq $true) {
+                $StatusCode = [HttpStatusCode]::Forbidden
+                $Results = @{ error = "This account is currently disabled" }
+                return [HttpResponseContext]@{
+                    StatusCode = $StatusCode
+                    Body = $Results
+                }
+            }
+            
             $SafeUserId = Protect-TableQueryValue -Value $User.RowKey
             
             # Get user subscription info to check tier

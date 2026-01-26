@@ -55,7 +55,7 @@ function Invoke-AdminGetSubAccounts {
             $SubAccountUser = Get-LinkToMeAzDataTableEntity @UsersTable -Filter "RowKey eq '$SafeSubId'" -ErrorAction SilentlyContinue | Select-Object -First 1
             
             if ($SubAccountUser) {
-                $SubAccountsList += [PSCustomObject]@{
+                $subAccountObj = [PSCustomObject]@{
                     userId = $SubAccountUser.RowKey
                     username = $SubAccountUser.Username
                     displayName = $SubAccountUser.DisplayName
@@ -63,6 +63,18 @@ function Invoke-AdminGetSubAccounts {
                     status = if ($relationship.PSObject.Properties['Status'] -and $relationship.Status) { $relationship.Status } else { 'active' }
                     createdAt = if ($relationship.PSObject.Properties['CreatedAt'] -and $relationship.CreatedAt) { $relationship.CreatedAt } else { $relationship.Timestamp }
                 }
+                
+                # Add disabled flag if present
+                if ($SubAccountUser.PSObject.Properties['Disabled']) {
+                    $subAccountObj | Add-Member -NotePropertyName 'disabled' -NotePropertyValue ([bool]$SubAccountUser.Disabled) -Force
+                }
+                
+                # Add disabled reason if present
+                if ($SubAccountUser.PSObject.Properties['DisabledReason'] -and $SubAccountUser.DisabledReason) {
+                    $subAccountObj | Add-Member -NotePropertyName 'disabledReason' -NotePropertyValue $SubAccountUser.DisabledReason -Force
+                }
+                
+                $SubAccountsList += $subAccountObj
             }
         }
         
