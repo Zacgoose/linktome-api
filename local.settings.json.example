@@ -19,6 +19,6 @@
     "STRIPE_PRICE_ID_PREMIUM_ANNUAL": "price_premium_annual_id",
     "STRIPE_PRICE_ID_ENTERPRISE": "price_enterprise_monthly_id",
     "STRIPE_PRICE_ID_ENTERPRISE_ANNUAL": "price_enterprise_annual_id",
-    "FRONTEND_URL": "http://localhost:3000"
+    "FRONTEND_URL": "http://localhost:4280"
   }
 }

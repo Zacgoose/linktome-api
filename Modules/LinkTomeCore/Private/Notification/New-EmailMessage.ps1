@@ -9,7 +9,7 @@ function New-EmailMessage {
         [string]$To,
 
         [Parameter(Mandatory)]
-        [ValidateSet('2FA','PasswordReset','Notification')]
+        [ValidateSet('2FA','PasswordReset','Notification','PasswordResetConfirm')]
         [string]$Template,
 
         [Parameter()]
@@ -23,12 +23,16 @@ function New-EmailMessage {
             Body    = "Hello,`n`nYour two-factor authentication code is: {Code}`n`nIf you did not request this, please ignore this email."
         }
         'PasswordReset' = @{
-            Subject = 'Password Reset Request'
-            Body    = "Hello,`n`nTo reset your password, click the following link: {ResetLink}`n`nIf you did not request this, please ignore this email."
+            Subject = 'Password Reset Code'
+            Body    = "Hello,`n`nYour password reset code is: {ResetCode}`n`nThis code will expire in 1 hour. If you did not request this, please ignore this email."
         }
         'Notification' = @{
             Subject = 'Notification from LinkToMe'
             Body    = "Hello,`n`n{Message}`n`nThank you,`nLinkToMe Team"
+        }
+        'PasswordResetConfirm' = @{
+            Subject = 'Your LinkToMe Password Was Changed'
+            Body    = "Hello,`n`nYour LinkToMe password was successfully changed. If you did not perform this action, please contact support immediately.`n`nThank you,`nLinkToMe Team"
         }
     }
 
