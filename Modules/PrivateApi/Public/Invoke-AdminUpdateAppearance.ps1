@@ -117,7 +117,7 @@ function Invoke-AdminUpdateAppearance {
         
         if (-not $AppearanceData) {
             # Create new appearance record
-            $AppearanceData = @{
+            $AppearanceData = [PSCustomObject]@{
                 PartitionKey = $UserId
                 RowKey = 'appearance-' + (New-Guid).ToString()
                 PageId = $PageId
@@ -685,7 +685,7 @@ function Invoke-AdminUpdateAppearance {
         }
         
         # Save updated appearance data (includes displayName, bio, avatar - all per-page)
-        $AppearanceData.UpdatedAt = (Get-Date).ToUniversalTime().ToString('o')
+        Set-EntityProperty -Entity $AppearanceData -PropertyName 'UpdatedAt' -Value ((Get-Date).ToUniversalTime().ToString('o'))
         Add-LinkToMeAzDataTableEntity @AppearanceTable -Entity $AppearanceData -Force
         
         # Return success with current appearance

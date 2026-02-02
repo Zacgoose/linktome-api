@@ -73,7 +73,7 @@ function Invoke-AdminGetAppearance {
             header = @{
                 profileImageLayout = if ($AppearanceData.ProfileImageLayout) { $AppearanceData.ProfileImageLayout } else { 'classic' }
                 titleStyle = if ($AppearanceData.TitleStyle) { $AppearanceData.TitleStyle } else { 'text' }
-                displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "@$($UserData.Username)" }
+                displayName = if ($AppearanceData.DisplayName) { $AppearanceData.DisplayName } else { "$($UserData.Username)" }
                 bio = $AppearanceData.Bio
             }
             profileImageUrl = $AppearanceData.Avatar
@@ -119,7 +119,7 @@ function Invoke-AdminGetAppearance {
             
             # Legacy support (for backwards compatibility with old clients)
             buttonStyle = if ($AppearanceData.ButtonStyle) { $AppearanceData.ButtonStyle } else { 'rounded' }
-            fontFamily = if ($AppearanceData.FontFamily) { $AppearanceData.FontFamily } else { 'default' }
+            fontFamily = if ($AppearanceData.FontFamily) { $AppearanceData.FontFamily } else { 'inter' }
             layoutStyle = if ($AppearanceData.LayoutStyle) { $AppearanceData.LayoutStyle } else { 'centered' }
             colors = @{
                 primary = if ($AppearanceData.ColorPrimary) { $AppearanceData.ColorPrimary } else { '#000000' }
